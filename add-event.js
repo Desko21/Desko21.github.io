@@ -1,176 +1,133 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // JSONBin.io configuration
-    const JSONBIN_BIN_ID = '68870d4d7b4b8670d8a868e8'; // Your actual Bin ID
-    const JSONBIN_LOGS_BIN_ID = '688924c7f7e7a370d1eff96b'; 
-    const JSONBIN_LOGS_WRITE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_LOGS_BIN_ID}`;
-    const JSONBIN_MASTER_KEY = '$2a$10$moQg0NYbmqEkIUS1bTku2uiW8ywvcz0Bt8HKG3J/4qYU8dCZggiT6'; // Replace with your actual Master Key
+    console.log('add-event.js loaded.');
+
+    const JSONBIN_BIN_ID = '68870d4d7b4b8670d8a868e8'; // IL TUO BIN ID PRINCIPALE DEGLI EVENTI
+    const JSONBIN_MASTER_KEY = '$2a$10$moQg0NYbmqEkIUS1bTku2uiW8ywvcz0Bt8HKG3J/4qYU8dCZggiT6'; // LA TUA MASTER KEY
     const JSONBIN_READ_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
-    const JSONBIN_UPDATE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+    const JSONBIN_WRITE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
-    // Get form elements
-    const form = document.getElementById('addEventForm');
-    const eventNameInput = document.getElementById('eventName');
-    const eventLocationInput = document.getElementById('eventLocation');
-    const eventLatitudeInput = document.getElementById('eventLatitude');
-    const eventLongitudeInput = document.getElementById('eventLongitude');
-    const eventGameTypeInput = document.getElementById('eventGameType');
-    const eventGenderInput = document.getElementById('eventGender');
-    const eventStartDateInput = document.getElementById('eventStartDate');
-    const eventEndDateInput = document.getElementById('eventEndDate');
-    const eventDescriptionInput = document.getElementById('eventDescription');
-    const eventLinkInput = document.getElementById('eventLink');
-    const messageDiv = document.getElementById('message');
+    // DETTAGLI PER IL BIN DI LOG - AGGIORNATO CON IL TUO ID
+    const JSONBIN_LOGS_BIN_ID = '688924c7f7e7a370d1eff96b';
+    const JSONBIN_LOGS_WRITE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_LOGS_BIN_ID}`;
 
-    // Reference to the form's submit button
-    // Make sure your submit button inside 'addEventForm' has the ID 'submitEventButton'
-    // For example in your HTML: <button type="submit" id="submitEventButton">Add Event</button>
-    const submitEventButton = form.querySelector('button[type="submit"]'); 
+    const addEventForm = document.getElementById('addEventForm');
+    const addEventMessageDiv = document.getElementById('addEventMessage');
 
-
-    // Nominatim API endpoint for geocoding
-    const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search?format=json&limit=1';
-
-    // Geocode location when the location input loses focus
-    eventLocationInput.addEventListener('blur', () => {
-        geocodeLocation(eventLocationInput.value);
-    });
-
-    // Function to geocode the location (unchanged)
-    async function geocodeLocation(locationString) {
-        if (!locationString) {
-            eventLatitudeInput.value = '';
-            eventLongitudeInput.value = '';
-            return;
-        }
-
+    // Funzione per inviare i log
+    async function logAction(action, eventDetails) {
         try {
-            const response = await fetch(`${NOMINATIM_URL}&q=${encodeURIComponent(locationString)}`);
-            const data = await response.json();
-
-            if (data && data.length > 0) {
-                const { lat, lon } = data[0];
-                eventLatitudeInput.value = parseFloat(lat).toFixed(6);
-                eventLongitudeInput.value = parseFloat(lon).toFixed(6);
+            // Ottieni i log attuali
+            const responseRead = await fetch(`${JSONBIN_LOGS_WRITE_URL}/latest`, {
+                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+            });
+            let currentLogs = [];
+            if (responseRead.ok) {
+                const data = await responseRead.json();
+                currentLogs = data.record || [];
             } else {
-                alert('Location not found. Please try a more specific address or enter coordinates manually.');
-                eventLatitudeInput.value = '';
-                eventLongitudeInput.value = '';
+                console.warn('Could not read existing logs, starting new log array.');
+            }
+
+            // Aggiungi il nuovo log
+            const logEntry = {
+                timestamp: new Date().toISOString(),
+                action: action,
+                event: eventDetails
+            };
+            currentLogs.push(logEntry);
+
+            // Scrivi l'array di log aggiornato
+            const responseWrite = await fetch(JSONBIN_LOGS_WRITE_URL, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_MASTER_KEY,
+                    'X-Bin-Meta': 'false'
+                },
+                body: JSON.stringify(currentLogs)
+            });
+
+            if (!responseWrite.ok) {
+                const errorText = await responseWrite.text();
+                console.error(`Error logging action: ${responseWrite.status} - ${errorText}`);
+            } else {
+                console.log(`Action logged: ${action}`);
             }
         } catch (error) {
-            console.error('Error geocoding location:', error);
-            alert('Error geocoding location. Please try again or enter coordinates manually.');
-            eventLatitudeInput.value = '';
-            eventLongitudeInput.value = '';
+            console.error('An unexpected error occurred during logging:', error);
         }
     }
 
-    // Handle form submission
-    form.addEventListener('submit', async (eventSubmit) => { 
-        eventSubmit.preventDefault(); 
 
-        // Disable button and change text for feedback
-        if (submitEventButton) {
-            submitEventButton.disabled = true;
-            submitEventButton.textContent = 'Adding...';
-            // Optional: add a CSS class for a spinner
-            // submitEventButton.classList.add('loading'); 
-        }
+    addEventForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-        // Get current form values
+        addEventMessageDiv.textContent = 'Adding event...';
+        addEventMessageDiv.className = 'message info';
+
         const newEvent = {
-            name: eventNameInput.value,
-            location: eventLocationInput.value,
-            latitude: parseFloat(eventLatitudeInput.value),
-            longitude: parseFloat(eventLongitudeInput.value),
-            gameType: eventGameTypeInput.value,
-            gender: eventGenderInput.value,
-            startDate: eventStartDateInput.value,
-            endDate: eventEndDateInput.value || null,
-            description: eventDescriptionInput.value,
-            link: eventLinkInput.value || null,
-            featured: false, // ALWAYS FALSE ON EVENT CREATION
-            createdAt: new Date().toISOString()
+            name: document.getElementById('eventName').value,
+            description: document.getElementById('eventDescription').value,
+            location: document.getElementById('eventLocation').value,
+            latitude: parseFloat(document.getElementById('eventLatitude').value),
+            longitude: parseFloat(document.getElementById('eventLongitude').value),
+            startDate: document.getElementById('eventStartDate').value,
+            gameType: document.getElementById('gameType').value,
+            gender: document.getElementById('gender').value,
+            featured: document.getElementById('isFeatured').checked,
+            link: document.getElementById('eventLink').value,
+            createdAt: new Date().toISOString() // Data di creazione per ID univoco
         };
 
-        // Basic validation for coordinates
-        if (isNaN(newEvent.latitude) || isNaN(newEvent.longitude)) {
-            showMessage('Please ensure Latitude and Longitude are valid numbers. Use the geocoding feature or enter them manually.', 'error');
-            // Re-enable button if validation fails
-            if (submitEventButton) {
-                submitEventButton.disabled = false;
-                submitEventButton.textContent = 'Add Event'; // Restore original text
-                // submitEventButton.classList.remove('loading');
-            }
-            return;
-        }
-
         try {
-            // Fetch existing events
+            // Ottieni gli eventi attuali
             const responseRead = await fetch(JSONBIN_READ_URL, {
                 headers: {
                     'X-Master-Key': JSONBIN_MASTER_KEY
                 }
             });
 
-            if (!responseRead.ok) {
-                const errorText = await responseRead.text();
-                console.error("Error reading bin:", responseRead.status, errorText);
-                showMessage(`Error reading existing events: ${responseRead.status}. Check console.`, 'error');
-                return; 
+            let currentEvents = [];
+            if (responseRead.ok) {
+                const data = await responseRead.json();
+                currentEvents = data.record || [];
+            } else {
+                console.warn('Could not read existing events, starting new events array.');
             }
 
-            const existingData = await responseRead.json();
-            const events = existingData.record || []; // Assumes your bin is { "record": [...] }
+            currentEvents.push(newEvent);
 
-            // Add new event to the array
-            events.push(newEvent);
-
-            // Update the bin with the new array of events
-            const responseUpdate = await fetch(JSONBIN_UPDATE_URL, {
-                method: 'PUT', // 'PUT' to update an existing bin
+            // Invia l'array di eventi aggiornato
+            const responseWrite = await fetch(JSONBIN_WRITE_URL, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Master-Key': JSONBIN_MASTER_KEY,
-                    'X-Bin-Versioning': 'false' 
+                    'X-Bin-Meta': 'false'
                 },
-                body: JSON.stringify(events) // Sends the entire updated array
-                // If your bin is an object with a "record" key, send:
-                // body: JSON.stringify({ record: events })
+                body: JSON.stringify(currentEvents)
             });
 
-            if (!responseUpdate.ok) {
-                const errorText = await responseUpdate.text();
-                console.error("Error updating bin:", responseUpdate.status, errorText);
-                showMessage(`Error adding event: ${responseUpdate.status}. Check console.`, 'error');
-                return; 
+            if (!responseWrite.ok) {
+                const errorText = await responseWrite.text();
+                throw new Error(`Failed to add event: ${responseWrite.status} - ${errorText}`);
             }
 
-            const updatedData = await responseUpdate.json();
-            console.log('Event added successfully:', updatedData);
-            showMessage('Event added successfully!', 'success');
-            form.reset(); // Clear the form
-            eventLatitudeInput.value = ''; 
-            eventLongitudeInput.value = '';
+            addEventMessageDiv.textContent = 'Event added successfully!';
+            addEventMessageDiv.className = 'message success';
+            addEventForm.reset(); // Pulisce il modulo
+
+            // Log dell'azione
+            await logAction('Event Added', { 
+                name: newEvent.name, 
+                createdAt: newEvent.createdAt, 
+                location: newEvent.location 
+            });
 
         } catch (error) {
-            console.error('An unexpected error occurred:', error);
-            showMessage('An unexpected error occurred. Please try again.', 'error');
-        } finally {
-            // Re-enable button and restore original text
-            if (submitEventButton) {
-                submitEventButton.disabled = false;
-                submitEventButton.textContent = 'Add Event'; // Restore original text
-                // submitEventButton.classList.remove('loading');
-            }
+            console.error('Error adding event:', error);
+            addEventMessageDiv.textContent = `Error: ${error.message}`;
+            addEventMessageDiv.className = 'message error';
         }
     });
-
-    function showMessage(msg, type) {
-        messageDiv.textContent = msg;
-        messageDiv.className = `message ${type}`;
-        setTimeout(() => {
-            messageDiv.textContent = '';
-            messageDiv.className = 'message';
-        }, 5000);
-    }
 });
