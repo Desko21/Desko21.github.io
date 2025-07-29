@@ -39,17 +39,25 @@ document.addEventListener('DOMContentLoaded', () => {
     let markers = L.featureGroup().addTo(map);
     let allEvents = [];
 
-    // --- MODIFICATO: Funzione per creare icone Font Awesome personalizzate per i marker ---
-    function createCustomMarkerIcon() { // Non accetta più parametri
-        const iconClass = 'fas fa-map-marker-alt'; // Icona uniforme per tutti
+    // --- AGGIORNATO: Funzione per creare icone Font Awesome personalizzate per i marker ---
+    function createCustomMarkerIcon(gameType) { // Riporto gameType come parametro per una possibile futura differenziazione
+        let iconClass = 'fas fa-map-marker-alt'; // Icona predefinita
         const iconColor = '#22454C'; // Colore uniforme per tutti
 
+        // Se vuoi differenziare i marker per tipo, puoi aggiungere qui la logica
+        // Ad esempio, per la "Clinic":
+        if (gameType && gameType.toLowerCase() === 'clinic') {
+            iconClass = 'fas fa-book'; // Icona a forma di libro per le clinic
+        }
+        // else if (gameType && gameType.toLowerCase() === 'field') { iconClass = 'fa-solid fa-seedling'; }
+        // ... e così via per gli altri tipi, se in futuro decidi di diversificare.
+
         return L.divIcon({
-            className: 'custom-marker', // Classe CSS per lo styling
+            className: 'custom-marker',
             html: `<div style="color: ${iconColor}; font-size: 28px;"><i class="${iconClass}"></i></div>`,
-            iconSize: [30, 42], // Dimensione del contenitore dell'icona
-            iconAnchor: [15, 42], // Punto dell'icona che si allinea con la latitudine/longitudine
-            popupAnchor: [0, -40] // Punto da cui si apre il popup
+            iconSize: [30, 42],
+            iconAnchor: [15, 42],
+            popupAnchor: [0, -40]
         });
     }
 
@@ -90,8 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
         );
 
         validEvents.forEach(event => {
-            // *** MODIFICA QUI: Chiama la funzione senza parametri, otterrà l'icona uniforme ***
-            const customIcon = createCustomMarkerIcon(); // Chiamata senza argomenti
+            // Passiamo il gameType alla funzione per la creazione dell'icona del marker
+            const customIcon = createCustomMarkerIcon(event.gameType || 'N/A');
             const marker = L.marker([event.latitude, event.longitude], { icon: customIcon }).addTo(markers);
 
             const gameType = event.gameType && typeof event.gameType === 'string' ? event.gameType : 'N/A';
@@ -108,6 +116,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         break;
                     case 'sixes':
                         gameTypeIcon = '<span class="sixes-icon icon-margin-right">6</span>';
+                        break;
+                    case 'clinic': // AGGIUNTA PER CLINIC
+                        gameTypeIcon = '<i class="fas fa-book icon-margin-right"></i>'; // Icona libro
                         break;
                     default:
                         gameTypeIcon = '<i class="fas fa-gamepad icon-margin-right"></i>';
@@ -236,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
             eventItem.className = 'tournament-item';
 
             let featuredIconHtml = event.featured ? '<span class="star-icon event-list-icon">★</span>' : '';
-            let sixesTitleIconHtml = (event.format && event.format.toLowerCase() === 'sixes') ? '<span class="sixes-icon event-list-icon">6</span>' : '';
+            let sixesTitleIconHtml = (event.format && event.format.toLowerCase() === 'sixes') ? '<span class="sixes-icon icon-margin-right">6</span>' : ''; // Era un <p>
 
             const formattedDate = new Date(event.startDate).toLocaleDateString();
             const locationText = event.location;
@@ -255,6 +266,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         break;
                     case 'sixes':
                         gameTypeIcon = '<span class="sixes-icon icon-margin-right">6</span>';
+                        break;
+                    case 'clinic': // AGGIUNTA PER CLINIC
+                        gameTypeIcon = '<i class="fas fa-book icon-margin-right"></i>'; // Icona libro
                         break;
                     default:
                         gameTypeIcon = '<i class="fas fa-gamepad icon-margin-right"></i>';
