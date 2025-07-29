@@ -1,13 +1,33 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Script.js is loaded and DOM is ready. Starting map initialization...');
 
+    // Posizione predefinita (ad esempio, Roma)
+    const DEFAULT_LATITUDE = 41.9028;
+    const DEFAULT_LONGITUDE = 12.4964;
+    const DEFAULT_ZOOM = 5; // Zoom iniziale per la posizione predefinita
+
     const map = L.map('map', {
         minZoom: 3
-    }).setView([41.9028, 12.4964], 5);
+    }).setView([DEFAULT_LATITUDE, DEFAULT_LONGITUDE], DEFAULT_ZOOM); 
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
+
+    // --- Inizio: Codice per la Geolocalizzazione ---
+    if (navigator.geolocation) {
+        console.log("Geolocation is supported by this browser.");
+        map.locate({ // Correzione: usare map.locate() invece di navigator.geolocation.locate()
+            setView: true, 
+            maxZoom: 5,   // *** MODIFICATO A 5 ***
+            enableHighAccuracy: true,
+            timeout: 10000, 
+            maximumAge: 0   
+        });
+    } else {
+        console.log("Geolocation is not supported by this browser. Using default map view.");
+    }
+    // --- Fine: Codice per la Geolocalizzazione ---
 
     const JSONBIN_BIN_ID = '68870d4d7b4b8670d8a868e8'; 
     const JSONBIN_MASTER_KEY = '$2a$10$moQg0NYbmqEkIUS1bTku2uiW8ywvcz0Bt8HKG3J/4qYU8dCZggiT6';
@@ -104,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let popupContent = `<h3>${event.name}</h3>`;
             popupContent += `<p><i class="fas fa-calendar-alt icon-margin-right"></i><strong>Date:</strong> ${new Date(event.startDate).toLocaleDateString()}</p>`;
-            popupContent += `<p><i class="fas fa-map-marker-alt icon-margin-right"></i><strong>Location:</strong> ${event.location}</p>`;
+            popupContent += `<p><i class="fas fa-map-marker-alt icon-margin-right"></i><strong>Location:</b> ${event.location}</p>`;
             popupContent += `<p>${gameTypeIcon}<strong>Game Type:</strong> ${gameType}</p>`;
             popupContent += `<p>${genderIcon}<strong>Gender:</strong> ${gender}</p>`;
             popupContent += `<p><i class="fas fa-info-circle icon-margin-right"></i>${event.description}</p>`;
@@ -116,12 +136,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 popupContent += `<p class="popup-icon-line"><span class="sixes-icon">6</span> Sixes Format</p>`;
             }
             
-            // AGGIORNATO: Ora cerca il campo 'link'
             if (event.link && typeof event.link === 'string') {
                 popupContent += `<p><a href="${event.link}" target="_blank" class="more-info-link"><i class="fas fa-external-link-alt icon-margin-right"></i>More Info</a></p>`;
             }
 
-            marker.bindPopup(popupContent, { autoPan: false }); // Aggiunta l'opzione autoPan: false
+            marker.bindPopup(popupContent, { autoPan: false });
         });
     }
 
@@ -259,13 +278,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </span>
                 </h3>
                 <p><i class="fas fa-calendar-alt icon-margin-right"></i><strong>Date:</strong> ${formattedDate}</p>
-                <p><i class="fas fa-map-marker-alt icon-margin-right"></i><strong>Location:</strong> ${locationText}</p>
-                <p>${gameTypeIcon}<strong>Game Type:</strong> ${gameType}</p>
-                <p>${genderIcon}<strong>Gender:</strong> ${gender}</p>
-                <p><i class="fas fa-info-circle icon-margin-right"></i>${descriptionText}</p>
-            `;
+                <p><i class="fas fa-map-marker-alt icon-margin-right"></i><strong>Location:</b> ${locationText}</p>`; // Chiuso il strong
+            eventItem.innerHTML += `<p>${gameTypeIcon}<strong>Game Type:</strong> ${gameType}</p>`;
+            eventItem.innerHTML += `<p>${genderIcon}<strong>Gender:</strong> ${gender}</p>`;
+            eventItem.innerHTML += `<p><i class="fas fa-info-circle icon-margin-right"></i>${descriptionText}</p>`;
             
-            // AGGIORNATO: Ora cerca il campo 'link'
             if (event.link && typeof event.link === 'string') {
                 const moreInfoParagraph = document.createElement('p');
                 moreInfoParagraph.innerHTML = `<a href="${event.link}" target="_blank" class="more-info-link"><i class="fas fa-external-link-alt icon-margin-right"></i>More Info</a>`;
