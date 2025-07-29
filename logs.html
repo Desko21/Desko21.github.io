@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Logs</title>
+    
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Map & Events</a></li> 
+            <li><a href="add-event.html">Add New Event</a></li>
+            <li><a href="manage-featured.html">Manage Featured Events</a></li>
+            <li><a href="delete-event.html">Delete Event</a></li>
+            <li><a href="logs.html">View Logs</a></li> </ul>
+    </nav>
+</head>
+<body>
+    <header>
+        <h1>Activity Logs</h1>
+        <h2>Review all event modifications and additions.</h2>
+    </header>
+
+    <div class="container">
+        <div id="message" class="message"></div>
+        <div id="logsList">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Action</th>
+                        <th>Event Name</th>
+                        <th>Event ID</th>
+                        <th>Event Location</th>
+                    </tr>
+                </thead>
+                <tbody id="logsTableBody">
+                    </tbody>
+            </table>
+        </div>
+        <button id="clearLogsButton" class="delete-button" style="margin-top: 20px;">Clear All Logs</button>
+    </div>
+
+    <script src="logs.js"></script> </body>
+</html>
