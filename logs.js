@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('logs.js loaded.'); // AGGIORNATO QUI
+    console.log('logs.js loaded.');
 
     const JSONBIN_MASTER_KEY = '$2a$10$moQg0NYbmqEkIUS1bTku2uiW8ywvcz0Bt8HKG3J/4qYU8dCZggiT6'; // LA TUA MASTER KEY
     const JSONBIN_LOGS_BIN_ID = '688924c7f7e7a370d1eff96b'; // IL BIN ID DEI TUOI LOGS
@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const messageDiv = document.getElementById('message');
     const logsTableBody = document.getElementById('logsTableBody');
-    const clearLogsButton = document.getElementById('clearLogsButton');
+    // const clearLogsButton = document.getElementById('clearLogsButton'); // RIMOSSO
 
     let allLogs = [];
 
@@ -66,42 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    async function clearAllLogs() {
-        if (!confirm('Are you sure you want to clear ALL logs? This action cannot be undone!')) {
-            return;
-        }
+    // async function clearAllLogs() { ... } // FUNZIONE RIMOSSA
 
-        messageDiv.textContent = 'Clearing logs...';
-        messageDiv.className = 'message info';
-
-        try {
-            const response = await fetch(JSONBIN_LOGS_WRITE_URL, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': JSONBIN_MASTER_KEY,
-                    'X-Bin-Meta': 'false'
-                },
-                body: JSON.stringify([])
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Failed to clear logs: ${response.status} - ${errorText}`);
-            }
-
-            allLogs = [];
-            displayLogs();
-            messageDiv.textContent = 'All logs cleared successfully!';
-            messageDiv.className = 'message success';
-
-        } catch (error) {
-            console.error('Error clearing logs:', error);
-            messageDiv.textContent = `Error: ${error.message}`;
-            messageDiv.className = 'message error';
-        }
-    }
-
-    clearLogsButton.addEventListener('click', clearAllLogs);
+    // clearLogsButton.addEventListener('click', clearAllLogs); // RIGA RIMOSSA
     loadLogs();
 });
