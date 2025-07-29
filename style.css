@@ -663,10 +663,10 @@ form input[type="image"] {
 }
 
 #logsList td:nth-child(4) { /* Event ID */
-    font-family: monospace; /* Font monospace per l'ID */
-    font-size: 0.85em; /* ID più piccolo */
+    font-family: monospace;
+    font-size: 0.85em;
     color: #666;
-    width: 100px;
+    width: 200px; /* MODIFICATO QUI */
 }
 
 #logsList td:nth-child(5) { /* Event Location */
