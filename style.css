@@ -672,3 +672,80 @@ form input[type="image"] {
 #logsList td:nth-child(5) { /* Event Location */
     width: 180px;
 }
+
+Hai ragione! Se la pagina delete-event.html appare "tutta male" e non sfrutta lo spazio, è molto probabile che gli stili per le tabelle che abbiamo aggiunto per i log non stiano influenzando correttamente la tabella degli eventi in quella pagina, o che ci siano altri elementi che non si allineano come dovrebbero.
+
+Abbiamo già le regole CSS per le tabelle generali nel tuo style.css (quelle che iniziano con #eventList table, #eventList th, #eventList td). Probabilmente, c'è un piccolo conflitto o una mancanza di specificità che fa sì che non vengano applicate correttamente, oppure le regole che abbiamo aggiunto per #logsList sono più specifiche e "vincono" in qualche modo, anche se non dovrebbero influenzare direttamente delete-event.
+
+Vediamo cosa possiamo fare.
+
+Possibili cause e soluzione
+Il problema potrebbe derivare da:
+
+Sovrascrittura degli stili: Le tue regole CSS originali per delete-event potrebbero essere meno specifiche di quelle che abbiamo aggiunto per i log, o non abbastanza robuste.
+
+Mancanza di ampiezza: La tabella potrebbe non avere la width: 100% applicata correttamente.
+
+Margini/Padding esterni: Il div che contiene la tabella potrebbe avere margini o padding che la spingono.
+
+Proviamo ad aggiornare e rafforzare le regole CSS per la tabella in delete-event.html all'interno del tuo style.css. Useremo selettori più specifici e ci assicureremo che le proprietà di larghezza e allineamento siano ben definite.
+
+Modifiche al tuo style.css per delete-event.html
+Apri il tuo file style.css e cerca le sezioni relative a #eventList. Potrebbe esserci una sezione alla fine o in mezzo al file.
+
+Rafforza o aggiungi le seguenti regole:
+
+CSS
+
+/* Stili per la tabella degli eventi (delete-event.html) */
+#eventList table {
+    width: 100%; /* Fondamentale: fa sì che la tabella occupi il 100% della larghezza */
+    border-collapse: collapse; /* Rimuove lo spazio tra i bordi delle celle */
+    margin-top: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Aggiunge una leggera ombra */
+    border-radius: 8px; /* Bordi arrotondati */
+    overflow: hidden; /* Assicura che i bordi arrotondati siano visibili */
+}
+
+#eventList th, 
+#eventList td {
+    border: 1px solid #e0e0e0; /* Bordi più chiari */
+    padding: 12px 15px; /* Padding aumentato per più spazio */
+    text-align: left; /* Allinea il testo a sinistra */
+    font-size: 0.95em; /* Leggermente più piccolo per maggiore densità */
+}
+
+#eventList th {
+    background-color: #22454C; /* Colore di sfondo scuro per l'header */
+    color: white; /* Testo bianco */
+    font-weight: bold;
+    text-transform: uppercase; /* Rende il testo delle intestazioni maiuscolo */
+    letter-spacing: 0.5px; /* Spaziatura tra le lettere */
+}
+
+#eventList tbody tr:nth-child(even) {
+    background-color: #f8f8f8; /* Sfondo leggermente diverso per le righe pari */
+}
+
+#eventList tbody tr:hover {
+    background-color: #eef; /* Cambia colore al passaggio del mouse */
+}
+
+/* Stili specifici per gli elementi nella tabella delete-event.html */
+#eventList td:last-child {
+    text-align: center; /* Centra il pulsante Elimina */
+    white-space: nowrap; /* Evita che il pulsante vada a capo */
+    width: 80px; /* Larghezza fissa per la colonna del pulsante */
+}
+
+#eventList td:nth-last-child(2) { /* Questa è la colonna "Featured" (il checkbox) */
+    text-align: center; /* Centra il checkbox */
+    white-space: nowrap;
+    width: 80px; /* Larghezza fissa */
+}
+
+#eventList td input[type="checkbox"] {
+    transform: scale(1.2); /* Rende il checkbox leggermente più grande */
+    margin: 0; /* Rimuove margini extra */
+    padding: 0; /* Rimuove padding extra */
+}
