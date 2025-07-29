@@ -673,30 +673,6 @@ form input[type="image"] {
     width: 180px;
 }
 
-Hai ragione! Se la pagina delete-event.html appare "tutta male" e non sfrutta lo spazio, è molto probabile che gli stili per le tabelle che abbiamo aggiunto per i log non stiano influenzando correttamente la tabella degli eventi in quella pagina, o che ci siano altri elementi che non si allineano come dovrebbero.
-
-Abbiamo già le regole CSS per le tabelle generali nel tuo style.css (quelle che iniziano con #eventList table, #eventList th, #eventList td). Probabilmente, c'è un piccolo conflitto o una mancanza di specificità che fa sì che non vengano applicate correttamente, oppure le regole che abbiamo aggiunto per #logsList sono più specifiche e "vincono" in qualche modo, anche se non dovrebbero influenzare direttamente delete-event.
-
-Vediamo cosa possiamo fare.
-
-Possibili cause e soluzione
-Il problema potrebbe derivare da:
-
-Sovrascrittura degli stili: Le tue regole CSS originali per delete-event potrebbero essere meno specifiche di quelle che abbiamo aggiunto per i log, o non abbastanza robuste.
-
-Mancanza di ampiezza: La tabella potrebbe non avere la width: 100% applicata correttamente.
-
-Margini/Padding esterni: Il div che contiene la tabella potrebbe avere margini o padding che la spingono.
-
-Proviamo ad aggiornare e rafforzare le regole CSS per la tabella in delete-event.html all'interno del tuo style.css. Useremo selettori più specifici e ci assicureremo che le proprietà di larghezza e allineamento siano ben definite.
-
-Modifiche al tuo style.css per delete-event.html
-Apri il tuo file style.css e cerca le sezioni relative a #eventList. Potrebbe esserci una sezione alla fine o in mezzo al file.
-
-Rafforza o aggiungi le seguenti regole:
-
-CSS
-
 /* Stili per la tabella degli eventi (delete-event.html) */
 #eventList table {
     width: 100%; /* Fondamentale: fa sì che la tabella occupi il 100% della larghezza */
