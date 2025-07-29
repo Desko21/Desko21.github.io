@@ -612,3 +612,63 @@ form input[type="image"] {
     border-color: #007bff;
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }
+
+#logsList table {
+    width: 100%; /* Fa sì che la tabella occupi il 100% della larghezza del suo contenitore */
+    border-collapse: collapse; /* Rimuove lo spazio tra i bordi delle celle */
+    margin-top: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Aggiunge una leggera ombra per farla risaltare */
+    border-radius: 8px; /* Bordi arrotondati per la tabella */
+    overflow: hidden; /* Assicura che i bordi arrotondati siano visibili */
+}
+
+#logsList th, 
+#logsList td {
+    border: 1px solid #e0e0e0; /* Bordi più chiari */
+    padding: 12px 15px; /* Aumenta il padding per più spazio */
+    text-align: left; /* Allinea il testo a sinistra */
+    font-size: 0.95em; /* Leggermente più piccolo per maggiore densità */
+}
+
+#logsList th {
+    background-color: #22454C; /* Colore di sfondo scuro per l'header */
+    color: white; /* Testo bianco */
+    font-weight: bold;
+    text-transform: uppercase; /* Rende il testo delle intestazioni maiuscolo */
+    letter-spacing: 0.5px; /* Spaziatura tra le lettere */
+}
+
+#logsList tbody tr:nth-child(even) {
+    background-color: #f8f8f8; /* Sfondo leggermente diverso per le righe pari */
+}
+
+#logsList tbody tr:hover {
+    background-color: #eef; /* Cambia colore al passaggio del mouse per evidenziare */
+    cursor: default; /* Mantiene il cursore normale */
+}
+
+/* Stili specifici per le colonne per una migliore leggibilità */
+#logsList td:nth-child(1) { /* Timestamp */
+    white-space: nowrap; /* Evita che la data vada a capo */
+    width: 180px; /* Larghezza fissa per il timestamp */
+}
+
+#logsList td:nth-child(2) { /* Action */
+    font-weight: bold; /* Rende il tipo di azione più leggibile */
+    width: 150px;
+}
+
+#logsList td:nth-child(3) { /* Event Name */
+    width: auto; /* Lascia che questa colonna si espanda */
+}
+
+#logsList td:nth-child(4) { /* Event ID */
+    font-family: monospace; /* Font monospace per l'ID */
+    font-size: 0.85em; /* ID più piccolo */
+    color: #666;
+    width: 100px;
+}
+
+#logsList td:nth-child(5) { /* Event Location */
+    width: 180px;
+}
