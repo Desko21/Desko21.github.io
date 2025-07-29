@@ -125,8 +125,8 @@ document.addEventListener('DOMContentLoaded', () => {
             let popupContent = `<h3>${event.name}</h3>`;
             popupContent += `<p><i class="fas fa-calendar-alt icon-margin-right"></i><strong>Date:</strong> ${new Date(event.startDate).toLocaleDateString()}</p>`;
             popupContent += `<p><i class="fas fa-map-marker-alt icon-margin-right"></i><strong>Location:</b> ${event.location}</p>`;
-            popupContent += `<p>${gameTypeIcon}<strong>Game Type:</strong> ${gameType}</p>`;
-            popupContent += `<p>${genderIcon}<strong>Gender:</strong> ${gender}</p>`;
+            popupContent += `<p>${gameTypeIcon}Game Type: ${gameType}</p>`;
+            popupContent += `<p>${genderIcon}Gender: ${gender}</p>`;
             popupContent += `<p><i class="fas fa-info-circle icon-margin-right"></i>${event.description}</p>`;
 
             if (event.featured) {
@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </span>
                 </h3>
                 <p><i class="fas fa-calendar-alt icon-margin-right"></i><strong>Date:</strong> ${formattedDate}</p>
-                <p><i class="fas fa-map-marker-alt icon-margin-right"></i><strong>Location:</b> ${locationText}</p>`; // Chiuso il strong
+                <p><i class="fas fa-map-marker-alt icon-margin-right"></i><strong>Location:<strong></b> ${locationText}</p>`; // Chiuso il strong
             eventItem.innerHTML += `<p>${gameTypeIcon}<strong>Game Type:</strong> ${gameType}</p>`;
             eventItem.innerHTML += `<p>${genderIcon}<strong>Gender:</strong> ${gender}</p>`;
             eventItem.innerHTML += `<p><i class="fas fa-info-circle icon-margin-right"></i>${descriptionText}</p>`;
