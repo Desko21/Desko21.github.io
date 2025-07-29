@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaxMap - Home</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="assets/logoCrop.png" alt="LaxMap Logo" style="height: 150px;">
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <a href="add-event.html">Add New Event</a>
+					<a href="manage-featured.html">Manage Featured Events</a> </ul>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h2>Upcoming Lacrosse Events</h2>
+            <div id="map"></div>
+            
+            <div class="filters-container">
+				<div class="filter-group">
+					<label for="gameTypeFilter">Game Type:</label>
+					<select id="gameTypeFilter">
+						<option value="all">All</option>
+						<option value="field">Field</option>
+						<option value="box">Box</option>
+						<option value="sixes">Sixes</option>
+					</select>
+				</div>
+
+				<div class="filter-group">
+					<label for="genderFilter">Gender:</label>
+					<select id="genderFilter">
+						<option value="all">All</option>
+						<option value="men">Men</option>
+						<option value="women">Women</option>
+						<option value="both">Both</option>
+					</select>
+				</div>
+			</div>
+            <h3>Event List</h3>
+            <div id="event-list">
+                <p>Loading events...</p>
+            </div>
+            
+            <div id="message"></div>
+        </div>
+    </main>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="script.js"></script>
+    <script src="include.js"></script>
+</body>
+</html>

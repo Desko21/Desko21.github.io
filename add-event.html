@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Event - LaxMap</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+            <a href="index.html">
+                <img src="assets/logoCrop.png" alt="LaxMap Logo" style="height: 150px;"> </a>
+			</div>
+            <nav>
+                <ul>
+                    <a href="index.html">View Events</a>
+                    <a href="manage-featured.html">Manage Featured Events</a> </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h2>Add New Lacrosse Event</h2>
+            <form id="addEventForm">
+                <div class="form-group">
+                    <label for="eventName">Event Name:</label>
+                    <input type="text" id="eventName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventLocation">Location (City, Country):</label>
+                    <input type="text" id="eventLocation" placeholder="e.g., Rome, Italy" required>
+                    <small>Type a city and click outside the box to get coordinates.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventLatitude">Latitude:</label>
+                    <input type="text" id="eventLatitude" readonly required>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventLongitude">Longitude:</label>
+                    <input type="text" id="eventLongitude" readonly required>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventGameType">Game Type:</label>
+                    <select id="eventGameType" required>
+                        <option value="">Select Game Type</option>
+                        <option value="sixes">Sixes</option>
+                        <option value="box">Box</option>
+                        <option value="field">Field</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventGender">Gender:</label>
+                    <select id="eventGender" required>
+                        <option value="">Select Gender</option>
+                        <option value="men">Men</option>
+                        <option value="women">Women</option>
+                        <option value="both">Both</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventStartDate">Start Date:</label>
+                    <input type="date" id="eventStartDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventEndDate">End Date (optional, if multi-day):</label>
+                    <input type="date" id="eventEndDate">
+                    <small>Leave blank if it's a single-day event.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventDescription">Description:</label>
+                    <textarea id="eventDescription" rows="4" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventLink">More Info Link (optional):</label>
+                    <input type="url" id="eventLink" placeholder="e.g., https://example.com/event-info">
+                </div>
+
+                <button type="submit">Add Event</button>
+            </form>
+            <div id="message"></div>
+        </div>
+    </main>
+
+    <script src="include.js"></script>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="add-event.js"></script>
+</body>
+</html>

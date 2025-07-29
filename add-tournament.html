@@ -1,0 +1,76 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Event - LaxMap</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.paypalobjects.com/paypal-js-sdk/react.js" data-sdk-integration-source="integrationbuilder_id"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+            <a href="index.html">
+                <img src="assets/logoCrop.png" alt="LaxMap Logo" style="height: 150px;"> </a>
+			</div>
+            <nav>
+                <ul>
+                    <a href="index.html">View Events</a>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section id="add-tournament">
+                <form id="add-tournament-form">
+                    <label for="tournamentName">Tournament Name:</label>
+                    <input type="text" id="tournamentName" name="tournamentName" required placeholder="e.g., Summer Lacrosse Clash">
+
+                    <label for="tournamentDate">Date:</label>
+                    <input type="date" id="tournamentDate" name="tournamentDate" required>
+
+                    <label for="tournamentLocation">Location (City, Country):</label>
+                    <input type="text" id="tournamentLocation" name="tournamentLocation" required placeholder="e.g., Rome, Italy">
+
+                    <label for="tournamentLatitude">Latitude:</label>
+                    <input type="number" step="any" id="tournamentLatitude" name="tournamentLatitude" required placeholder="e.g., 41.9028">
+
+                    <label for="tournamentLongitude">Longitude:</label>
+                    <input type="number" step="any" id="tournamentLongitude" name="tournamentLongitude" required placeholder="e.g., 12.4964">
+
+                    <label for="tournamentDescription">Description:</label>
+                    <textarea id="tournamentDescription" name="tournamentDescription" rows="4" placeholder="Brief description of the event..."></textarea>
+
+                    <label for="tournamentLink">More Info Link (Optional):</label>
+                    <input type="url" id="tournamentLink" name="tournamentLink" placeholder="e.g., https://example.com/tournament-info">
+
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="featureTournament" name="featureTournament">
+                        <label for="featureTournament">Feature this Event (requires payment)</label>
+                    </div>
+
+                    <button type="submit">Add Event</button>
+                </form>
+
+                <div id="message" class="message" style="display:none;"></div>
+
+                <div id="download-section" style="display:none;">
+                    <h3>Event Added!</h3>
+                    <p>Your event has been saved and will be visible in the main list. Go back to the home page to see it!</p>
+                    <button id="downloadJsonBtn" style="display:none;">Download tournaments.json</button> <p><strong>Note:</strong> If you chose to feature the event, please complete the PayPal payment below.</p>
+                    <div id="paypal-button-container" style="display:none;">
+                        <div id="paypal-button"></div>
+                    </div>
+                    <a href="index.html" class="back-home-button">Back to Home</a>
+                </div>
+            </section>
+        </div>
+    </main>
+
+
+    <script src="add-tournament.js"></script>
+	 <script src="include.js"></script>
+</body>
+</html>
