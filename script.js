@@ -1,10 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Script.js is loaded and DOM is ready. Starting map initialization...');
 
-    // Default position (e.g., Rome)
     const DEFAULT_LATITUDE = 41.9028;
     const DEFAULT_LONGITUDE = 12.4964;
-    const DEFAULT_ZOOM = 5; // Initial zoom for the default position
+    const DEFAULT_ZOOM = 5;
 
     const map = L.map('map', {
         minZoom: 3
@@ -14,12 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    // --- Geolocation Code ---
     if (navigator.geolocation) {
         console.log("Geolocation is supported by this browser.");
         map.locate({
             setView: true,
-            maxZoom: 5,   // Set to 5 as requested
+            maxZoom: 5,
             enableHighAccuracy: true,
             timeout: 10000,
             maximumAge: 0
@@ -27,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.log("Geolocation is not supported by this browser. Using default map view.");
     }
-    // --- End Geolocation Code ---
 
     const JSONBIN_BIN_ID = '68870d4d7b4b8670d8a868e8';
     const JSONBIN_MASTER_KEY = '$2a$10$moQg0NYbmqEkIUS1bTku2uiW8ywvcz0Bt8HKG3J/4qYU8dCZggiT6';
@@ -41,6 +38,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let markers = L.featureGroup().addTo(map);
     let allEvents = [];
+
+    // --- MODIFICATO: Funzione per creare icone Font Awesome personalizzate per i marker ---
+    function createCustomMarkerIcon() { // Non accetta più parametri
+        const iconClass = 'fas fa-map-marker-alt'; // Icona uniforme per tutti
+        const iconColor = '#22454C'; // Colore uniforme per tutti
+
+        return L.divIcon({
+            className: 'custom-marker', // Classe CSS per lo styling
+            html: `<div style="color: ${iconColor}; font-size: 28px;"><i class="${iconClass}"></i></div>`,
+            iconSize: [30, 42], // Dimensione del contenitore dell'icona
+            iconAnchor: [15, 42], // Punto dell'icona che si allinea con la latitudine/longitudine
+            popupAnchor: [0, -40] // Punto da cui si apre il popup
+        });
+    }
 
     async function loadEvents() {
         try {
@@ -79,7 +90,9 @@ document.addEventListener('DOMContentLoaded', () => {
         );
 
         validEvents.forEach(event => {
-            const marker = L.marker([event.latitude, event.longitude]).addTo(markers);
+            // *** MODIFICA QUI: Chiama la funzione senza parametri, otterrà l'icona uniforme ***
+            const customIcon = createCustomMarkerIcon(); // Chiamata senza argomenti
+            const marker = L.marker([event.latitude, event.longitude], { icon: customIcon }).addTo(markers);
 
             const gameType = event.gameType && typeof event.gameType === 'string' ? event.gameType : 'N/A';
             const gender = event.gender && typeof event.gender === 'string' ? event.gender : 'N/A';
@@ -124,9 +137,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let popupContent = `<h3>${event.name}</h3>`;
             popupContent += `<p><i class="fas fa-calendar-alt icon-margin-right"></i><strong>Date:</strong> ${new Date(event.startDate).toLocaleDateString()}</p>`;
-            popupContent += `<p><i class="fas fa-map-marker-alt icon-margin-right"></i><strong>Location:</strong> ${event.location}</p>`; // Strong qui
-            popupContent += `<p>${gameTypeIcon}<strong>Game Type:</strong> ${gameType}</p>`; // Strong qui
-            popupContent += `<p>${genderIcon}<strong>Gender:</strong> ${gender}</p>`;     // Strong qui
+            popupContent += `<p><i class="fas fa-map-marker-alt icon-margin-right"></i><strong>Location:</strong> ${event.location}</p>`;
+            popupContent += `<p>${gameTypeIcon}<strong>Game Type:</strong> ${gameType}</p>`;
+            popupContent += `<p>${genderIcon}<strong>Gender:</strong> ${gender}</p>`;
             popupContent += `<p><i class="fas fa-info-circle icon-margin-right"></i>${event.description}</p>`;
 
             if (event.featured) {
