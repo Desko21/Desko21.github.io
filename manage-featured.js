@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initiatePayPalPayment(eventId, eventName) {
-        const confirmation = confirm(`ou are about to pay ${PAYPAL_AMOUNT} ${PAYPAL_CURRENCY_CODE} to make "${eventName}" a featured event. Continue to PayPal?`);
+        const confirmation = confirm(`You are about to pay ${PAYPAL_AMOUNT} ${PAYPAL_CURRENCY_CODE} to make "${eventName}" a featured event. Continue to PayPal?`);
         if (!confirmation) {
             return;
         }
