@@ -1,17 +1,61 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('delete-event.js loaded.');
 
-    const JSONBIN_BIN_ID = '68870d4d7b4b8670d8a868e8'; // Assicurati che questo sia il tuo ID del bin
-    const JSONBIN_LOGS_BIN_ID = '688924c7f7e7a370d1eff96b'; 
-    const JSONBIN_LOGS_WRITE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_LOGS_BIN_ID}`;
-    const JSONBIN_MASTER_KEY = '$2a$10$moQg0NYbmqEkIUS1bTku2uiW8ywvcz0Bt8HKG3J/4qYU8dCZggiT6'; // Assicurati che questa sia la tua Master Key
+    const JSONBIN_BIN_ID = '68870d4d7b4b8670d8a868e8'; // IL TUO BIN ID PRINCIPALE DEGLI EVENTI
+    const JSONBIN_MASTER_KEY = '$2a$10$moQg0NYbmqEkIUS1bTku2uiW8ywvcz0Bt8HKG3J/4qYU8dCZggiT6'; // LA TUA MASTER KEY
     const JSONBIN_READ_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
-    const JSONBIN_WRITE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`; // URL per PUT/aggiornare l'intero bin
+    const JSONBIN_WRITE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+
+    // DETTAGLI PER IL BIN DI LOG - AGGIORNATO CON IL TUO ID
+    const JSONBIN_LOGS_BIN_ID = '688924c7f7e7a370d1eff96b';
+    const JSONBIN_LOGS_WRITE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_LOGS_BIN_ID}`;
 
     const messageDiv = document.getElementById('message');
     const eventsTableBody = document.getElementById('eventsTableBody');
 
-    let allEvents = []; // Array per memorizzare tutti gli eventi caricati
+    let allEvents = [];
+
+    // Funzione per inviare i log
+    async function logAction(action, eventDetails) {
+        try {
+            const responseRead = await fetch(`${JSONBIN_LOGS_WRITE_URL}/latest`, {
+                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+            });
+            let currentLogs = [];
+            if (responseRead.ok) {
+                const data = await responseRead.json();
+                currentLogs = data.record || [];
+            } else {
+                console.warn('Could not read existing logs, starting new log array.');
+            }
+
+            const logEntry = {
+                timestamp: new Date().toISOString(),
+                action: action,
+                event: eventDetails
+            };
+            currentLogs.push(logEntry);
+
+            const responseWrite = await fetch(JSONBIN_LOGS_WRITE_URL, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_MASTER_KEY,
+                    'X-Bin-Meta': 'false'
+                },
+                body: JSON.stringify(currentLogs)
+            });
+
+            if (!responseWrite.ok) {
+                const errorText = await responseWrite.text();
+                console.error(`Error logging action: ${responseWrite.status} - ${errorText}`);
+            } else {
+                console.log(`Action logged: ${action}`);
+            }
+        } catch (error) {
+            console.error('An unexpected error occurred during logging:', error);
+        }
+    }
 
     async function loadEvents() {
         messageDiv.textContent = 'Loading events...';
@@ -32,10 +76,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const data = await response.json();
-            allEvents = data.record || []; // Assumiamo che gli eventi siano nell'array 'record'
+            allEvents = data.record || [];
             console.log('Events loaded:', allEvents);
             displayEvents();
-            messageDiv.textContent = ''; // Clear message on success
+            messageDiv.textContent = '';
             messageDiv.className = 'message';
         } catch (error) {
             console.error('An unexpected error occurred:', error);
@@ -45,14 +89,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function displayEvents() {
-        eventsTableBody.innerHTML = ''; // Pulisce la tabella prima di riempirla
+        eventsTableBody.innerHTML = '';
 
         if (allEvents.length === 0) {
-            eventsTableBody.innerHTML = '<tr><td colspan="7">No events found.</td></tr>'; // Aggiornato colspan
+            eventsTableBody.innerHTML = '<tr><td colspan="7">No events found.</td></tr>';
             return;
         }
 
-        // Ordina gli eventi per data, i featured prima
         allEvents.sort((a, b) => {
             if (a.featured && !b.featured) return -1;
             if (!a.featured && b.featured) return 1;
@@ -69,21 +112,19 @@ document.addEventListener('DOMContentLoaded', () => {
             row.insertCell().textContent = event.gameType || 'N/A';
             row.insertCell().textContent = event.gender || 'N/A';
 
-            // Cella per il toggle Featured
             const featuredCell = row.insertCell();
             const featuredToggle = document.createElement('input');
             featuredToggle.type = 'checkbox';
-            featuredToggle.checked = event.featured || false; // Imposta lo stato iniziale
-            featuredToggle.dataset.createdAt = event.createdAt; // Usa createdAt come ID univoco
+            featuredToggle.checked = event.featured || false;
+            featuredToggle.dataset.createdAt = event.createdAt;
             featuredToggle.addEventListener('change', toggleFeaturedStatus);
             featuredCell.appendChild(featuredToggle);
 
-            // Cella per il pulsante Delete
             const deleteCell = row.insertCell();
             const deleteButton = document.createElement('button');
             deleteButton.textContent = 'Delete';
             deleteButton.className = 'delete-button';
-            deleteButton.dataset.createdAt = event.createdAt; // Usa createdAt come ID univoco
+            deleteButton.dataset.createdAt = event.createdAt;
             deleteButton.addEventListener('click', deleteEvent);
             deleteCell.appendChild(deleteButton);
         });
@@ -92,25 +133,26 @@ document.addEventListener('DOMContentLoaded', () => {
     async function toggleFeaturedStatus(event) {
         const createdAt = event.target.dataset.createdAt;
         const newFeaturedStatus = event.target.checked;
+        
+        // Trova l'evento originale per i dettagli nel log
+        const originalEvent = allEvents.find(e => e.createdAt === createdAt);
 
         messageDiv.textContent = 'Updating featured status...';
         messageDiv.className = 'message info';
 
         try {
-            // Trova l'evento nell'array locale e aggiorna il suo stato
             const eventIndex = allEvents.findIndex(e => e.createdAt === createdAt);
             if (eventIndex === -1) {
                 throw new Error('Event not found for updating featured status.');
             }
             allEvents[eventIndex].featured = newFeaturedStatus;
 
-            // Invia l'intero array aggiornato a JSONBin.io
             const response = await fetch(JSONBIN_WRITE_URL, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Master-Key': JSONBIN_MASTER_KEY,
-                    'X-Bin-Meta': 'false' // Non aggiornare i metadati del bin
+                    'X-Bin-Meta': 'false'
                 },
                 body: JSON.stringify(allEvents)
             });
@@ -122,15 +164,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             messageDiv.textContent = 'Featured status updated successfully!';
             messageDiv.className = 'message success';
-            // Non ricaricare gli eventi, dato che allEvents è già aggiornato e displayEvents riordinerà
-            displayEvents(); 
+            displayEvents();
+
+            // Log dell'azione
+            await logAction(
+                newFeaturedStatus ? 'Event Featured' : 'Event Unfeatured', 
+                { 
+                    name: originalEvent.name, 
+                    createdAt: originalEvent.createdAt, 
+                    location: originalEvent.location 
+                }
+            );
 
         } catch (error) {
             console.error('Error toggling featured status:', error);
             messageDiv.textContent = `Error: ${error.message}`;
             messageDiv.className = 'message error';
-            // Ripristina lo stato del checkbox se l'aggiornamento fallisce
-            event.target.checked = !newFeaturedStatus; 
+            event.target.checked = !newFeaturedStatus;
         }
     }
 
@@ -140,21 +190,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirm('Are you sure you want to delete this event?')) {
             return;
         }
+        
+        // Trova l'evento originale per i dettagli nel log prima di eliminarlo
+        const originalEvent = allEvents.find(e => e.createdAt === createdAt);
 
         messageDiv.textContent = 'Deleting event...';
         messageDiv.className = 'message info';
 
         try {
-            // Filtra l'evento da eliminare dall'array locale
             const updatedEvents = allEvents.filter(e => e.createdAt !== createdAt);
 
-            // Invia l'array aggiornato (senza l'evento eliminato) a JSONBin.io
             const response = await fetch(JSONBIN_WRITE_URL, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Master-Key': JSONBIN_MASTER_KEY,
-                    'X-Bin-Meta': 'false' // Non aggiornare i metadati del bin
+                    'X-Bin-Meta': 'false'
                 },
                 body: JSON.stringify(updatedEvents)
             });
@@ -164,10 +215,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`Failed to delete event: ${response.status} - ${errorText}`);
             }
 
-            allEvents = updatedEvents; // Aggiorna l'array globale degli eventi
-            displayEvents(); // Ridisplay gli eventi aggiornati
+            allEvents = updatedEvents;
+            displayEvents();
             messageDiv.textContent = 'Event deleted successfully!';
             messageDiv.className = 'message success';
+
+            // Log dell'azione
+            await logAction('Event Removed', { 
+                name: originalEvent.name, 
+                createdAt: originalEvent.createdAt, 
+                location: originalEvent.location 
+            });
+
 
         } catch (error) {
             console.error('Error deleting event:', error);
@@ -176,6 +235,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Carica gli eventi all'avvio della pagina
     loadEvents();
 });
