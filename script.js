@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 popupContent += `<p><a href="${event.link}" target="_blank" class="more-info-link"><i class="fas fa-external-link-alt icon-margin-right"></i>More Info</a></p>`;
             }
 
-            marker.bindPopup(popupContent);
+            marker.bindPopup(popupContent, { autoPan: false }); // Aggiunta l'opzione autoPan: false
         });
     }
 
