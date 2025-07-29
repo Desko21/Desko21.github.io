@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const JSONBIN_UPDATE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
     // CONFIGURAZIONE PAYPAL
-    const PAYPAL_BUSINESS_EMAIL_OR_ID = 'TUA_EMAIL_PAYPAL_O_ID_COMMERCIANTE'; // <--- INSERISCI QUI LA TUA EMAIL PAYPAL O ID COMMERCIANTE
+    const PAYPAL_BUSINESS_EMAIL_OR_ID = 'jakkolo@gmail.com'; // <--- INSERISCI QUI LA TUA EMAIL PAYPAL O ID COMMERCIANTE
     const PAYPAL_ITEM_NAME = 'Promozione Evento Featured LaxMap';
     const PAYPAL_AMOUNT = '1.00'; // Costo per essere Featured (1€)
     const PAYPAL_CURRENCY_CODE = 'EUR'; // Valuta (es. USD, EUR, GBP)
