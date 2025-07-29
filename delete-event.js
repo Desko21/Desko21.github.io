@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('delete-event.js loaded.');
 
     const JSONBIN_BIN_ID = '68870d4d7b4b8670d8a868e8'; // Assicurati che questo sia il tuo ID del bin
+    const JSONBIN_LOGS_BIN_ID = '688924c7f7e7a370d1eff96b'; 
+    const JSONBIN_LOGS_WRITE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_LOGS_BIN_ID}`;
     const JSONBIN_MASTER_KEY = '$2a$10$moQg0NYbmqEkIUS1bTku2uiW8ywvcz0Bt8HKG3J/4qYU8dCZggiT6'; // Assicurati che questa sia la tua Master Key
     const JSONBIN_READ_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
     const JSONBIN_WRITE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`; // URL per PUT/aggiornare l'intero bin
