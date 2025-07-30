@@ -666,7 +666,7 @@ form input[type="image"] {
 
     /* Mostra l'hamburger menu su mobile */
     .hamburger-menu {
-        display: flex; /* Flex per allineare le barre */
+        display: flex; /* <-- Importante: 'flex' per allineare le barre */
         flex-direction: column;
         justify-content: space-around;
         width: 30px;
@@ -699,7 +699,8 @@ form input[type="image"] {
 
     /* --- Navigazione MOBILE (inizialmente nascosta su mobile) --- */
     nav.mobile-nav {
-        display: flex; /* Verrà mostrata/nascosta da JS */
+        /* *** MODIFICA EFFETTUATA QUI: *** */
+        display: none; /* Inizialmente nascosto su mobile, diventa 'flex' solo con la classe 'active' */
         flex-direction: column;
         position: absolute; /* Posizionata rispetto al .container */
         top: 100%; /* Sotto l'header */
@@ -716,6 +717,8 @@ form input[type="image"] {
     }
 
     nav.mobile-nav.active { /* Classe aggiunta da JS quando il menu è aperto */
+        /* *** MODIFICA EFFETTUATA QUI: *** */
+        display: flex; /* Mostra il menu mobile quando è attivo */
         transform: translateY(0); /* Porta il menu in vista */
         opacity: 1;
         pointer-events: auto; /* Abilita interazioni */
@@ -773,7 +776,7 @@ form input[type="image"] {
         align-items: stretch;
         padding: 10px;
         /* Assicurati che i filtri abbiano uno z-index inferiore al menu */
-        position: relative; 
+        position: relative;
         z-index: 990; /* Il menu mobile ha z-index 1000 */
     }
 
@@ -800,7 +803,7 @@ form input[type="image"] {
 
     /* Rimuovi lo scrolling dalla pagina quando il menu è aperto */
     body.mobile-menu-open {
-        overflow: hidden; 
+        overflow: hidden;
     }
 
     /* Media query specific for the table on delete-event.html for smaller screens */
