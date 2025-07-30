@@ -242,6 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
             eventItem.className = 'tournament-item';
 
             let featuredIconHtml = event.featured ? '<span class="star-icon event-list-icon">★</span>' : '';
+            let sixesTitleIconHtml = (event.type && event.type.toLowerCase() === 'sixes') ? '' : '';
 
             const formattedDate = new Date(event.startDate).toLocaleDateString();
             let dateRange = formattedDate;
