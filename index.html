@@ -12,7 +12,41 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
-    <div id="header-placeholder"></div>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="assets/logoFlat.webp" alt="LaxMap Logo" class="desktop-logo">
+                </a>
+            </div>
+            
+            <nav class="desktop-nav">
+                <ul>
+                    <li><a href="index.html">View Events</a></li>
+                    <li><a href="add-event.html">Add New Event</a></li>
+                    <li><a href="edit-event.html">Edit Event</a></li>
+                    <li><a href="manage-featured.html">Manage Featured</a></li>
+                    <li><a href="donate.html">Donate</a></li>
+                </ul>
+            </nav>
+            
+            <button class="hamburger-menu" aria-label="Toggle navigation">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+
+            <nav class="mobile-nav">
+                <ul>
+                    <li><a href="index.html">View Events</a></li>
+                    <li><a href="add-event.html">Add New Event</a></li>
+                    <li><a href="edit-event.html">Edit Event</a></li>
+                    <li><a href="manage-featured.html">Manage Featured</a></li>
+                    <li><a href="donate.html">Donate</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
     <main>
         <div class="container">
             <h2>Upcoming Lacrosse Events</h2>
@@ -50,8 +84,8 @@
     </main>
     
     <div id="footer-placeholder"></div>
-    <script src="load-header.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script type="module" src="script.js"></script>
-    </body>
+    <script src="menu.js"></script>
+</body>
 </html>
