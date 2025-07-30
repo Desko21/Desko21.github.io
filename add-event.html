@@ -15,99 +15,97 @@
 
     <main>
         <div class="container">
-    <h2>Add New Lacrosse Event</h2>
-    <form id="addEventForm">
-        <div class="form-group">
-            <label for="eventName">Event Name:</label>
-            <input type="text" id="eventName" required>
-        </div>
+            <h2>Add New Lacrosse Event</h2>
+            <form id="addEventForm">
+                <div class="form-group">
+                    <label for="eventName">Event Name:</label>
+                    <input type="text" id="eventName" required>
+                </div>
 
-        <div class="form-group">
-            <label for="eventLocation">Location (City, Country):</label>
-            <input type="text" id="eventLocation" placeholder="e.g., Rome, Italy" required>
-            <small>Type a city and click outside the box to get coordinates.</small>
-        </div>
-		
-		 <div id="geolocationMessage" class="message" style="margin-top: 5px; margin-bottom: 15px;"></div>
+                <div class="form-group">
+                    <label for="eventLocation">Location (City, Country):</label>
+                    <input type="text" id="eventLocation" placeholder="e.g., Rome, Italy" required>
+                    <small>Type a city and click outside the box to get coordinates.</small>
+                </div>
 
-        <div class="form-group">
-            <label for="latitude">Latitude:</label>
-            <input type="text" id="latitude" step="any">
-        </div>
-        <div class="form-group">
-            <label for="longitude">Longitude:</label>
-            <input type="text" id="longitude" step="any">
-        </div>
+                <div id="geolocationMessage" class="message" style="margin-top: 5px; margin-bottom: 15px;"></div>
 
-        <div class="form-group">
-            <label for="eventType">Game Type:</label>
-            <select id="eventType" required>
-                <option value="">Select Game Type</option>
-                <option value="sixes">Sixes</option>
-                <option value="box">Box</option>
-                <option value="field">Field</option>
-                <option value="clinic">Clinic</option>
-            </select>
+                <div class="form-group">
+                    <label for="latitude">Latitude:</label>
+                    <input type="text" id="latitude" step="any">
+                </div>
+                <div class="form-group">
+                    <label for="longitude">Longitude:</label>
+                    <input type="text" id="longitude" step="any">
+                </div>
+
+                <div class="form-group">
+                    <label for="eventType">Game Type:</label>
+                    <select id="eventType" required>
+                        <option value="">Select Game Type</option>
+                        <option value="sixes">Sixes</option>
+                        <option value="box">Box</option>
+                        <option value="field">Field</option>
+                        <option value="clinic">Clinic</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventGender">Gender:</label>
+                    <select id="eventGender" required>
+                        <option value="">Select Gender</option>
+                        <option value="men">Men</option>
+                        <option value="women">Women</option>
+                        <option value="both">Both</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventCost">Cost (optional):</label>
+                    <div class="cost-details">
+                        <input type="number" id="eventCost" step="0.01" min="0" placeholder="e.g., 25.00">
+                        <select id="eventCurrency">
+                            </select>
+                        <select id="costType">
+                            </select>
+                    </div>
+                    <small>Leave blank if the event is free.</small>
+                </div>
+                <div class="form-group">
+                    <label for="eventStartDate">Start Date:</label>
+                    <input type="date" id="eventStartDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventEndDate">End Date (optional, if multi-day):</label>
+                    <input type="date" id="eventEndDate">
+                    <small>Leave blank if it's a single-day event.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventDescription">Description:</label>
+                    <textarea id="eventDescription" rows="4" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventLink">More Info Link (optional):</label>
+                    <input type="url" id="eventLink" placeholder="e.g., https://example.com/event-info">
+                </div>
+
+                <div class="form-group">
+                    <label for="contactEmail">Contact Email (optional):</label>
+                    <input type="text" id="contactEmail" placeholder="e.g., info@yourevent.com">
+                </div>
+
+                <button type="submit" id="addEventButton" class="button">Add Event</button>
+            </form>
+            <div id="message"></div>
         </div>
-
-        <div class="form-group">
-            <label for="eventGender">Gender:</label>
-            <select id="eventGender" required>
-                <option value="">Select Gender</option>
-                <option value="men">Men</option>
-                <option value="women">Women</option>
-                <option value="both">Both</option>
-            </select>
-        </div>
-		
-		<div class="form-group">
-			<label for="eventCost">Cost (optional):</label>
-				<input type="number" id="eventCost" step="0.01" min="0" placeholder="e.g., 25.00">
-				<small>Leave blank if the event is free.</small>
-		</div>
-
-		<div class="form-group">
-			<label for="costType">Cost Type:</label>
-			<select id="costType">
-				</select>
-		</div>
-
-        <div class="form-group">
-            <label for="eventStartDate">Start Date:</label>
-            <input type="date" id="eventStartDate" required>
-        </div>
-
-        <div class="form-group">
-            <label for="eventEndDate">End Date (optional, if multi-day):</label>
-            <input type="date" id="eventEndDate">
-            <small>Leave blank if it's a single-day event.</small>
-        </div>
-
-        <div class="form-group">
-            <label for="eventDescription">Description:</label>
-            <textarea id="eventDescription" rows="4" required></textarea>
-        </div>
-
-        <div class="form-group">
-            <label for="eventLink">More Info Link (optional):</label>
-            <input type="url" id="eventLink" placeholder="e.g., https://example.com/event-info">
-        </div>
-		
-		<div class="form-group">
-		<label for="contactEmail">Contact Email (optional):</label>
-		<input type="text" id="contactEmail" placeholder="e.g., info@yourevent.com">
-		</div>
-
-       <button type="submit" id="addEventButton" class="button">Add Event</button>
-    </form>
-    <div id="message"></div>
-</div>
     </main>
-  <div id="footer-placeholder"></div>
+    <div id="footer-placeholder"></div>
     <script src="include.js"></script>
-
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script type="module" src="add-event.js"></script>
-	<script src="load-header.js"></script>
+    <script src="load-header.js"></script>
 </body>
 </html>

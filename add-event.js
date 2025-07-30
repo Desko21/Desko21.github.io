@@ -23,53 +23,76 @@ document.addEventListener('DOMContentLoaded', () => {
     const eventTypeInput = document.getElementById('eventType');
     const eventGenderInput = document.getElementById('eventGender');
 
-    // --- NEW REFERENCES FOR COST ---
+    // --- REFERENCES FOR COST AND CURRENCY ---
     const eventCostInput = document.getElementById('eventCost');
     const costTypeSelect = document.getElementById('costType');
+    const eventCurrencySelect = document.getElementById('eventCurrency'); // NEW: Reference for currency dropdown
 
 
     // --- Data for Select Options (MUST MATCH edit-event.js and script.js) ---
     const gameTypesOptions = ['Field', 'Box', 'Sixes', 'Clinic', 'Other'];
     const gendersOptions = ['Men', 'Women', 'Both', 'Mixed', 'Other'];
-    // --- NEW DATA FOR COST TYPE ---
     const costTypeOptions = ['Not Specified', 'Per Person', 'Per Team'];
+    // --- NEW DATA FOR CURRENCY ---
+    // Value: ISO 4217 code, Text: Code - Symbol (Name)
+    const currencyOptions = [
+        { value: '', text: 'Select Currency' }, // Placeholder
+        { value: 'usd', text: 'USD ($) - United States Dollar' },
+        { value: 'eur', text: 'EUR (€) - Euro' },
+        { value: 'gbp', text: 'GBP (£) - British Pound' },
+        { value: 'jpy', text: 'JPY (¥) - Japanese Yen' },
+        { value: 'cad', text: 'CAD (C$) - Canadian Dollar' },
+        { value: 'aud', text: 'AUD (A$) - Australian Dollar' },
+        { value: 'chf', text: 'CHF (CHF) - Swiss Franc' },
+        { value: 'cny', text: 'CNY (¥) - Chinese Yuan' },
+        { value: 'inr', text: 'INR (₹) - Indian Rupee' },
+        { value: 'brl', text: 'BRL (R$) - Brazilian Real' }
+    ];
 
 
     // --- Function to populate dropdowns ---
-    function populateDropdown(selectElement, options, placeholderText = "Select an option") {
+    // Modified to handle both simple string arrays and object arrays for currency
+    function populateDropdown(selectElement, options, placeholderText = "Select an option", isCurrency = false) {
         selectElement.innerHTML = ''; // Clear existing options
 
-        // Create and add the placeholder option
-        const placeholderOption = document.createElement('option');
-        placeholderOption.value = ''; // Empty value for the placeholder
-        placeholderOption.textContent = placeholderText;
-        // We are not making it disabled for cost types, because "Not Specified" could be a valid choice
-        // and we want the user to be able to explicitly select "Not Specified".
-        // For "Game Type" and "Gender" dropdowns that are required, the HTML `required` attribute will handle them.
-        if (placeholderText.includes("Select")) { // Only for initial placeholders (Game Type, Gender)
-            placeholderOption.disabled = true;
-        }
-        placeholderOption.selected = true; // Makes it the default selected option
-        selectElement.appendChild(placeholderOption);
+        if (isCurrency) {
+            options.forEach((optionData, index) => {
+                const option = document.createElement('option');
+                option.value = optionData.value;
+                option.textContent = optionData.text;
+                if (index === 0) { // First option is the placeholder
+                    option.disabled = true;
+                    option.selected = true;
+                }
+                selectElement.appendChild(option);
+            });
+        } else {
+            const placeholderOption = document.createElement('option');
+            placeholderOption.value = '';
+            placeholderOption.textContent = placeholderText;
+            if (placeholderText.includes("Select")) {
+                placeholderOption.disabled = true;
+            }
+            placeholderOption.selected = true;
+            selectElement.appendChild(placeholderOption);
 
-        // Populate other options
-        options.forEach(optionText => {
-            const option = document.createElement('option');
-            option.value = optionText.toLowerCase().replace(/\s/g, ''); // Value will be lowercase, no spaces (e.g., 'perperson')
-            option.textContent = optionText;        // Displayed text will be title case
-            selectElement.appendChild(option);
-        });
+            options.forEach(optionText => {
+                const option = document.createElement('option');
+                option.value = optionText.toLowerCase().replace(/\s/g, '');
+                option.textContent = optionText;
+                selectElement.appendChild(option);
+            });
+        }
     }
 
     // Populate dropdowns on page load with specific placeholder texts
     populateDropdown(eventTypeInput, gameTypesOptions, "Select Game Type");
     populateDropdown(eventGenderInput, gendersOptions, "Select Gender");
-    // --- POPULATE THE NEW COST TYPE DROPDOWN ---
     populateDropdown(costTypeSelect, costTypeOptions, "Not Specified");
+    populateDropdown(eventCurrencySelect, currencyOptions, null, true); // NEW: Populate currency dropdown
 
 
     // --- Utility Functions ---
-
     async function logActivity(action, eventDetails) {
         const timestamp = new Date().toISOString();
         let userIp = 'N/A';
@@ -230,12 +253,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const eventLink = document.getElementById('eventLink').value;
             const eventType = eventTypeInput.value;
             const eventGender = eventGenderInput.value;
-            // Get the value from the new contact email input field
             const contactEmail = document.getElementById('contactEmail').value;
 
-            // --- GET THE VALUES OF THE NEW COST FIELDS ---
             const eventCost = eventCostInput.value === '' ? null : parseFloat(eventCostInput.value);
             const costType = costTypeSelect.value === '' ? 'not_specified' : costTypeSelect.value;
+            const eventCurrency = eventCurrencySelect.value === '' ? null : eventCurrencySelect.value; // NEW: Get currency value
 
 
             let latitude = parseFloat(latitudeInput.value);
@@ -257,11 +279,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 description: eventDescription === '' ? null : eventDescription,
                 link: eventLink === '' ? null : eventLink,
                 featured: false,
-                // Add the contactEmail to the new event object
-                contactEmail: contactEmail === '' ? null : contactEmail, // Save as null if empty
-                // --- ADD THE NEW COST FIELDS TO THE EVENT OBJECT ---
+                contactEmail: contactEmail === '' ? null : contactEmail,
                 cost: eventCost,
-                costType: costType
+                costType: costType,
+                currency: eventCurrency // NEW: Add currency to event object
             };
 
             // Basic validation for dropdowns (since they are required)
@@ -272,21 +293,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitButton.textContent = 'Add Event';
                 return; // Stop form submission
             }
-            // --- Validation for cost and cost type ---
-            // If a cost is entered, but no type is specified, or if the type is specified but there's no cost
-            if (eventCost !== null && costType === 'not_specified') {
-                messageDiv.textContent = 'Please specify the Cost Type (e.g., Per Person, Per Team) if you enter a cost.';
-                messageDiv.className = 'message error';
-                submitButton.disabled = false;
-                submitButton.textContent = 'Add Event';
-                return;
-            }
-            if (eventCost === null && costType !== 'not_specified') {
-                messageDiv.textContent = 'You have selected a Cost Type but not entered a Cost. Please enter a cost or select "Not Specified".';
-                messageDiv.className = 'message error';
-                submitButton.disabled = false;
-                submitButton.textContent = 'Add Event';
-                return;
+            // --- Validation for cost, cost type, and currency ---
+            if (eventCost !== null) { // If a cost is entered...
+                if (costType === 'not_specified') {
+                    messageDiv.textContent = 'Please specify the Cost Type (e.g., Per Person, Per Team) if you enter a cost.';
+                    messageDiv.className = 'message error';
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Add Event';
+                    return;
+                }
+                if (eventCurrency === null) { // ... and currency is not selected
+                    messageDiv.textContent = 'Please select a Currency if you enter a cost.';
+                    messageDiv.className = 'message error';
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Add Event';
+                    return;
+                }
+            } else { // If no cost is entered
+                if (costType !== 'not_specified' && costType !== '') { // "" is the default for "Not Specified"
+                    messageDiv.textContent = 'You have selected a Cost Type but not entered a Cost. Please enter a cost or set Cost Type to "Not Specified".';
+                    messageDiv.className = 'message error';
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Add Event';
+                    return;
+                }
+                if (eventCurrency !== null && eventCurrency !== '') {
+                    messageDiv.textContent = 'You have selected a Currency but not entered a Cost. Please enter a cost or set Currency to "Select Currency".';
+                    messageDiv.className = 'message error';
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Add Event';
+                    return;
+                }
             }
 
 
@@ -330,13 +367,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // After reset, re-populate dropdowns to show placeholder
             populateDropdown(eventTypeInput, gameTypesOptions, "Select Game Type");
             populateDropdown(eventGenderInput, gendersOptions, "Select Gender");
-            // --- RE-POPULATE THE NEW COST DROPDOWN ---
             populateDropdown(costTypeSelect, costTypeOptions, "Not Specified");
-            
+            populateDropdown(eventCurrencySelect, currencyOptions, null, true); // NEW: Reset currency dropdown
+
             geolocationMessageDiv.textContent = '';
             latitudeInput.value = '';
             longitudeInput.value = '';
-
 
             logActivity('Event Added', newEvent);
 
@@ -345,7 +381,6 @@ document.addEventListener('DOMContentLoaded', () => {
             messageDiv.textContent = `Error: ${error.message}`;
             messageDiv.className = 'message error';
         } finally {
-            // Re-enable the button and restore text, regardless of success or error
             submitButton.disabled = false;
             submitButton.textContent = 'Add Event';
         }
