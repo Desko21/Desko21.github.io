@@ -5,6 +5,7 @@ import {
     JSONBIN_EVENTS_WRITE_URL,
     JSONBIN_LOGS_BIN_ID, // Potrebbe non essere necessario se usi solo JSONBIN_LOGS_WRITE_URL
     JSONBIN_LOGS_WRITE_URL,
+	JSONBIN_LOGS_READ_URL,
     NOMINATIM_USER_AGENT 
 } from './config.js'; // Il percorso è relativo a questo file .js
 

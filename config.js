@@ -11,6 +11,7 @@ export const JSONBIN_EVENTS_WRITE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_E
 // Bin ID dedicato ai LOGS
 export const JSONBIN_LOGS_BIN_ID = '688924c7f7e7a370d1eff96b'; // Logs Bin ID
 export const JSONBIN_LOGS_WRITE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_LOGS_BIN_ID}`;
+export const JSONBIN_LOGS_READ_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_LOGS_BIN_ID}/latest`;
 
 // Altre costanti globali
 export const NOMINATIM_USER_AGENT = 'LacrosseEventApp/1.0 (jakkolo@gmail.com)'; 
