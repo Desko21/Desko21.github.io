@@ -3,10 +3,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- JSONBin.io Configuration ---
     const JSONBIN_MASTER_KEY = '$2a$10$moQg0NYbmqEkIUS1bTku2uiW8ywvcz0Bt8HKG3J/4qYU8dCZggiT6'; // YOUR MASTER KEY!
-    const JSONBIN_EVENTS_READ_URL = 'https://api.jsonbin.io/v3/b/66923497e41b4d34e40e6c66/latest'; // Events Bin ID
-    const JSONBIN_EVENTS_WRITE_URL = 'https://api.jsonbin.io/v3/b/66923497e41b4d34e40e6c66';
+    const JSONBIN_EVENTS_READ_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`; // Events Bin ID
+    const JSONBIN_EVENTS_WRITE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
     const JSONBIN_LOGS_BIN_ID = '688924c7f7e7a370d1eff96b'; // Logs Bin ID
+	const JSONBIN_BIN_ID = '68870d4d7b4b8670d8a868e8'; // Your actual Bin ID
     const JSONBIN_LOGS_WRITE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_LOGS_BIN_ID}`;
+	
 
     // --- HTML Element References ---
     const messageDiv = document.getElementById('message');
