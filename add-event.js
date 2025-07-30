@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const eventLocationInput = document.getElementById('eventLocation');
     const latitudeInput = document.getElementById('latitude');
     const longitudeInput = document.getElementById('longitude');
+    const submitButton = document.getElementById('addEventButton'); // Assicurati che il tuo bottone abbia questo ID
 
     // Dropdown per Game Type e Gender
     const eventTypeInput = document.getElementById('eventType');
@@ -137,7 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data && data.length > 0) {
                 const firstResult = data[0];
-                // Converti in float e formatta per evitare troppe decimali
                 latitudeInput.value = parseFloat(firstResult.lat).toFixed(6); 
                 longitudeInput.value = parseFloat(firstResult.lon).toFixed(6);
                 geolocationMessageDiv.textContent = 'Coordinates found!';
@@ -154,119 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
             geolocationMessageDiv.className = 'message error';
         }
     }
-
-    // --- Event Listeners ---
-
-    // Listener per la ricerca delle coordinate quando l'utente esce dal campo località
-    eventLocationInput.addEventListener('blur', () => {
-        getCoordinatesFromLocation(eventLocationInput.value);
-    });
-
-    // Listener per la sottomissione del form
-    addEventForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        messageDiv.textContent = 'Adding event...';
-        messageDiv.className = 'message info';
-
-        const eventId = generateUniqueId();
-        const eventName = document.getElementById('eventName').value;
-        const eventLocation = eventLocationInput.value;
-        const eventStartDate = document.getElementById('eventStartDate').value;
-        const eventEndDate = document.getElementById('eventEndDate').value;
-        const eventDescription = document.getElementById('eventDescription').value;
-        const eventLink = document.getElementById('eventLink').value;
-        const eventType = eventTypeInput.value; // Valore selezionato dal dropdown
-        const eventGender = eventGenderInput.value; // Valore selezionato dal dropdown
-
-        // ***** PUNTO CRUCIALE: Conversione di Latitude e Longitude in numero *****
-        let latitude = parseFloat(latitudeInput.value);
-        let longitude = parseFloat(longitudeInput.value);
-
-        // Se parseFloat restituisce NaN (es. il campo era vuoto o non un numero valido), imposta a null
-        if (isNaN(latitude)) latitude = null;
-        if (isNaN(longitude)) longitude = null;
-        // *************************************************************************
-
-        const newEvent = {
-            id: eventId,
-            name: eventName,
-            startDate: eventStartDate,
-            endDate: eventEndDate === '' ? null : eventEndDate, // Salva null se la data di fine è vuota
-            location: eventLocation,
-            latitude: latitude, // Ora è garantito essere un numero o null
-            longitude: longitude, // Ora è garantito essere un numero o null
-            type: eventType,
-            gender: eventGender,
-            description: eventDescription === '' ? null : eventDescription, // Salva null se la descrizione è vuota
-            link: eventLink === '' ? null : eventLink, // Salva null se il link è vuoto
-            featured: false // Default a false per i nuovi eventi
-        };
-
-        try {
-            // Primo, leggi il bin esistente
-            const readResponse = await fetch(JSONBIN_EVENTS_WRITE_URL + '/latest', {
-                headers: {
-                    'X-Master-Key': JSONBIN_MASTER_KEY
-                }
-            });
-
-            if (!readResponse.ok) {
-                // Se il bin non esiste o c'è un errore di lettura, prova a creare un nuovo bin
-                // Questo è utile per la prima volta che si aggiunge un evento
-                console.warn("Existing bin not found or error reading, attempting to create a new one.");
-                // Potrebbe essere un 404 se il bin è vuoto o non esiste
-                if (readResponse.status === 404) {
-                     // Inizializza con il nuovo evento e prova a creare
-                     await createNewBin([newEvent]);
-                     messageDiv.textContent = 'Event added successfully! (New bin created)';
-                     messageDiv.className = 'message success';
-                     addEventForm.reset();
-                     logActivity('ADD_EVENT', newEvent);
-                     return;
-                } else {
-                    throw new Error(`Error reading existing events: ${readResponse.status} - ${await readResponse.text()}`);
-                }
-            }
-
-            // Se la lettura ha successo, ottieni i dati esistenti
-            const existingData = await readResponse.json();
-            let events = existingData.record || [];
-
-            // Aggiungi il nuovo evento all'array esistente
-            events.push(newEvent);
-
-            // Scrivi l'array aggiornato nel bin (sovrascrivendo)
-            const writeResponse = await fetch(JSONBIN_EVENTS_WRITE_URL, {
-                method: 'PUT', // Usa PUT per sovrascrivere l'intero bin
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': JSONBIN_MASTER_KEY,
-                    'X-Bin-Meta': 'false' // Non aggiornare i metadati del bin
-                },
-                body: JSON.stringify(events)
-            });
-
-            if (!writeResponse.ok) {
-                const errorText = await writeResponse.text();
-                throw new Error(`Error adding event: ${writeResponse.status} - ${errorText}`);
-            }
-
-            messageDiv.textContent = `Event '${eventName}' added successfully! ID: ${eventId}`;
-            messageDiv.className = 'message success';
-            addEventForm.reset(); // Resetta il form dopo l'aggiunta
-            geolocationMessageDiv.textContent = ''; // Pulisci anche il messaggio di geolocalizzazione
-            latitudeInput.value = ''; // Pulisci i campi lat/lon
-            longitudeInput.value = '';
-
-            logActivity('ADD_EVENT', newEvent);
-
-        } catch (error) {
-            console.error('Error adding event:', error);
-            messageDiv.textContent = `Error: ${error.message}`;
-            messageDiv.className = 'message error';
-        }
-    });
 
     // Funzione per creare un nuovo bin (utile se non esiste ancora)
     async function createNewBin(dataToSave) {
@@ -288,8 +175,108 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const newBinData = await createResponse.json();
         console.log('New bin created with ID:', newBinData.metadata.id);
-        // Potresti voler salvare il nuovo ID del bin nel tuo config.js o gestirlo in altro modo
-        // Per ora, assumiamo che JSONBIN_EVENTS_WRITE_URL punti sempre al bin corretto.
-        // Questa funzione è più un fallback per il primo evento.
     }
+
+    // --- Event Listeners ---
+
+    // Listener per la ricerca delle coordinate quando l'utente esce dal campo località
+    eventLocationInput.addEventListener('blur', () => {
+        getCoordinatesFromLocation(eventLocationInput.value);
+    });
+
+    // Listener per la sottomissione del form
+    addEventForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Disabilita il pulsante e mostra il messaggio di caricamento
+        submitButton.disabled = true;
+        submitButton.textContent = 'Saving...';
+        messageDiv.textContent = 'Adding event...';
+        messageDiv.className = 'message info';
+
+        try {
+            const eventId = generateUniqueId();
+            const eventName = document.getElementById('eventName').value;
+            const eventLocation = eventLocationInput.value;
+            const eventStartDate = document.getElementById('eventStartDate').value;
+            const eventEndDate = document.getElementById('eventEndDate').value;
+            const eventDescription = document.getElementById('eventDescription').value;
+            const eventLink = document.getElementById('eventLink').value;
+            const eventType = eventTypeInput.value;
+            const eventGender = eventGenderInput.value;
+
+            let latitude = parseFloat(latitudeInput.value);
+            let longitude = parseFloat(longitudeInput.value);
+
+            if (isNaN(latitude)) latitude = null;
+            if (isNaN(longitude)) longitude = null;
+
+            const newEvent = {
+                id: eventId,
+                name: eventName,
+                startDate: eventStartDate,
+                endDate: eventEndDate === '' ? null : eventEndDate,
+                location: eventLocation,
+                latitude: latitude,
+                longitude: longitude,
+                type: eventType,
+                gender: eventGender,
+                description: eventDescription === '' ? null : eventDescription,
+                link: eventLink === '' ? null : eventLink,
+                featured: false
+            };
+
+            const readResponse = await fetch(JSONBIN_EVENTS_WRITE_URL + '/latest', {
+                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+            });
+
+            if (!readResponse.ok) {
+                if (readResponse.status === 404) {
+                     await createNewBin([newEvent]);
+                     messageDiv.textContent = 'Event added successfully! (New bin created)';
+                     messageDiv.className = 'message success';
+                } else {
+                    throw new Error(`Error reading existing events: ${readResponse.status} - ${await readResponse.text()}`);
+                }
+            } else {
+                const existingData = await readResponse.json();
+                let events = existingData.record || [];
+                events.push(newEvent);
+
+                const writeResponse = await fetch(JSONBIN_EVENTS_WRITE_URL, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_MASTER_KEY,
+                        'X-Bin-Meta': 'false'
+                    },
+                    body: JSON.stringify(events)
+                });
+
+                if (!writeResponse.ok) {
+                    const errorText = await writeResponse.text();
+                    throw new Error(`Error adding event: ${writeResponse.status} - ${errorText}`);
+                }
+
+                messageDiv.textContent = `Event '${eventName}' added successfully! ID: ${eventId}`;
+                messageDiv.className = 'message success';
+            }
+
+            addEventForm.reset();
+            geolocationMessageDiv.textContent = '';
+            latitudeInput.value = '';
+            longitudeInput.value = '';
+
+            logActivity('Event Added', newEvent);
+
+        } catch (error) {
+            console.error('Error adding event:', error);
+            messageDiv.textContent = `Error: ${error.message}`;
+            messageDiv.className = 'message error';
+        } finally {
+            // Riabilita il pulsante e ripristina il testo, indipendentemente dal successo o dall'errore
+            submitButton.disabled = false;
+            submitButton.textContent = 'Add Event';
+        }
+    });
 });
