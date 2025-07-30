@@ -1,10 +1,10 @@
 // add-event.js
 
-import { 
+import {
     JSONBIN_MASTER_KEY,
     JSONBIN_EVENTS_WRITE_URL,
     JSONBIN_LOGS_WRITE_URL,
-    NOMINATIM_USER_AGENT 
+    NOMINATIM_USER_AGENT
 } from './config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -17,30 +17,41 @@ document.addEventListener('DOMContentLoaded', () => {
     const eventLocationInput = document.getElementById('eventLocation');
     const latitudeInput = document.getElementById('latitude');
     const longitudeInput = document.getElementById('longitude');
-    const submitButton = document.getElementById('addEventButton'); 
+    const submitButton = document.getElementById('addEventButton');
 
     // Dropdowns for Game Type and Gender
     const eventTypeInput = document.getElementById('eventType');
     const eventGenderInput = document.getElementById('eventGender');
 
     // --- Data for Select Options (MUST MATCH edit-event.js and script.js) ---
-    const gameTypes = ['Field', 'Box', 'Sixes', 'Clinic', 'Other'];
-    const genders = ['Men', 'Women', 'Both', 'Mixed', 'Other'];
+    // Ho cambiato i nomi delle variabili per chiarezza, le stringhe iniziali sono ora opzioni "placeholder"
+    const gameTypesOptions = ['Field', 'Box', 'Sixes', 'Clinic', 'Other'];
+    const gendersOptions = ['Men', 'Women', 'Both', 'Mixed', 'Other'];
 
     // --- Function to populate dropdowns ---
-    function populateDropdown(selectElement, options) {
+    function populateDropdown(selectElement, options, placeholderText = "Select an option") {
         selectElement.innerHTML = ''; // Clear existing options
+
+        // Crea e aggiungi l'opzione placeholder
+        const placeholderOption = document.createElement('option');
+        placeholderOption.value = ''; // Valore vuoto per il placeholder
+        placeholderOption.textContent = placeholderText;
+        placeholderOption.disabled = true; // Rende il placeholder non selezionabile (ma lo è di default)
+        placeholderOption.selected = true; // La rende l'opzione selezionata di default
+        selectElement.appendChild(placeholderOption);
+
+        // Popola le altre opzioni
         options.forEach(optionText => {
             const option = document.createElement('option');
             option.value = optionText.toLowerCase(); // Value will be lowercase
-            option.textContent = optionText;         // Displayed text will be title case
+            option.textContent = optionText;        // Displayed text will be title case
             selectElement.appendChild(option);
         });
     }
 
-    // Populate dropdowns on page load
-    populateDropdown(eventTypeInput, gameTypes);
-    populateDropdown(eventGenderInput, genders);
+    // Populate dropdowns on page load with specific placeholder texts
+    populateDropdown(eventTypeInput, gameTypesOptions, "Select Game Type");
+    populateDropdown(eventGenderInput, gendersOptions, "Select Gender");
 
     // --- Utility Functions ---
 
@@ -123,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName)}&limit=1`;
-            
+
             const response = await fetch(nominatimUrl, {
                 headers: {
                     'User-Agent': NOMINATIM_USER_AGENT
@@ -138,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data && data.length > 0) {
                 const firstResult = data[0];
-                latitudeInput.value = parseFloat(firstResult.lat).toFixed(6); 
+                latitudeInput.value = parseFloat(firstResult.lat).toFixed(6);
                 longitudeInput.value = parseFloat(firstResult.lon).toFixed(6);
                 geolocationMessageDiv.textContent = 'Coordinates found!';
                 geolocationMessageDiv.className = 'message success';
@@ -204,10 +215,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const eventLink = document.getElementById('eventLink').value;
             const eventType = eventTypeInput.value;
             const eventGender = eventGenderInput.value;
-            // --- MODIFICATION START ---
             // Get the value from the new contact email input field
             const contactEmail = document.getElementById('contactEmail').value;
-            // --- MODIFICATION END ---
 
 
             let latitude = parseFloat(latitudeInput.value);
@@ -229,11 +238,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 description: eventDescription === '' ? null : eventDescription,
                 link: eventLink === '' ? null : eventLink,
                 featured: false,
-                // --- MODIFICATION START ---
                 // Add the contactEmail to the new event object
                 contactEmail: contactEmail === '' ? null : contactEmail // Save as null if empty
-                // --- MODIFICATION END ---
             };
+
+            // Basic validation for dropdowns (since they are required)
+            if (eventType === '' || eventGender === '') {
+                messageDiv.textContent = 'Please select a Game Type and a Gender.';
+                messageDiv.className = 'message error';
+                submitButton.disabled = false;
+                submitButton.textContent = 'Add Event';
+                return; // Stop form submission
+            }
+
 
             const readResponse = await fetch(JSONBIN_EVENTS_WRITE_URL + '/latest', {
                 headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
@@ -272,9 +289,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             addEventForm.reset();
+            // After reset, re-populate dropdowns to show placeholder
+            populateDropdown(eventTypeInput, gameTypesOptions, "Select Game Type");
+            populateDropdown(eventGenderInput, gendersOptions, "Select Gender");
+            
             geolocationMessageDiv.textContent = '';
             latitudeInput.value = '';
             longitudeInput.value = '';
+
 
             logActivity('Event Added', newEvent);
 
