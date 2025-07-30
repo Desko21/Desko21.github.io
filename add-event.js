@@ -10,39 +10,39 @@ import {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('add-event.js loaded.');
 
-    // --- Riferimenti agli elementi HTML ---
+    // --- HTML Element References ---
     const addEventForm = document.getElementById('addEventForm');
     const messageDiv = document.getElementById('message');
     const geolocationMessageDiv = document.getElementById('geolocationMessage');
     const eventLocationInput = document.getElementById('eventLocation');
     const latitudeInput = document.getElementById('latitude');
     const longitudeInput = document.getElementById('longitude');
-    const submitButton = document.getElementById('addEventButton'); // Assicurati che il tuo bottone abbia questo ID
+    const submitButton = document.getElementById('addEventButton'); 
 
-    // Dropdown per Game Type e Gender
+    // Dropdowns for Game Type and Gender
     const eventTypeInput = document.getElementById('eventType');
     const eventGenderInput = document.getElementById('eventGender');
 
-    // --- Data per le opzioni dei Select (DEVE CORRISPONDERE A edit-event.js e script.js) ---
+    // --- Data for Select Options (MUST MATCH edit-event.js and script.js) ---
     const gameTypes = ['Field', 'Box', 'Sixes', 'Clinic', 'Other'];
     const genders = ['Men', 'Women', 'Both', 'Mixed', 'Other'];
 
-    // --- Funzione per popolare i dropdown ---
+    // --- Function to populate dropdowns ---
     function populateDropdown(selectElement, options) {
-        selectElement.innerHTML = ''; // Pulisce le opzioni esistenti
+        selectElement.innerHTML = ''; // Clear existing options
         options.forEach(optionText => {
             const option = document.createElement('option');
-            option.value = optionText.toLowerCase(); // Il valore sarà in minuscolo
-            option.textContent = optionText;         // Il testo visualizzato sarà con la maiuscola iniziale
+            option.value = optionText.toLowerCase(); // Value will be lowercase
+            option.textContent = optionText;         // Displayed text will be title case
             selectElement.appendChild(option);
         });
     }
 
-    // Popola i dropdown all'avvio della pagina
+    // Populate dropdowns on page load
     populateDropdown(eventTypeInput, gameTypes);
     populateDropdown(eventGenderInput, genders);
 
-    // --- Funzioni Utility ---
+    // --- Utility Functions ---
 
     async function logActivity(action, eventDetails) {
         const timestamp = new Date().toISOString();
@@ -103,12 +103,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Funzione per generare un ID unico
+    // Function to generate a unique ID
     function generateUniqueId() {
         return 'event-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
     }
 
-    // Funzione per ottenere le coordinate dalla località
+    // Function to get coordinates from location
     async function getCoordinatesFromLocation(locationName) {
         if (locationName.trim() === '') {
             latitudeInput.value = '';
@@ -155,15 +155,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Funzione per creare un nuovo bin (utile se non esiste ancora)
+    // Function to create a new bin (useful if it doesn't exist yet)
     async function createNewBin(dataToSave) {
-        const createResponse = await fetch('https://api.jsonbin.io/v3/b', { // Endpoint per creare un nuovo bin
+        const createResponse = await fetch('https://api.jsonbin.io/v3/b', { // Endpoint to create a new bin
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Master-Key': JSONBIN_MASTER_KEY,
-                'X-Bin-Name': 'laxmap_events_bin', // Nome per il nuovo bin
-                'private': false // Imposta a true se vuoi che sia privato
+                'X-Bin-Name': 'laxmap_events_bin', // Name for the new bin
+                'private': false // Set to true if you want it to be private
             },
             body: JSON.stringify(dataToSave)
         });
@@ -179,16 +179,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Event Listeners ---
 
-    // Listener per la ricerca delle coordinate quando l'utente esce dal campo località
+    // Listener for coordinate lookup when the user leaves the location field
     eventLocationInput.addEventListener('blur', () => {
         getCoordinatesFromLocation(eventLocationInput.value);
     });
 
-    // Listener per la sottomissione del form
+    // Listener for form submission
     addEventForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // Disabilita il pulsante e mostra il messaggio di caricamento
+        // Disable button and show loading message
         submitButton.disabled = true;
         submitButton.textContent = 'Saving...';
         messageDiv.textContent = 'Adding event...';
@@ -204,6 +204,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const eventLink = document.getElementById('eventLink').value;
             const eventType = eventTypeInput.value;
             const eventGender = eventGenderInput.value;
+            // --- MODIFICATION START ---
+            // Get the value from the new contact email input field
+            const contactEmail = document.getElementById('contactEmail').value;
+            // --- MODIFICATION END ---
+
 
             let latitude = parseFloat(latitudeInput.value);
             let longitude = parseFloat(longitudeInput.value);
@@ -223,7 +228,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 gender: eventGender,
                 description: eventDescription === '' ? null : eventDescription,
                 link: eventLink === '' ? null : eventLink,
-                featured: false
+                featured: false,
+                // --- MODIFICATION START ---
+                // Add the contactEmail to the new event object
+                contactEmail: contactEmail === '' ? null : contactEmail // Save as null if empty
+                // --- MODIFICATION END ---
             };
 
             const readResponse = await fetch(JSONBIN_EVENTS_WRITE_URL + '/latest', {
@@ -232,9 +241,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!readResponse.ok) {
                 if (readResponse.status === 404) {
-                     await createNewBin([newEvent]);
-                     messageDiv.textContent = 'Event added successfully! (New bin created)';
-                     messageDiv.className = 'message success';
+                    await createNewBin([newEvent]);
+                    messageDiv.textContent = 'Event added successfully! (New bin created)';
+                    messageDiv.className = 'message success';
                 } else {
                     throw new Error(`Error reading existing events: ${readResponse.status} - ${await readResponse.text()}`);
                 }
@@ -274,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
             messageDiv.textContent = `Error: ${error.message}`;
             messageDiv.className = 'message error';
         } finally {
-            // Riabilita il pulsante e ripristina il testo, indipendentemente dal successo o dall'errore
+            // Re-enable the button and restore text, regardless of success or error
             submitButton.disabled = false;
             submitButton.textContent = 'Add Event';
         }

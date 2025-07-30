@@ -42,9 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const genderFilter = document.getElementById('genderFilter');
 
     let markers = L.featureGroup().addTo(map);
-    let allEvents = []; // Contiene tutti gli eventi caricati
+    let allEvents = []; // Contains all loaded events
 
-    // Popola i filtri Game Type e Gender
+    // Populate Game Type and Gender filters
     const gameTypes = ['All', 'Field', 'Box', 'Sixes', 'Clinic', 'Other'];
     const genders = ['All', 'Men', 'Women', 'Both', 'Mixed', 'Other'];
 
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Popola i dropdown dei filtri all'inizio
+    // Populate filter dropdowns on startup
     populateFilterDropdown(gameTypeFilter, gameTypes);
     populateFilterDropdown(genderFilter, genders);
 
@@ -93,11 +93,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const data = await response.json();
-            // Assicurati che 'record' esista e sia un array, altrimenti usa un array vuoto
+            // Ensure 'record' exists and is an array, otherwise use an empty array
             allEvents = Array.isArray(data.record) ? data.record : [];
             console.log('All events loaded:', allEvents);
 
-            filterAndDisplayEvents(); // Ricrea la mappa e la lista con i dati caricati
+            filterAndDisplayEvents(); // Recreate map and list with loaded data
 
         } catch (error) {
             console.error('An unexpected error occurred:', error);
@@ -116,9 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (validEvents.length === 0) {
             console.warn("No valid events with numerical coordinates to display on map.");
-            // Non fare 'return' qui se vogliamo che la mappa mostri i marker anche senza eventi filtrati in vista
-            // Ma è una scelta di design: vogliamo solo i marker filtrati o tutti i marker validi?
-            // Per ora, solo i filtrati. Se l'utente si sposta, i marker verranno ricaricati.
         }
 
         validEvents.forEach(event => {
@@ -161,6 +158,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (event.link && typeof event.link === 'string') {
                 popupContent += `<p><a href="${event.link}" target="_blank" class="more-info-link"><i class="fas fa-external-link-alt icon-margin-right"></i>More Info</a></p>`;
             }
+            // --- MODIFICATION START (Add Contact Email to Popup) ---
+            if (event.contactEmail && typeof event.contactEmail === 'string') {
+                popupContent += `<p><i class="fas fa-envelope icon-margin-right"></i><strong>Email:</strong> <a href="mailto:${event.contactEmail}">${event.contactEmail}</a></p>`;
+            }
+            // --- MODIFICATION END ---
 
             marker.bindPopup(popupContent, { autoPan: false });
         });
@@ -172,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedGameType = gameTypeFilter.value;
         const selectedGender = genderFilter.value;
 
-        // Filtra tutti gli eventi in base ai filtri a discesa (tipo di gioco e genere)
+        // Filter all events based on dropdown filters (game type and gender)
         const filteredByDropdowns = allEvents.filter(event => {
             const eventTypeLower = event.type ? event.type.toLowerCase() : '';
             const eventGenderLower = event.gender ? event.gender.toLowerCase() : '';
@@ -180,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const matchesGameType = (selectedGameType === 'all' || eventTypeLower === selectedGameType);
             
             let matchesGender = (selectedGender === 'all' || eventGenderLower === selectedGender);
-            // Logica per "Both" per il filtro di genere
+            // Logic for "Both" for gender filter
             if (selectedGender === 'both' && (eventGenderLower === 'men' || eventGenderLower === 'women')) {
                 matchesGender = true;
             }
@@ -188,42 +190,38 @@ document.addEventListener('DOMContentLoaded', () => {
             return matchesGameType && matchesGender;
         });
 
-        // --- MODIFICA INIZIO ---
-
-        // Eventi da visualizzare nella lista HTML:
-        // Inizialmente, include solo gli eventi che sono nei limiti della mappa E filtrati dai dropdown.
+        // Events to display in the HTML list:
+        // Initially, include only events that are within map bounds AND filtered by dropdowns.
         let eventsForHtmlList = filteredByDropdowns.filter(event => {
             return (typeof event.latitude === 'number' && typeof event.longitude === 'number' &&
                     !isNaN(event.latitude) && !isNaN(event.longitude) &&
                     bounds.contains(L.latLng(event.latitude, event.longitude)));
         });
 
-        // Raccogli tutti gli eventi featured dall'array completo 'allEvents'
+        // Collect all featured events from the complete 'allEvents' array
         const allFeaturedEvents = allEvents.filter(event => event.featured);
 
-        // Combina gli eventi filtrati con tutti gli eventi featured, evitando duplicati
-        const finalEventsToDisplayInList = new Map(); // Usa Map per deduplicare per ID
+        // Combine filtered events with all featured events, avoiding duplicates
+        const finalEventsToDisplayInList = new Map(); // Use Map for deduplication by ID
 
-        // Aggiungi prima gli eventi filtrati normalmente
+        // Add normally filtered events first
         eventsForHtmlList.forEach(event => {
             finalEventsToDisplayInList.set(event.id, event);
         });
 
-        // Poi aggiungi tutti gli eventi featured. Se un featured è già presente, verrà sovrascritto (nessun duplicato)
+        // Then add all featured events. If a featured event is already present, it will be overwritten (no duplicates)
         allFeaturedEvents.forEach(event => {
             finalEventsToDisplayInList.set(event.id, event);
         });
 
-        // Converte la Map in un array
+        // Convert the Map to an array
         const finalEventsArray = Array.from(finalEventsToDisplayInList.values());
 
-        // --- MODIFICA FINE ---
-
-        // Eventi per i marker sulla mappa (solo filtrati per dropdown, indipendentemente dai limiti della mappa)
+        // Events for map markers (only filtered by dropdown, regardless of map bounds)
         const eventsForMapMarkers = filteredByDropdowns;
 
-        // Passa la lista finale alla funzione di visualizzazione HTML
-        displayEventsListHtml(finalEventsArray); // Modificato qui
+        // Pass the final list to the HTML display function
+        displayEventsListHtml(finalEventsArray); // Modified here
         updateMapMarkers(eventsForMapMarkers);
     }
 
@@ -244,21 +242,21 @@ document.addEventListener('DOMContentLoaded', () => {
         eventListDiv.innerHTML = '';
 
         if (eventsToDisplay.length === 0) {
-            // Messaggio aggiornato per riflettere che i featured sono sempre inclusi
-            eventListDiv.innerHTML = '<p>Nessun torneo trovato con i filtri selezionati o nessun evento in evidenza.</p>';
+            // Updated message to reflect that featured are always included
+            eventListDiv.innerHTML = '<p>No tournaments found with the selected filters or no featured events.</p>';
             return;
         }
 
-        // Ordina prima per 'featured', poi per data
+        // Sort first by 'featured', then by date
         eventsToDisplay.sort((a, b) => {
-            // Gli eventi featured vanno prima (true = 1, false = 0, quindi true - false = 1, false - true = -1)
-            // Se 'a' è featured e 'b' non lo è, 'a' viene prima (-1)
-            // Se 'b' è featured e 'a' non lo è, 'b' viene prima (1)
-            // Se entrambi o nessuno sono featured, ordina per data.
+            // Featured events go first (true = 1, false = 0, so true - false = 1, false - true = -1)
+            // If 'a' is featured and 'b' is not, 'a' comes first (-1)
+            // If 'b' is featured and 'a' is not, 'b' comes first (1)
+            // If both or neither are featured, sort by date.
             if (a.featured && !b.featured) return -1;
             if (!a.featured && b.featured) return 1;
             
-            // Ordina per data di inizio se non c'è differenza di featured status
+            // Sort by start date if there's no difference in featured status
             return new Date(a.startDate) - new Date(b.startDate); 
         });
 
@@ -266,17 +264,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const eventItem = document.createElement('div');
             eventItem.className = 'tournament-item';
 
-            // Aggiungi la classe 'featured' all'elemento del torneo se è featured
+            // Add 'featured' class to the tournament item if it's featured
             if (event.featured) {
                 eventItem.classList.add('featured');
             }
 
             let featuredIconHtml = event.featured ? '<span class="star-icon event-list-icon">★</span>' : '';
-            // sixesTitleIconHtml non viene usato per l'icona "6" accanto al titolo,
-            // ma l'icona "6" è inclusa nel popup e nella lista separatamente.
-            // L'icona Sixes nella lista è generata dallo switch case del gameTypeIcon
-            // Questo è stato rimosso per evitare duplicati o confusione.
-            let sixesTitleIconHtml = ''; // Lasciamo vuoto per coerenza con il nuovo template
+            let sixesTitleIconHtml = ''; // Left empty for consistency with new template
 
             const formattedDate = new Date(event.startDate).toLocaleDateString();
             let dateRange = formattedDate;
@@ -293,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
             switch (eventType.toLowerCase()) {
                 case 'field': gameTypeIcon = '<i class="fa-solid fa-seedling icon-margin-right"></i>'; break;
                 case 'box': gameTypeIcon = '<i class="fas fa-cube icon-margin-right"></i>'; break;
-                case 'sixes': gameTypeIcon = '<span class="sixes-icon icon-margin-right">6</span>'; break; // Usiamo lo span per il "6"
+                case 'sixes': gameTypeIcon = '<span class="sixes-icon icon-margin-right">6</span>'; break; // Use span for "6"
                 case 'clinic': gameTypeIcon = '<i class="fas fa-book icon-margin-right"></i>'; break;
                 default: gameTypeIcon = '<i class="fas fa-gamepad icon-margin-right"></i>'; break;
             }
@@ -318,7 +312,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p>${gameTypeIcon}<strong>Game Type:</strong> ${eventType}</p>
                 <p>${genderIcon}<strong>Gender:</strong> ${gender}</p>
                 <p><i class="fas fa-info-circle icon-margin-right"></i>${descriptionText}</p>
-            `;
+                ${event.contactEmail ? `<p><i class="fas fa-envelope icon-margin-right"></i><strong>Email:</strong> <a href="mailto:${event.contactEmail}">${event.contactEmail}</a></p>` : ''}
+                `;
 
             if (event.link && typeof event.link === 'string') {
                 const moreInfoParagraph = document.createElement('p');
@@ -339,11 +334,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Event listeners per i filtri e il movimento della mappa
+    // Event listeners for filters and map movement
     map.on('moveend', filterAndDisplayEvents);
     gameTypeFilter.addEventListener('change', filterAndDisplayEvents);
     genderFilter.addEventListener('change', filterAndDisplayEvents);
 
-    // Carica gli eventi all'avvio
+    // Load events on startup
     loadEvents();
 });
