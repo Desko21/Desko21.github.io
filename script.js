@@ -1,3 +1,13 @@
+// script.js
+
+// Importa le costanti dal file config.js
+import { 
+    JSONBIN_MASTER_KEY,
+    JSONBIN_EVENTS_READ_URL, // Useremo questo per leggere gli eventi
+    JSONBIN_EVENTS_BIN_ID, // Manteniamo questo per chiarezza, anche se non direttamente usato nella URL di lettura se usi /latest
+    NOMINATIM_USER_AGENT // Potrebbe non essere usato qui, ma lo importiamo per consistenza
+} from './config.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Script.js is loaded and DOM is ready. Starting map initialization...');
 
@@ -17,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Geolocation is supported by this browser.");
         map.locate({
             setView: true,
-            maxZoom: 5,
+            maxZoom: 5, // Potrebbe essere troppo basso per una posizione precisa
             enableHighAccuracy: true,
             timeout: 10000,
             maximumAge: 0
@@ -26,9 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Geolocation is not supported by this browser. Using default map view.");
     }
 
-    const JSONBIN_BIN_ID = '68870d4d7b4b8670d8a868e8';
-    const JSONBIN_MASTER_KEY = '$2a$10$moQg0NYbmqEkIUS1bTku2uiW8ywvcz0Bt8HKG3J/4qYU8dCZggiT6';
-    const JSONBIN_READ_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
+    // Le costanti di JSONBin.io vengono ora importate da config.js
+    // JSONBIN_BIN_ID, JSONBIN_MASTER_KEY, JSONBIN_READ_URL sono importate!
 
     const eventListDiv = document.getElementById('event-list');
     const messageDiv = document.getElementById('message');
@@ -37,21 +46,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const genderFilter = document.getElementById('genderFilter');
 
     let markers = L.featureGroup().addTo(map);
-    let allEvents = [];
+    let allEvents = []; // Contiene tutti gli eventi caricati
 
     // --- AGGIORNATO: Funzione per creare icone Font Awesome personalizzate per i marker ---
-    function createCustomMarkerIcon(gameType) { // Riporto gameType come parametro per una possibile futura differenziazione
+    // Ora usa 'eventType' come parametro
+    function createCustomMarkerIcon(eventType) {
         let iconClass = 'fas fa-map-marker-alt'; // Icona predefinita
         const iconColor = '#22454C'; // Colore uniforme per tutti
 
-        // Se vuoi differenziare i marker per tipo, puoi aggiungere qui la logica
-        // Ad esempio, per la "Clinic":
-        if (gameType && gameType.toLowerCase() === 'clinic') {
-            iconClass = 'fas fa-book'; // Icona a forma di libro per le clinic
+        if (eventType && typeof eventType === 'string') {
+            switch (eventType.toLowerCase()) { // Usiamo eventType per la logica
+                case 'clinic':
+                    iconClass = 'fas fa-book'; // Icona a forma di libro per le clinic
+                    break;
+                case 'field':
+                    iconClass = 'fa-solid fa-seedling'; // Esempio per Field
+                    break;
+                case 'box':
+                    iconClass = 'fas fa-cube'; // Esempio per Box
+                    break;
+                case 'sixes':
+                    iconClass = 'fa-solid fa-dice-six'; // Esempio per Sixes (se hai l'icona)
+                    break;
+                default:
+                    iconClass = 'fas fa-map-marker-alt';
+            }
         }
-        // else if (gameType && gameType.toLowerCase() === 'field') { iconClass = 'fa-solid fa-seedling'; }
-        // ... e così via per gli altri tipi, se in futuro decidi di diversificare.
-
+        
         return L.divIcon({
             className: 'custom-marker',
             html: `<div style="color: ${iconColor}; font-size: 28px;"><i class="${iconClass}"></i></div>`,
@@ -63,9 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadEvents() {
         try {
-            const response = await fetch(JSONBIN_READ_URL, {
+            const response = await fetch(JSONBIN_EVENTS_READ_URL, { // Usa JSONBIN_EVENTS_READ_URL da config.js
                 headers: {
-                    'X-Master-Key': JSONBIN_MASTER_KEY
+                    'X-Master-Key': JSONBIN_MASTER_KEY // Usa JSONBIN_MASTER_KEY da config.js
                 }
             });
 
@@ -81,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
             allEvents = data.record || [];
             console.log('All events loaded:', allEvents);
 
-            filterAndDisplayEvents();
+            filterAndDisplayEvents(); // Ricrea la mappa e la lista con i dati caricati
 
         } catch (error) {
             console.error('An unexpected error occurred:', error);
@@ -93,21 +114,26 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateMapMarkers(eventsToMap) {
         markers.clearLayers();
 
+        // Filtra solo gli eventi con coordinate numeriche valide
         const validEvents = eventsToMap.filter(event =>
-            typeof event.latitude === 'number' && typeof event.longitude === 'number'
+            typeof event.latitude === 'number' && typeof event.longitude === 'number' &&
+            !isNaN(event.latitude) && !isNaN(event.longitude) // Assicurati che non siano NaN
         );
 
         validEvents.forEach(event => {
-            // Passiamo il gameType alla funzione per la creazione dell'icona del marker
-            const customIcon = createCustomMarkerIcon(event.gameType || 'N/A');
+            // Passiamo event.type (il campo corretto dal tuo JSON) alla funzione per l'icona
+            const customIcon = createCustomMarkerIcon(event.type);
+            
+            // Crea il marker usando latitude e longitude
             const marker = L.marker([event.latitude, event.longitude], { icon: customIcon }).addTo(markers);
 
-            const gameType = event.gameType && typeof event.gameType === 'string' ? event.gameType : 'N/A';
+            // Pop-up content: usa event.type e event.gender
+            const eventType = event.type && typeof event.type === 'string' ? event.type : 'N/A';
             const gender = event.gender && typeof event.gender === 'string' ? event.gender : 'N/A';
 
             let gameTypeIcon = '';
-            if (gameType !== 'N/A') {
-                switch (gameType.toLowerCase()) {
+            if (eventType !== 'N/A') {
+                switch (eventType.toLowerCase()) { // Usa eventType qui
                     case 'field':
                         gameTypeIcon = '<i class="fa-solid fa-seedling icon-margin-right"></i>';
                         break;
@@ -117,8 +143,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     case 'sixes':
                         gameTypeIcon = '<span class="sixes-icon icon-margin-right">6</span>';
                         break;
-                    case 'clinic': // AGGIUNTA PER CLINIC
-                        gameTypeIcon = '<i class="fas fa-book icon-margin-right"></i>'; // Icona libro
+                    case 'clinic':
+                        gameTypeIcon = '<i class="fas fa-book icon-margin-right"></i>';
                         break;
                     default:
                         gameTypeIcon = '<i class="fas fa-gamepad icon-margin-right"></i>';
@@ -147,19 +173,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             let popupContent = `<h3>${event.name}</h3>`;
-            popupContent += `<p><i class="fas fa-calendar-alt icon-margin-right"></i><strong>Date:</strong> ${new Date(event.startDate).toLocaleDateString()}</p>`;
+            // Usa startDate e endDate dal tuo nuovo formato
+            popupContent += `<p><i class="fas fa-calendar-alt icon-margin-right"></i><strong>Date:</strong> ${new Date(event.startDate).toLocaleDateString()}`;
+            if (event.endDate && event.endDate !== event.startDate) {
+                popupContent += ` - ${new Date(event.endDate).toLocaleDateString()}`;
+            }
+            popupContent += `</p>`;
+            
             popupContent += `<p><i class="fas fa-map-marker-alt icon-margin-right"></i><strong>Location:</strong> ${event.location}</p>`;
-            popupContent += `<p>${gameTypeIcon}<strong>Game Type:</strong> ${gameType}</p>`;
+            popupContent += `<p>${gameTypeIcon}<strong>Game Type:</strong> ${eventType}</p>`; // Usa eventType qui
             popupContent += `<p>${genderIcon}<strong>Gender:</strong> ${gender}</p>`;
             popupContent += `<p><i class="fas fa-info-circle icon-margin-right"></i>${event.description}</p>`;
 
+            // Verifica se event.featured esiste e è true
             if (event.featured) {
                 popupContent += `<p class="popup-icon-line"><span class="star-icon">★</span> Featured Event</p>`;
             }
-            if (event.format && event.format.toLowerCase() === 'sixes') {
+            // Verifica se event.type è 'sixes' per l'icona
+            if (eventType.toLowerCase() === 'sixes') {
                 popupContent += `<p class="popup-icon-line"><span class="sixes-icon">6</span> Sixes Format</p>`;
             }
 
+            // Verifica se event.link esiste e è una stringa
             if (event.link && typeof event.link === 'string') {
                 popupContent += `<p><a href="${event.link}" target="_blank" class="more-info-link"><i class="fas fa-external-link-alt icon-margin-right"></i>More Info</a></p>`;
             }
@@ -174,18 +209,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedGameType = gameTypeFilter.value;
         const selectedGender = genderFilter.value;
 
-        let eventsToDisplay = [];
-        let eventsForMap = [];
+        let eventsToDisplay = []; // Eventi per la lista HTML
+        let eventsForMap = [];    // Eventi per i marker sulla mappa
 
+        // Prima, aggiungi tutti gli eventi "featured" a entrambi gli array
         const featuredEvents = allEvents.filter(event => event.featured);
         eventsToDisplay.push(...featuredEvents);
-        eventsForMap.push(...featuredEvents);
+        eventsForMap.push(...featuredEvents); // Gli eventi featured sono sempre sulla mappa
 
+        // Poi filtra i non featured
         const nonFeaturedFiltered = allEvents.filter(event => {
-            if (event.featured) return false;
+            if (event.featured) return false; // Escludi i featured (già aggiunti)
 
+            // Usa event.type qui per il filtro del tipo di gioco
             const matchesGameType = (selectedGameType === 'all' ||
-                                     (event.gameType && event.gameType.toLowerCase() === selectedGameType));
+                                     (event.type && event.type.toLowerCase() === selectedGameType));
 
             const matchesGender = (selectedGender === 'all' ||
                                    (event.gender && event.gender.toLowerCase() === selectedGender) ||
@@ -194,20 +232,24 @@ document.addEventListener('DOMContentLoaded', () => {
             return matchesGameType && matchesGender;
         });
 
+        // Eventi per la lista HTML: quelli non-featured che sono anche all'interno dei limiti della mappa
         const nonFeaturedFilteredAndInBounds = nonFeaturedFiltered.filter(event => {
             return (typeof event.latitude === 'number' && typeof event.longitude === 'number' &&
+                    !isNaN(event.latitude) && !isNaN(event.longitude) &&
                     bounds.contains(L.latLng(event.latitude, event.longitude)));
         });
 
         eventsToDisplay.push(...nonFeaturedFilteredAndInBounds);
-        eventsForMap.push(...nonFeaturedFiltered);
+        // Tutti i non-featured filtrati (indipendentemente dai limiti della mappa) vanno nei marker per poterli filtrare quando la mappa si muove
+        eventsForMap.push(...nonFeaturedFiltered); 
 
+        // Rimuovi duplicati basandoti sull'ID univoco che hai generato (event.id)
         const uniqueEventsListMap = new Map();
-        eventsToDisplay.forEach(event => uniqueEventsListMap.set(event.createdAt, event));
+        eventsToDisplay.forEach(event => uniqueEventsListMap.set(event.id, event)); // Usa event.id
         const finalEventsList = Array.from(uniqueEventsListMap.values());
 
         const uniqueEventsMapMarkers = new Map();
-        eventsForMap.forEach(event => uniqueEventsMapMarkers.set(event.createdAt, event));
+        eventsForMap.forEach(event => uniqueEventsMapMarkers.set(event.id, event)); // Usa event.id
         const finalEventsForMap = Array.from(uniqueEventsMapMarkers.values());
 
 
@@ -216,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function zoomToEvent(latitude, longitude, zoomLevel = 6) {
-        if (typeof latitude === 'number' && typeof longitude === 'number') {
+        if (typeof latitude === 'number' && typeof longitude === 'number' && !isNaN(latitude) && !isNaN(longitude)) {
             map.setView([latitude, longitude], zoomLevel, {
                 animate: true,
                 duration: 0.5
@@ -236,10 +278,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Ordina prima per 'featured', poi per data
         eventsToDisplay.sort((a, b) => {
             if (a.featured && !b.featured) return -1;
             if (!a.featured && b.featured) return 1;
-            return new Date(b.startDate) - new Date(a.startDate);
+            // Ordina dalla data più recente (o più vicina al futuro) a quella più vecchia
+            // Se startDate è una stringa, convertila in oggetto Date per il confronto
+            return new Date(a.startDate) - new Date(b.startDate); 
         });
 
         eventsToDisplay.forEach(event => {
@@ -247,17 +292,25 @@ document.addEventListener('DOMContentLoaded', () => {
             eventItem.className = 'tournament-item';
 
             let featuredIconHtml = event.featured ? '<span class="star-icon event-list-icon">★</span>' : '';
-            let sixesTitleIconHtml = (event.format && event.format.toLowerCase() === 'sixes') ? '<span class="sixes-icon icon-margin-right">6</span>' : ''; // Era un <p>
+            // Usa event.type per Sixes
+            let sixesTitleIconHtml = (event.type && event.type.toLowerCase() === 'sixes') ? '<span class="sixes-icon icon-margin-right">6</span>' : '';
 
+            // Formatta le date, includendo endDate se presente e diversa da startDate
             const formattedDate = new Date(event.startDate).toLocaleDateString();
+            let dateRange = formattedDate;
+            if (event.endDate && event.endDate !== event.startDate) {
+                dateRange += ` - ${new Date(event.endDate).toLocaleDateString()}`;
+            }
+
             const locationText = event.location;
             const descriptionText = event.description;
-            const gameType = event.gameType && typeof event.gameType === 'string' ? event.gameType : 'N/A';
+            // Usa event.type per il tipo di gioco
+            const eventType = event.type && typeof event.type === 'string' ? event.type : 'N/A';
             const gender = event.gender && typeof event.gender === 'string' ? event.gender : 'N/A';
 
             let gameTypeIcon = '';
-            if (gameType !== 'N/A') {
-                switch (gameType.toLowerCase()) {
+            if (eventType !== 'N/A') {
+                switch (eventType.toLowerCase()) { // Usa eventType qui
                     case 'field':
                         gameTypeIcon = '<i class="fa-solid fa-seedling icon-margin-right"></i>';
                         break;
@@ -267,8 +320,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     case 'sixes':
                         gameTypeIcon = '<span class="sixes-icon icon-margin-right">6</span>';
                         break;
-                    case 'clinic': // AGGIUNTA PER CLINIC
-                        gameTypeIcon = '<i class="fas fa-book icon-margin-right"></i>'; // Icona libro
+                    case 'clinic':
+                        gameTypeIcon = '<i class="fas fa-book icon-margin-right"></i>';
                         break;
                     default:
                         gameTypeIcon = '<i class="fas fa-gamepad icon-margin-right"></i>';
@@ -304,9 +357,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${sixesTitleIconHtml}
                     </span>
                 </h3>
-                <p><i class="fas fa-calendar-alt icon-margin-right"></i><strong>Date:</strong> ${formattedDate}</p>
+                <p><i class="fas fa-calendar-alt icon-margin-right"></i><strong>Date:</strong> ${dateRange}</p>
                 <p><i class="fas fa-map-marker-alt icon-margin-right"></i><strong>Location:</strong> ${locationText}</p>
-                <p>${gameTypeIcon}<strong>Game Type:</strong> ${gameType}</p>
+                <p>${gameTypeIcon}<strong>Game Type:</strong> ${eventType}</p>
                 <p>${genderIcon}<strong>Gender:</strong> ${gender}</p>
                 <p><i class="fas fa-info-circle icon-margin-right"></i>${descriptionText}</p>
             `;
@@ -330,9 +383,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Event listeners per i filtri e il movimento della mappa
     map.on('moveend', filterAndDisplayEvents);
     gameTypeFilter.addEventListener('change', filterAndDisplayEvents);
     genderFilter.addEventListener('change', filterAndDisplayEvents);
 
+    // Carica gli eventi all'avvio
     loadEvents();
 });

@@ -1,9 +1,10 @@
+// add-event.js
+
 // Importa le costanti dal file config.js
 import { 
     JSONBIN_MASTER_KEY,
     JSONBIN_EVENTS_READ_URL,
     JSONBIN_EVENTS_WRITE_URL,
-    JSONBIN_LOGS_BIN_ID, // Potrebbe non essere necessario se usi solo JSONBIN_LOGS_WRITE_URL
     JSONBIN_LOGS_WRITE_URL,
     NOMINATIM_USER_AGENT 
 } from './config.js'; // Il percorso è relativo a questo file .js
@@ -11,17 +12,21 @@ import {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('add-event.js loaded.');
 
+    // --- Riferimenti agli elementi HTML ---
+    const messageDiv = document.getElementById('message'); // Div per i messaggi generali del form
+    const geolocationMessageDiv = document.getElementById('geolocationMessage'); // Div per i messaggi specifici di geolocalizzazione
+    const eventForm = document.getElementById('eventForm'); // Il form principale
+    const eventLocationInput = document.getElementById('eventLocation'); // Campo località
+    const latitudeInput = document.getElementById('latitude'); // Campo latitudine
+    const longitudeInput = document.getElementById('longitude'); // Campo longitudine
+    const submitButton = eventForm.querySelector('button[type="submit"]'); // Il bottone di submit
 
-    // --- HTML Element References ---
-    const messageDiv = document.getElementById('message');
-    const eventForm = document.getElementById('eventForm'); // Make sure this ID exists in HTML
-    const eventLocationInput = document.getElementById('eventLocation'); // Location field
-    const latitudeInput = document.getElementById('latitude'); // Latitude field
-    const longitudeInput = document.getElementById('longitude'); // Longitude field
+    // --- Funzioni di Utilità ---
 
-    // --- Utility Functions ---
-
-    // Function to generate a UUID v4 (Universally Unique Identifier)
+    /**
+     * Genera un UUID v4 (Identificatore Univoco Universale).
+     * Utilizzato per assegnare un ID robusto e controllabile a ogni nuovo evento.
+     */
     function generateUUID() {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
             var r = Math.random() * 16 | 0,
@@ -30,12 +35,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Function to log activities
+    /**
+     * Registra un'attività nel bin dei log.
+     * Include il timestamp, l'azione, l'indirizzo IP dell'utente e dettagli sull'evento.
+     * @param {string} action - L'azione eseguita (es. 'ADD_EVENT').
+     * @param {object} eventDetails - Un oggetto con i dettagli dell'evento (id, name, location).
+     */
     async function logActivity(action, eventDetails) {
         const timestamp = new Date().toISOString();
-        let userIp = 'N/A';
+        let userIp = 'N/A'; // Valore di default in caso di fallimento
 
         try {
+            // Tentativo di recuperare l'indirizzo IP pubblico dell'utente
             const ipResponse = await fetch('https://api.ipify.org?format=json');
             if (ipResponse.ok) {
                 const ipData = await ipResponse.json();
@@ -50,15 +61,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const logEntry = {
             timestamp: timestamp,
             action: action,
-            ipAddress: userIp,
+            ipAddress: userIp, // Aggiungi l'indirizzo IP al log
             event: {
-                id: eventDetails.id,
+                id: eventDetails.id, // ID generato per l'evento
                 name: eventDetails.name,
                 location: eventDetails.location,
             }
         };
 
         try {
+            // Carica i log esistenti
             const readLogResponse = await fetch(JSONBIN_LOGS_WRITE_URL + '/latest', {
                 headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
             });
@@ -70,14 +82,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.warn("Could not read existing logs or bin does not exist, starting fresh.");
             }
 
+            // Aggiungi il nuovo log
             existingLogs.push(logEntry);
 
+            // Scrivi l'intero array di log aggiornato
             const writeLogResponse = await fetch(JSONBIN_LOGS_WRITE_URL, {
-                method: 'PUT',
+                method: 'PUT', // PUT sovrascrive il contenuto del bin
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Master-Key': JSONBIN_MASTER_KEY,
-                    'X-Bin-Meta': 'false'
+                    'X-Bin-Meta': 'false' // Non aggiornare i metadati del bin, solo il suo contenuto
                 },
                 body: JSON.stringify(existingLogs)
             });
@@ -90,23 +104,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Function for geocoding from location to coordinates (latitude/longitude)
+    /**
+     * Esegue il geocoding da un nome di località a coordinate (latitudine/longitudine)
+     * utilizzando OpenStreetMap Nominatim.
+     * I risultati vengono popolati nei campi latitudeInput e longitudeInput.
+     * @param {string} locationName - Il nome della località da cercare.
+     */
     async function getCoordinatesFromLocation(locationName) {
+        // Pulisci i messaggi di geolocalizzazione ogni volta che inizia una nuova ricerca
+        geolocationMessageDiv.textContent = '';
+        geolocationMessageDiv.className = 'message';
+
         if (locationName.trim() === '') {
-            latitudeInput.value = ''; // Ensure latitudeInput is correctly referenced
-            longitudeInput.value = ''; // Ensure longitudeInput is correctly referenced
+            latitudeInput.value = '';
+            longitudeInput.value = '';
             return;
         }
 
-        messageDiv.textContent = 'Searching for coordinates for the location...';
-        messageDiv.className = 'message info';
+        geolocationMessageDiv.textContent = 'Searching for coordinates for the location...';
+        geolocationMessageDiv.className = 'message info';
 
         try {
             const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName)}&limit=1`;
             
             const response = await fetch(nominatimUrl, {
                 headers: {
-                    'User-Agent': 'LacrosseEventApp/1.0 (your-email@example.com)' // CHANGE THIS TO YOUR APP NAME AND YOUR EMAIL!
+                    'User-Agent': NOMINATIM_USER_AGENT // Usa la costante importata da config.js
                 }
             });
 
@@ -118,60 +141,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data && data.length > 0) {
                 const firstResult = data[0];
-                latitudeInput.value = parseFloat(firstResult.lat).toFixed(6);
-                longitudeInput.value = parseFloat(firstResult.lon).toFixed(6);
-                messageDiv.textContent = 'Coordinates found!';
-                messageDiv.className = 'message success';
+                latitudeInput.value = parseFloat(firstResult.lat).toFixed(6); // Formatta a 6 cifre decimali
+                longitudeInput.value = parseFloat(firstResult.lon).toFixed(6); // Formatta a 6 cifre decimali
+                geolocationMessageDiv.textContent = 'Coordinates found!';
+                geolocationMessageDiv.className = 'message success';
             } else {
                 latitudeInput.value = '';
                 longitudeInput.value = '';
-                messageDiv.textContent = 'Location not found, please enter coordinates manually.';
-                messageDiv.className = 'message warning';
+                geolocationMessageDiv.textContent = 'Location not found, please enter coordinates manually.';
+                geolocationMessageDiv.className = 'message warning';
             }
         } catch (error) {
             console.error('Error during geocoding:', error);
-            messageDiv.textContent = `Geocoding error: ${error.message}. Please enter coordinates manually.`;
-            messageDiv.className = 'message error';
+            geolocationMessageDiv.textContent = `Geocoding error: ${error.message}. Please enter coordinates manually.`;
+            geolocationMessageDiv.className = 'message error';
         }
     }
 
     // --- Event Listeners ---
 
+    // Attiva il geocoding quando il campo "Location" perde il focus
     eventLocationInput.addEventListener('blur', () => {
         getCoordinatesFromLocation(eventLocationInput.value);
     });
 
+    // Gestione dell'invio del modulo
     eventForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Previene il ricaricamento della pagina
         await saveEvent();
     });
 
-    // --- Main Functions ---
+    // --- Funzioni Principali ---
 
+    /**
+     * Salva un nuovo evento nel bin di JSONBin.io.
+     * Legge tutti i dati dal modulo, genera un ID univoco e aggiorna il bin.
+     */
     async function saveEvent() {
+        // Disabilita il bottone subito all'inizio della funzione per prevenire doppi click
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Adding Event...'; // Cambia il testo del bottone
+        }
+
         messageDiv.textContent = 'Saving event...';
         messageDiv.className = 'message info';
 
-        const newEventId = generateUUID();
+        const newEventId = generateUUID(); // GENERA UN ID UNIVOCO PER IL NUOVO EVENTO
 
-        // COLLECT ALL FORM DATA, INCLUDING NEW FIELDS
+        // Raccogli tutti i dati del modulo, inclusi i nuovi campi
         const eventData = {
-            id: newEventId,
+            id: newEventId, // Includi l'ID univoco nell'oggetto evento
             name: document.getElementById('eventName').value,
             location: document.getElementById('eventLocation').value,
             latitude: latitudeInput.value,
             longitude: longitudeInput.value,
             type: document.getElementById('eventType').value, // Game Type
-            gender: document.getElementById('eventGender').value, // NEW FIELD: Gender
-            startDate: document.getElementById('eventStartDate').value, // NEW FIELD: Start Date
-            endDate: document.getElementById('eventEndDate').value, // NEW FIELD: End Date
+            gender: document.getElementById('eventGender').value, // Campo: Gender
+            startDate: document.getElementById('eventStartDate').value, // Campo: Start Date
+            endDate: document.getElementById('eventEndDate').value, // Campo: End Date
             description: document.getElementById('eventDescription').value,
-            link: document.getElementById('eventLink').value, // NEW FIELD: More Info Link
-            // Ensure 'isFeatured' exists in your HTML if you uncomment this line
+            link: document.getElementById('eventLink').value, // Campo: More Info Link
+            // Se hai un campo "isFeatured" (checkbox) nel tuo HTML, decommenta la riga sotto:
             // featured: document.getElementById('isFeatured') ? document.getElementById('isFeatured').checked : false 
         };
 
         try {
+            // PASSO 1: Carica tutti gli eventi esistenti dal bin
             const readResponse = await fetch(JSONBIN_EVENTS_READ_URL, {
                 headers: {
                     'X-Master-Key': JSONBIN_MASTER_KEY
@@ -183,18 +219,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const existingData = await readResponse.json();
-            let events = existingData.record || [];
+            let events = existingData.record || []; // Assicurati che sia un array, anche se vuoto
 
+            // Aggiungi il nuovo evento all'array
             events.push(eventData);
 
+            // PASSO 2: Scrivi l'intero array aggiornato nel bin di JSONBin.io
             const writeResponse = await fetch(JSONBIN_EVENTS_WRITE_URL, {
-                method: 'PUT',
+                method: 'PUT', // PUT sovrascrive il contenuto del bin
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Master-Key': JSONBIN_MASTER_KEY,
-                    'X-Bin-Meta': 'false'
+                    'X-Bin-Meta': 'false' // Non aggiornare i metadati del bin, solo il suo contenuto
                 },
-                body: JSON.stringify(events)
+                body: JSON.stringify(events) // Invia l'intero array di eventi aggiornato
             });
 
             if (!writeResponse.ok) {
@@ -202,16 +240,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`Error saving the event: ${writeResponse.status} - ${errorText}`);
             }
 
-            messageDiv.textContent = `Event '${eventData.name}' added successfully! Event ID: ${newEventId}`;
+            // A questo punto, l'evento è stato salvato con successo.
+            // L'ID da mostrare è quello che abbiamo generato noi.
+            messageDiv.textContent = `Event '${eventData.name}' added successfully!\nPlease make a note of the Event ID: ${newEventId}, as you will need it to modify the event in the future.`;
             messageDiv.className = 'message success';
-            eventForm.reset();
+            eventForm.reset(); // Resetta il modulo per permettere l'inserimento di un nuovo evento
 
+            // Logga l'azione di aggiunta evento, passando l'oggetto eventData con il nuovo ID
             logActivity('ADD_EVENT', eventData); 
 
         } catch (error) {
             console.error('Error:', error);
             messageDiv.textContent = `Error: ${error.message}`;
             messageDiv.className = 'message error';
+        } finally {
+            // Riabilita il bottone alla fine, sia in caso di successo che di errore
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Add Event'; // Riporta il testo originale
+            }
         }
     }
 });
