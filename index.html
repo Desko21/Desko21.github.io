@@ -12,34 +12,34 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
-	<div id="header-placeholder"></div>
+    <div id="header-placeholder"></div>
     <main>
         <div class="container">
             <h2>Upcoming Lacrosse Events</h2>
             <div id="map"></div>
             
             <div class="filters-container">
-				<div class="filter-group">
-					<label for="gameTypeFilter">Game Type:</label>
-					<select id="gameTypeFilter">
-						<option value="all">All</option>
-						<option value="field">Field</option>
-						<option value="box">Box</option>
-						<option value="sixes">Sixes</option>
-						<option value="clinic">Clinic</option>
-					</select>
-				</div>
+                <div class="filter-group">
+                    <label for="gameTypeFilter">Game Type:</label>
+                    <select id="gameTypeFilter">
+                        <option value="all">All</option>
+                        <option value="field">Field</option>
+                        <option value="box">Box</option>
+                        <option value="sixes">Sixes</option>
+                        <option value="clinic">Clinic</option>
+                    </select>
+                </div>
 
-				<div class="filter-group">
-					<label for="genderFilter">Gender:</label>
-					<select id="genderFilter">
-						<option value="all">All</option>
-						<option value="men">Men</option>
-						<option value="women">Women</option>
-						<option value="both">Both</option>
-					</select>
-				</div>
-			</div>
+                <div class="filter-group">
+                    <label for="genderFilter">Gender:</label>
+                    <select id="genderFilter">
+                        <option value="all">All</option>
+                        <option value="men">Men</option>
+                        <option value="women">Women</option>
+                        <option value="both">Both</option>
+                    </select>
+                </div>
+            </div>
             <h3>Event List</h3>
             <div id="event-list">
                 <p>Loading events...</p>
@@ -48,12 +48,10 @@
             <div id="message"></div>
         </div>
     </main>
-	
+    
     <div id="footer-placeholder"></div>
-	<script src="load-header.js"></script>
+    <script src="load-header.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script type="module" src="script.js"></script>
-    <script src="include.js"></script>
-	
-</body>
+    </body>
 </html>
