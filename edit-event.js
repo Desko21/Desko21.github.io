@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const geolocationMessageDiv = document.getElementById('geolocationMessage');
 
     // Elementi del FORM DI MODIFICA EVENTO
-    // Ho corretto tutti gli ID qui per corrispondere a quelli nel tuo edit-event.html (con prefisso "edit")
     const editEventForm = document.getElementById('editEventForm');
     const eventIdHiddenInput = document.getElementById('eventId'); // L'ID nascosto dentro il form
 
@@ -37,9 +36,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const eventTypeInput = document.getElementById('editEventType');
     const eventGenderInput = document.getElementById('editEventGender');
 
-    // Assicurati che questi ID siano corretti nel tuo HTML per il costo
-    const eventCostInput = document.getElementById('editEventCost'); // Aggiunto "edit" qui, per coerenza
-    const costTypeSelect = document.getElementById('costType'); // Questo ID sembra corretto dal tuo HTML
+    const eventCostInput = document.getElementById('editEventCost');
+    const costTypeSelect = document.getElementById('costType');
+    const currencyTypeSelect = document.getElementById('currencyType'); // NUOVA REFERENZA PER LA VALUTA
 
     const saveChangesButton = document.getElementById('saveChangesButton');
 
@@ -48,6 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const gameTypesOptions = ['Field', 'Box', 'Sixes', 'Clinic', 'Other'];
     const gendersOptions = ['Men', 'Women', 'Both', 'Mixed', 'Other'];
     const costTypeOptions = ['Not Specified', 'Per Person', 'Per Team'];
+    const currencyOptions = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY']; // NUOVE OPZIONI PER LA VALUTA
 
     let currentEventId = null; // To store the ID of the event being edited
 
@@ -62,7 +62,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const placeholderOption = document.createElement('option');
         placeholderOption.value = '';
         placeholderOption.textContent = placeholderText;
-        if (placeholderText.includes("Select")) { // Only for initial placeholders (Game Type, Gender)
+        if (placeholderText.includes("Select") || placeholderText.includes("Not Specified")) {
+            // Solo per i placeholder iniziali (Game Type, Gender, Cost Type)
             placeholderOption.disabled = true;
         }
         placeholderOption.selected = true;
@@ -70,7 +71,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         options.forEach(optionText => {
             const option = document.createElement('option');
-            option.value = optionText.toLowerCase().replace(/\s/g, ''); // Normalizza per matchare il valore del database
+            // La valuta potrebbe non voler essere normalizzata con toLowerCase().replace(/\s/g, '')
+            // Per valute, il valore e il testo sono spesso identici (es. USD, EUR)
+            option.value = optionText; // Per valute, usa il testo come valore
             option.textContent = optionText;
             selectElement.appendChild(option);
         });
@@ -79,12 +82,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Populate dropdowns on page load for the edit form
     populateDropdown(eventTypeInput, gameTypesOptions, "Select Game Type");
     populateDropdown(eventGenderInput, gendersOptions, "Select Gender");
-    // Aggiungi un controllo per costTypeSelect, dato che è l'unico senza prefisso "edit"
+
     if (costTypeSelect) {
         populateDropdown(costTypeSelect, costTypeOptions, "Not Specified");
     } else {
         console.warn("Element with ID 'costType' not found. Cost Type dropdown will not be populated.");
     }
+
+    // Popola la nuova dropdown della valuta
+    if (currencyTypeSelect) {
+        populateDropdown(currencyTypeSelect, currencyOptions, "Select Currency");
+    } else {
+        console.warn("Element with ID 'currencyType' not found. Currency dropdown will not be populated.");
+    }
+
 
     // --- Utility Functions ---
 
@@ -234,6 +245,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (costTypeSelect) {
                     costTypeSelect.value = (event.costType || '').toLowerCase().replace(/\s/g, '');
                 }
+                // Carica il valore della valuta
+                if (currencyTypeSelect) {
+                    currencyTypeSelect.value = event.currency || ''; // Carica il valore salvato
+                }
+
 
                 messageDiv.textContent = 'Event loaded successfully. You can now edit its details.';
                 messageDiv.className = 'message success';
@@ -286,14 +302,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     // --- Event Listeners for the edit form ---
-    // Questi listener vengono aggiunti solo se il form di modifica esiste
     if (editEventForm) {
-        // Listener per la ricerca coordinate quando l'utente lascia il campo location
         eventLocationInput.addEventListener('blur', () => {
             getCoordinatesFromLocation(eventLocationInput.value);
         });
 
-        // Listener per l'invio del form (salva modifiche)
         editEventForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -303,7 +316,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             messageDiv.className = 'message info';
 
             try {
-                // Recupera i valori dai campi del form (ID sono già corretti sopra)
                 const eventName = eventNameInput.value;
                 const eventLocation = eventLocationInput.value;
                 const eventStartDate = eventStartDateInput.value;
@@ -314,9 +326,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const eventType = eventTypeInput.value;
                 const eventGender = eventGenderInput.value;
 
-                // Recupera i valori dei campi del costo
                 const eventCost = eventCostInput.value === '' ? null : parseFloat(eventCostInput.value);
                 const costType = costTypeSelect.value === '' ? 'not_specified' : costTypeSelect.value;
+                const currency = currencyTypeSelect.value === '' ? null : currencyTypeSelect.value; // NUOVO CAMPO VALUTA
 
                 let latitude = parseFloat(latitudeInput.value);
                 let longitude = parseFloat(longitudeInput.value);
@@ -332,24 +344,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                     saveChangesButton.textContent = 'Save Changes';
                     return;
                 }
-                // Validazione per costo e tipo di costo
-                if (eventCost !== null && (costType === 'not_specified' || costType === '')) {
-                    messageDiv.textContent = 'Please specify the Cost Type (e.g., Per Person, Per Team) if you enter a cost.';
+                // Validazione per costo, tipo di costo e valuta
+                if (eventCost !== null && (costType === 'not_specified' || costType === '') && (currency === null || currency === '')) {
+                    messageDiv.textContent = 'Please specify the Cost Type AND Currency if you enter a cost.';
                     messageDiv.className = 'message error';
                     saveChangesButton.disabled = false;
                     saveChangesButton.textContent = 'Save Changes';
                     return;
                 }
-                if (eventCost === null && costType !== 'not_specified' && costType !== '') {
-                    messageDiv.textContent = 'You have selected a Cost Type but not entered a Cost. Please enter a cost or select "Not Specified".';
+                if (eventCost === null && (costType !== 'not_specified' || costType !== '' || currency !== null || currency !== '')) {
+                    messageDiv.textContent = 'You have selected a Cost Type or Currency but not entered a Cost. Please enter a cost or select "Not Specified" for Cost Type and "Select Currency" for Currency.';
                     messageDiv.className = 'message error';
                     saveChangesButton.disabled = false;
                     saveChangesButton.textContent = 'Save Changes';
                     return;
                 }
 
+
                 const updatedEvent = {
-                    id: currentEventId, // L'ID dell'evento corrente
+                    id: currentEventId,
                     name: eventName,
                     startDate: eventStartDate,
                     endDate: eventEndDate === '' ? null : eventEndDate,
@@ -361,9 +374,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     description: eventDescription === '' ? null : eventDescription,
                     link: eventLink === '' ? null : eventLink,
                     contactEmail: contactEmail === '' ? null : contactEmail,
-                    featured: false, // Assumendo che 'featured' non sia modificabile qui
+                    featured: false,
                     cost: eventCost,
-                    costType: costType
+                    costType: costType,
+                    currency: currency // AGGIUNGI LA VALUTA ALL'OGGETTO EVENTO
                 };
 
                 const readResponse = await fetch(JSONBIN_EVENTS_WRITE_URL + '/latest', {
@@ -377,7 +391,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const existingData = await readResponse.json();
                 let events = existingData.record || [];
 
-                // Trova e sostituisci l'evento
                 const eventIndex = events.findIndex(e => e.id === currentEventId);
                 if (eventIndex > -1) {
                     events[eventIndex] = updatedEvent;
