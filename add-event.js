@@ -359,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error(`Error adding event: ${writeResponse.status} - ${errorText}`);
                 }
 
-                messageDiv.textContent = `Event '${eventName}' added successfully! ID: ${eventId}`;
+                messageDiv.textContent = `Event '${eventName}' added successfully! Remember your Event ID: ${eventId} for future edits.`;
                 messageDiv.className = 'message success';
             }
 

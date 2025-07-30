@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return costTypeString
             .replace(/_/g, ' ')
             .split(' ')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .map(word => word.charAt(0).toUpperCase() + ' ' + word.slice(1))
             .join(' ');
     }
 
@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const formattedCost = `${currencySym}${event.cost.toFixed(2)}`;
                 const formattedCostType = formatCostType(event.costType);
                 // Combiniamo il tutto in un'unica riga
-                costDisplay = `<p><i class="fas fa-dollar-sign icon-margin-right"></i><strong>Costo:</strong> ${formattedCost} ${formattedCostType}</p>`;
+                costDisplay = `<p><i class="fas fa-dollar-sign icon-margin-right"></i><strong>Cost:</strong> ${formattedCost} ${formattedCostType}</p>`;
             }
             // --- FINE MODIFICA ---
 
