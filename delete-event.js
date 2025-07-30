@@ -130,57 +130,52 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    async function toggleFeaturedStatus(event) {
-        const createdAt = event.target.dataset.createdAt;
-        const newFeaturedStatus = event.target.checked;
-        
-        // Trova l'evento originale per i dettagli nel log
-        const originalEvent = allEvents.find(e => e.createdAt === createdAt);
-
-        messageDiv.textContent = 'Updating featured status...';
-        messageDiv.className = 'message info';
-
+   // Funzione per aggiornare lo stato "featured" di un evento
+    async function toggleFeaturedStatus(eventId, isFeatured) {
         try {
-            const eventIndex = allEvents.findIndex(e => e.createdAt === createdAt);
+            // Leggi gli eventi attuali dal bin
+            const response = await fetch(JSONBIN_EVENTS_READ_URL, {
+                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to read events for toggling featured status: ${response.status} - ${await response.text()}`);
+            }
+
+            const data = await response.json();
+            let events = data.record || [];
+
+            // ***** PUNTO CHIAVE: Trovare l'evento per ID *****
+            const eventIndex = events.findIndex(event => event.id === eventId); // Riga 146 o vicina
+            
             if (eventIndex === -1) {
+                // Se l'evento non viene trovato, lancia un errore
                 throw new Error('Event not found for updating featured status.');
             }
-            allEvents[eventIndex].featured = newFeaturedStatus;
 
-            const response = await fetch(JSONBIN_WRITE_URL, {
+            // Aggiorna lo stato featured
+            events[eventIndex].featured = isFeatured;
+
+            // Scrivi l'array aggiornato nel bin
+            const writeResponse = await fetch(JSONBIN_EVENTS_WRITE_URL, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Master-Key': JSONBIN_MASTER_KEY,
                     'X-Bin-Meta': 'false'
                 },
-                body: JSON.stringify(allEvents)
+                body: JSON.stringify(events)
             });
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Failed to update featured status: ${response.status} - ${errorText}`);
+            if (!writeResponse.ok) {
+                throw new Error(`Failed to update featured status in bin: ${writeResponse.status} - ${await writeResponse.text()}`);
             }
 
-            messageDiv.textContent = 'Featured status updated successfully!';
-            messageDiv.className = 'message success';
-            displayEvents();
-
-            // Log dell'azione
-            await logAction(
-                newFeaturedStatus ? 'Event Featured' : 'Event Unfeatured', 
-                { 
-                    name: originalEvent.name, 
-                    createdAt: originalEvent.createdAt, 
-                    location: originalEvent.location 
-                }
-            );
-
+            console.log(`Featured status for event ${eventId} updated to ${isFeatured}.`);
+            return true; // Successo
         } catch (error) {
             console.error('Error toggling featured status:', error);
-            messageDiv.textContent = `Error: ${error.message}`;
-            messageDiv.className = 'message error';
-            event.target.checked = !newFeaturedStatus;
+            throw error; // Rilancia l'errore per gestirlo all'esterno
         }
     }
 
