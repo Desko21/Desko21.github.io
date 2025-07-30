@@ -346,7 +346,7 @@ form button:hover {
 
 /* Stili per il pulsante di donazione PayPal */
 .paypal-donate-button-container input[type="image"] {
-    width: 150px;
+    width: 250px;
     height: auto;
     max-width: 100%;
 }
