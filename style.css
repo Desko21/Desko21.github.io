@@ -736,3 +736,13 @@ form input[type="image"] {
     font-size: 1.1rem;
     transition: background-color 0.3s ease;
 }
+
+.full-width-input {
+    width: 100%; /* O una larghezza fissa come 400px */
+    box-sizing: border-box;
+    /* Altri stili per uniformare l'aspetto */
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
