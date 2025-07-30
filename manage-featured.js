@@ -1,3 +1,12 @@
+// manage-featured.js
+
+import { 
+    JSONBIN_MASTER_KEY,
+    // Note: JSONBIN_READ_URL and JSONBIN_UPDATE_URL are defined locally
+    // If you prefer, you can also import them from config.js
+    JSONBIN_LOGS_WRITE_URL // Make sure this is imported from config.js
+} from './config.js'; // Ensure JSONBIN_LOGS_WRITE_URL is in config.js
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('manage-featured.js loaded.');
 
@@ -15,13 +24,74 @@ document.addEventListener('DOMContentLoaded', () => {
     const PAYPAL_RETURN_URL = 'https://tuodominio.com/grazie-paypal.html'; // URL dopo pagamento riuscito
     const PAYPAL_CANCEL_URL = 'https://tuodominio.com/annulla-pagamento.html'; // URL dopo pagamento annullata
     // NOTA: notify_url richiede un backend per IPN, non incluso in questo setup frontend
-    // const PAYPAL_NOTIFY_URL = 'https://tuodominio.com/ipn-listener.php'; 
-
+    // const PAYPAL_NOTIFY_URL = 'https://tuodominio.com/ipn-listener.php'; 
 
     const eventListDiv = document.getElementById('event-list-for-featured-management');
     const messageDiv = document.getElementById('message');
 
     let allEvents = []; // To store all events after fetching
+
+    // --- NEW: Log Activity Function ---
+    async function logActivity(action, eventDetails) {
+        const timestamp = new Date().toISOString();
+        let userIp = 'N/A';
+
+        try {
+            const ipResponse = await fetch('https://api.ipify.org?format=json');
+            if (ipResponse.ok) {
+                const ipData = await ipResponse.json();
+                userIp = ipData.ip || 'N/A';
+            } else {
+                console.warn("Could not retrieve IP:", await ipResponse.text());
+            }
+        } catch (ipError) {
+            console.error("Error retrieving IP:", ipError);
+        }
+
+        const logEntry = {
+            timestamp: timestamp,
+            action: action, 
+            ipAddress: userIp,
+            event: {
+                id: eventDetails.id, // Using eventDetails.id (which is createdAt in this context)
+                name: eventDetails.name,
+                location: eventDetails.location,
+            }
+        };
+
+        try {
+            const readLogResponse = await fetch(JSONBIN_LOGS_WRITE_URL + '/latest', {
+                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+            });
+            let existingLogs = [];
+            if (readLogResponse.ok) {
+                const logData = await readLogResponse.json();
+                existingLogs = logData.record || [];
+            } else {
+                console.warn("Could not read existing logs or bin does not exist, starting fresh.");
+            }
+
+            existingLogs.push(logEntry);
+
+            const writeLogResponse = await fetch(JSONBIN_LOGS_WRITE_URL, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_MASTER_KEY,
+                    'X-Bin-Meta': 'false'
+                },
+                body: JSON.stringify(existingLogs)
+            });
+
+            if (!writeLogResponse.ok) {
+                console.error("Failed to save activity log:", await writeLogResponse.text());
+            }
+        } catch (error) {
+            console.error('Error logging activity:', error);
+        }
+    }
+    // --- END NEW: Log Activity Function ---
+
 
     async function loadEventsForFeaturedManagement() {
         try {
@@ -63,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         events.forEach(event => {
             const eventItem = document.createElement('div');
-            eventItem.className = 'tournament-item'; 
+            eventItem.className = 'tournament-item'; 
             
             let actionButtonHtml = '';
             let sixesIconHtml = '';
@@ -77,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!event.featured) {
                 // Aggiungi la stellina al pulsante "Make Featured"
                 actionButtonHtml = `
-                    <button class="feature-button" data-id="${event.createdAt}" data-event-name="${event.name}">
+                    <button class="feature-button" data-id="${event.createdAt}" data-event-name="${event.name}" data-event-location="${event.location}">
                         Make Featured (1€) <span class="star-icon">★</span>
                     </button>
                 `;
@@ -90,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h3>${event.name}</h3>
                 <p><strong>Location:</strong> ${event.location}</p>
                 <p><strong>Date:</strong> ${new Date(event.startDate).toLocaleDateString()}</p>
-                <p>${event.description.substring(0, 100)}...</p>
+                <p>${event.description ? event.description.substring(0, 100) + '...' : ''}</p>
                 <div class="event-actions">
                     ${actionButtonHtml}
                     ${sixesIconHtml} </div>
@@ -101,8 +171,31 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add event listener for the "Make Featured" buttons
         document.querySelectorAll('.feature-button').forEach(button => {
             button.addEventListener('click', (e) => {
-                const eventId = e.target.dataset.id;
+                const eventId = e.target.dataset.id; // This is createdAt
                 const eventName = e.target.dataset.eventName;
+                const eventLocation = e.target.dataset.eventLocation; // Get location for logging
+                
+                // --- NEW: Log the activity before initiating PayPal ---
+                // We need to find the full event object for logActivity
+                const selectedEvent = allEvents.find(event => event.createdAt === eventId);
+                if (selectedEvent) {
+                    // Use a more generic action for the button click
+                    logActivity('CLICK_MAKE_FEATURED_BUTTON', { 
+                        id: selectedEvent.id, // Use the actual event ID if available, otherwise createdAt
+                        name: selectedEvent.name, 
+                        location: selectedEvent.location 
+                    });
+                } else {
+                    console.warn('Could not find event in allEvents for logging.');
+                    // Fallback log with available data
+                    logActivity('CLICK_MAKE_FEATURED_BUTTON_FALLBACK', { 
+                        id: eventId, 
+                        name: eventName, 
+                        location: eventLocation 
+                    });
+                }
+                // --- END NEW ---
+
                 initiatePayPalPayment(eventId, eventName); // PayPal call
             });
         });
@@ -111,24 +204,25 @@ document.addEventListener('DOMContentLoaded', () => {
     function initiatePayPalPayment(eventId, eventName) {
         const confirmation = confirm(`You are about to pay ${PAYPAL_AMOUNT} ${PAYPAL_CURRENCY_CODE} to make "${eventName}" a featured event. Continue to PayPal?`);
         if (!confirmation) {
+            showMessage('PayPal payment cancelled by user.', 'warning');
             return;
         }
 
         const form = document.createElement('form');
         form.action = 'https://www.paypal.com/cgi-bin/webscr';
         form.method = 'post';
-        form.target = '_top'; 
+        form.target = '_top'; 
 
         const fields = {
             cmd: '_xclick',
             business: PAYPAL_BUSINESS_EMAIL_OR_ID,
-            item_name: `${PAYPAL_ITEM_NAME} - ${eventName}`, 
+            item_name: `${PAYPAL_ITEM_NAME} - ${eventName}`, 
             amount: PAYPAL_AMOUNT,
             currency_code: PAYPAL_CURRENCY_CODE,
             no_shipping: '1',
             return: PAYPAL_RETURN_URL,
             cancel_return: PAYPAL_CANCEL_URL,
-            custom: eventId 
+            custom: eventId 
         };
 
         for (const key in fields) {
@@ -149,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.body.appendChild(form);
         form.submit();
-        document.body.removeChild(form); 
+        document.body.removeChild(form); 
     }
 
     function showMessage(msg, type) {
@@ -158,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             messageDiv.textContent = '';
             messageDiv.className = 'message';
-        }, 5000); 
+        }, 5000); 
     }
 
     // Initial load of events when the page loads
