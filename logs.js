@@ -11,10 +11,6 @@ import {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('logs.js loaded.');
 
-    // SOSTITUISCI CON LA TUA MASTER KEY EFFETTIVA DI JSONBIN.IO
-    const JSONBIN_MASTER_KEY = '$2a$10$moQg0NYbmqEkIUS1bTku2uiW8ywvcz0Bt8HKG3J/4qYU8dCZggiT6'; 
-    const JSONBIN_LOGS_BIN_ID = '688924c7f7e7a370d1eff96b'; // Il BIN ID dei tuoi log
-    const JSONBIN_LOGS_READ_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_LOGS_BIN_ID}/latest`;
     // L'URL di scrittura non è più necessario visto che non cancelliamo i log
     // const JSONBIN_LOGS_WRITE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_LOGS_BIN_ID}`; 
 
