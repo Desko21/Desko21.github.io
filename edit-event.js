@@ -31,12 +31,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const editEventTypeInput = document.getElementById('editEventType');
     const editEventGenderInput = document.getElementById('editEventGender');
     const editEventLinkInput = document.getElementById('editEventLink');
+    // --- NUOVA RIGA: Riferimento al campo email di contatto ---
+    const editContactEmailInput = document.getElementById('editContactEmail');
+
 
     const saveChangesButton = document.getElementById('saveChangesButton');
-    // const deleteEventButton = document.getElementById('deleteEventButton'); // RIMOSSO
 
     // --- Data for Select Options ---
-    // Queste liste DEVONO CORRISPONDERE a quelle in add-event.js per coerenza
     const gameTypes = ['Field', 'Box', 'Sixes', 'Clinic', 'Other'];
     const genders = ['Men', 'Women', 'Both', 'Mixed', 'Other'];
 
@@ -48,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         options.forEach(optionText => {
             const option = document.createElement('option');
             option.value = optionText.toLowerCase(); // Il valore sarà in minuscolo
-            option.textContent = optionText;         // Il testo visualizzato sarà con la maiuscola iniziale
+            option.textContent = optionText;        // Il testo visualizzato sarà con la maiuscola iniziale
             if (option.value === selectedValue) {
                 option.selected = true;
             }
@@ -216,6 +217,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 populateDropdown(editEventGenderInput, genders, foundEvent.gender);
                 
                 editEventLinkInput.value = foundEvent.link || '';
+                // --- NUOVA RIGA: Popola il campo email di contatto ---
+                editContactEmailInput.value = foundEvent.contactEmail || '';
+
 
                 eventEditFormContainer.style.display = 'block';
                 messageDiv.textContent = `Event '${foundEvent.name}' found! You can now modify its values.`;
@@ -257,6 +261,8 @@ document.addEventListener('DOMContentLoaded', () => {
             gender: editEventGenderInput.value,
             description: editEventDescriptionInput.value,
             link: editEventLinkInput.value,
+            // --- NUOVA RIGA: Includi il valore dell'email di contatto ---
+            contactEmail: editContactEmailInput.value === '' ? null : editContactEmailInput.value,
             featured: false // Impostato a false in modo fisso dato che non c'è il campo nel form
         };
 
@@ -266,6 +272,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (updatedEventData.endDate === '') updatedEventData.endDate = null;
         if (updatedEventData.description === '') updatedEventData.description = null;
         if (updatedEventData.link === '') updatedEventData.link = null;
+        // Non è necessario controllare updatedEventData.contactEmail qui,
+        // perché lo stiamo già impostando a null se è vuoto nella riga precedente.
+
 
         try {
             const readResponse = await fetch(JSONBIN_EVENTS_READ_URL, {
@@ -284,6 +293,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const eventIndex = events.findIndex(event => event.id === eventIdToUpdate);
 
             if (eventIndex !== -1) {
+                // Prima di aggiornare, mantieni lo stato 'featured' esistente
+                // perché non è un campo modificabile dal form
+                updatedEventData.featured = events[eventIndex].featured || false;
+                
                 events[eventIndex] = updatedEventData;
 
                 const writeResponse = await fetch(JSONBIN_EVENTS_WRITE_URL, {
@@ -304,6 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 messageDiv.textContent = `Event '${updatedEventData.name}' (ID: ${eventIdToUpdate}) updated successfully!`;
                 messageDiv.className = 'message success';
                 
+                // Opzionale: nascondi il modulo e resetta la ricerca
                 eventEditFormContainer.style.display = 'none';
                 searchEventIdInput.value = '';
 
@@ -320,6 +334,4 @@ document.addEventListener('DOMContentLoaded', () => {
             messageDiv.className = 'message error';
         }
     });
-
-    // deleteEventButton.addEventListener('click', ...); // RIMOSSO IL LISTENER DEL PULSANTE DI ELIMINAZIONE
 });
