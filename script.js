@@ -7,8 +7,13 @@ import {
     NOMINATIM_USER_AGENT
 } from './config.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+// NON importare loadHeader qui, dato che load-header.js gestisce già il DOMContentLoaded
+// e la sua logica (inclusa la gestione dell'hamburger menu) viene eseguita lì.
+
+document.addEventListener('DOMContentLoaded', () => { // NON più async
     console.log('Script.js is loaded and DOM is ready. Starting map initialization...');
+
+    // ... (tutto il resto del tuo codice, dalla mappa ai filtri) ...
 
     const DEFAULT_LATITUDE = 41.9028;
     const DEFAULT_LONGITUDE = 12.4964;
@@ -26,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Geolocation is supported by this browser.");
         map.locate({
             setView: true,
-            maxZoom: 5, // Un po' meno zoom per mostrare una zona più ampia inizialmente
+            maxZoom: 5,
             enableHighAccuracy: true,
             timeout: 10000,
             maximumAge: 0
@@ -44,13 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let markers = L.featureGroup().addTo(map);
     let allEvents = []; // Contains all loaded events
 
-    // Populate Game Type and Gender filters
     const gameTypes = ['All', 'Field', 'Box', 'Sixes', 'Clinic', 'Other'];
     const genders = ['All', 'Men', 'Women', 'Both', 'Mixed', 'Other'];
 
-    // --- NEW DATA FOR COST TYPE AND CURRENCY (Must match add-event.js and edit-event.js) ---
     const costTypeOptions = ['Not Specified', 'Per Person', 'Per Team'];
-    // Map for currency symbols based on ISO code
     const currencySymbols = {
         'usd': '$',
         'eur': '€',
@@ -62,14 +64,12 @@ document.addEventListener('DOMContentLoaded', () => {
         'cny': '¥',
         'inr': '₹',
         'brl': 'R$'
-        // Add more if needed
     };
 
-    // --- NEW: Mappa per i nomi visualizzati dei tipi di costo (CORRECTED) ---
     const costTypeDisplayNames = {
         'not_specified': '',
-        'perperson': 'per person', // Changed to lowercase 'p' to match usual formatting
-        'perteam': 'per team'      // Changed to lowercase 't'
+        'perperson': 'per person',
+        'perteam': 'per team'
     };
 
     function populateFilterDropdown(selectElement, options) {
@@ -82,7 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Populate filter dropdowns on startup
     populateFilterDropdown(gameTypeFilter, gameTypes);
     populateFilterDropdown(genderFilter, genders);
 
@@ -120,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
             allEvents = Array.isArray(data.record) ? data.record : [];
             console.log('All events loaded:', allEvents);
 
-            filterAndDisplayEvents(); // Recreate map and list with loaded data
+            filterAndDisplayEvents();
 
         } catch (error) {
             console.error('An unexpected error occurred:', error);
@@ -129,16 +128,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Helper function to format cost type (e.g., 'perperson' to 'per person')
     function formatCostType(costTypeString) {
-        // Usa la mappa per ottenere il nome di visualizzazione esatto
-        // Se costTypeString non è nella mappa o è vuoto/null, restituisce una stringa vuota
         return costTypeDisplayNames[costTypeString] || '';
     }
 
-    // Helper function to get currency symbol
     function getCurrencySymbol(currencyCode) {
-        return currencySymbols[currencyCode.toLowerCase()] || ''; // Fallback to empty string
+        return currencySymbols[currencyCode.toLowerCase()] || '';
     }
 
 
@@ -200,18 +195,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
             }
 
-            // --- MODIFICA QUI PER COSTO, VALUTA, TIPO DI COSTO UNO DI FIANCO ALL'ALTRO ---
             let costPopup = '';
-            // Verifica se event.cost è un numero valido e non nullo
             if (event.cost !== null && event.cost !== undefined && typeof event.cost === 'number' && !isNaN(event.cost)) {
                 const currencySym = event.currency ? getCurrencySymbol(event.currency) : '';
                 const formattedCost = `${currencySym}${event.cost.toFixed(2)}`;
-                // Utilizza formatCostType solo se costType ha un valore significativo
                 const formattedCostType = event.costType && event.costType !== 'not_specified' ? formatCostType(event.costType) : '';
-                // Combiniamo il tutto in un'unica riga, aggiungendo uno spazio solo se il tipo di costo è presente
                 costPopup = `<p><strong>Cost:</strong> ${formattedCost}${formattedCostType ? ' ' + formattedCostType : ''}</p>`;
             }
-            // --- FINE MODIFICA ---
 
             let popupContent = `<h3>${event.name}</h3>`;
             popupContent += `<p><i class="fas fa-calendar-alt icon-margin-right"></i><strong>Date:</strong> ${new Date(event.startDate).toLocaleDateString()}`;
@@ -223,9 +213,8 @@ document.addEventListener('DOMContentLoaded', () => {
             popupContent += `<p><i class="fas fa-map-marker-alt icon-margin-right"></i><strong>Location:</strong> ${event.location}</p>`;
             popupContent += `<p>${gameTypeIcon}<strong>Game Type:</strong> ${eventType}</p>`;
             popupContent += `<p>${genderIcon}<strong>Gender:</strong> ${gender}</p>`;
-            popupContent += costPopup; // Inseriamo qui le informazioni sul costo
+            popupContent += costPopup;
 
-            // Aggiungiamo un link "More Info" che punta all'elemento dell'elenco
             popupContent += `<p><a href="#event-${event.id}" class="more-info-link-popup" onclick="this.closest('.leaflet-popup').remove();"><i class="fas fa-external-link-alt icon-margin-right"></i>More Info</a></p>`;
 
             marker.bindPopup(popupContent, {
@@ -318,7 +307,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             let featuredIconHtml = event.featured ? '<span class="star-icon event-list-icon">★</span>' : '';
-            // let sixesTitleIconHtml = ''; // Questo non è usato, puoi rimuoverlo
 
             const formattedDate = new Date(event.startDate).toLocaleDateString();
             let dateRange = formattedDate;
@@ -366,7 +354,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
             }
 
-            // --- MODIFICA QUI PER COSTO, VALUTA, TIPO DI COSTO UNO DI FIANCO ALL'ALTRO ---
             let costDisplay = '';
             if (event.cost !== null && event.cost !== undefined && typeof event.cost === 'number' && !isNaN(event.cost)) {
                 const currencySym = event.currency ? getCurrencySymbol(event.currency) : '';
@@ -374,7 +361,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const formattedCostType = event.costType && event.costType !== 'not_specified' ? formatCostType(event.costType) : '';
                 costDisplay = `<p><i class="fas fa-dollar-sign icon-margin-right"></i><strong>Cost:</strong> ${formattedCost}${formattedCostType ? ' ' + formattedCostType : ''}</p>`;
             }
-            // --- FINE MODIFICA ---
 
             eventItem.innerHTML = `
                 <h3 class="event-title-clickable">
@@ -411,39 +397,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Event listeners for filters and map movement
     map.on('moveend', filterAndDisplayEvents);
     gameTypeFilter.addEventListener('change', filterAndDisplayEvents);
     genderFilter.addEventListener('change', filterAndDisplayEvents);
 
-    // Load events on startup
     loadEvents();
-
-
-    // START: Hamburger Menu Management
-    const hamburgerMenu = document.querySelector('.hamburger-menu');
-    const mobileNav = document.querySelector('nav.mobile-nav');
-    const body = document.body; // Reference to the body element
-
-    // Ensure elements exist before adding listeners
-    if (hamburgerMenu && mobileNav) {
-        hamburgerMenu.addEventListener('click', () => {
-            hamburgerMenu.classList.toggle('open');
-            mobileNav.classList.toggle('active');
-            body.classList.toggle('mobile-menu-open'); // Toggle class on body
-        });
-
-        // Close the menu if a link inside is clicked
-        mobileNav.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                hamburgerMenu.classList.remove('open');
-                mobileNav.classList.remove('active');
-                body.classList.remove('mobile-menu-open');
-            });
-        });
-    } else {
-        console.warn('Hamburger menu or mobile navigation not found. Check your HTML structure.');
-    }
-    // END: Hamburger Menu Management
-
 });
