@@ -28,7 +28,7 @@
     <main>
         <div class="container">
             <h2>Add New Lacrosse Event</h2>
-            <form id="addEventForm">
+            <form id="EventForm">
                 <div class="form-group">
                     <label for="eventName">Event Name:</label>
                     <input type="text" id="eventName" required>
@@ -40,15 +40,14 @@
                     <small>Type a city and click outside the box to get coordinates.</small>
                 </div>
 
-                <div class="form-group">
-                    <label for="eventLatitude">Latitude:</label>
-                    <input type="text" id="eventLatitude" readonly required>
-                </div>
-
-                <div class="form-group">
-                    <label for="eventLongitude">Longitude:</label>
-                    <input type="text" id="eventLongitude" readonly required>
-                </div>
+               <div class="form-group">
+					<label for="latitude">Latitudine:</label>
+					<input type="number" id="latitude" step="any">
+				</div>
+				<div class="form-group">
+					<label for="longitude">Longitudine:</label>
+					<input type="number" id="longitude" step="any">
+				</div>
 
                 <div class="form-group">
                     <label for="eventGameType">Game Type:</label>
