@@ -1,7 +1,7 @@
 // edit-event.js
 
 // Importa le costanti dal file config.js
-import { JSONBIN_MASTER_KEY, JSONBIN_EVENTS_READ_URL, JSONBIN_EVENTS_UPDATE_URL, NOMINATIM_USER_AGENT } from './config.js';
+import { JSONBIN_MASTER_KEY, JSONBIN_EVENTS_READ_URL, JSONBIN_EVENTS_WRITE_URL, NOMINATIM_USER_AGENT } from './config.js';
 
 // Riferimenti agli elementi del DOM
 const searchEventIdInput = document.getElementById('searchEventId');
