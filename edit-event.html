@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Event</title>
+    <title>Edit Event - LaxMap</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
@@ -11,92 +11,104 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 </head>
 <body>
-   <div id="header-placeholder"></div>
+    <div id="header-placeholder"></div>
+
     <main>
         <div class="container">
-            
-
-            <div class="form-section">
-                <h2>Search Event by ID</h2>
-				<p>Can't remember your event ID? <a href="mailto:jakkolo@gmail.com" style="color: white; text-decoration: underline;">Contact Me</a> </p>
+            <h2>Edit Lacrosse Event</h2>
+            <form id="editEventForm">
                 <div class="form-group">
-                    <input class="full-width-input" type="text" id="searchEventId" placeholder="Enter the unique event ID" required>
+                    <label for="eventName">Event Name:</label>
+                    <input type="text" id="eventName" required>
                 </div>
-				</br>
-                <button type="submit" id="searchButton" class="edit-button" >Search Event</button>
-            </div>
-			
-			<div id="message" class="message"></div>
 
-            <div id="eventEditFormContainer" style="display: none;">
-                <h2>Event Details</h2>
-                <form id="editEventForm">
-                    <input type="hidden" id="eventId"> 
-                    
-                    <div class="form-group">
-                        <label for="editEventName">Event Name:</label>
-                        <input type="text" id="editEventName" required>
-                    </div>
+                <div class="form-group">
+                    <label for="eventLocation">Location (City, Country):</label>
+                    <input type="text" id="eventLocation" placeholder="e.g., Rome, Italy" required>
+                    <small>Type a city and click outside the box to get coordinates.</small>
+                </div>
+                
+                <div id="geolocationMessage" class="message" style="margin-top: 5px; margin-bottom: 15px;"></div>
 
-                    <div class="form-group">
-                        <label for="editEventLocation">Location (City, Country):</label>
-                        <input type="text" id="editEventLocation" required>
-                        <small>Type a city and click outside the box to get coordinates.</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="editLatitude">Latitude:</label>
-                        <input type="number" id="editLatitude" step="any">
-                    </div>
-                    <div class="form-group">
-                        <label for="editLongitude">Longitude:</label>
-                        <input type="number" id="editLongitude" step="any">
-                    </div>
-                    <div id="geolocationMessage" class="message" style="margin-top: 5px; margin-bottom: 15px;"></div>
+                <div class="form-group">
+                    <label for="latitude">Latitude:</label>
+                    <input type="text" id="latitude" step="any">
+                </div>
+                <div class="form-group">
+                    <label for="longitude">Longitude:</label>
+                    <input type="text" id="longitude" step="any">
+                </div>
 
-                    <div class="form-group">
-                        <label for="editEventType">Game Type:</label>
-                        <select id="editEventType">
-                            </select>
-                    </div>
+                <div class="form-group">
+                    <label for="eventType">Game Type:</label>
+                    <select id="eventType" required>
+                        <option value="">Select Game Type</option>
+                        <option value="sixes">Sixes</option>
+                        <option value="box">Box</option>
+                        <option value="field">Field</option>
+                        <option value="clinic">Clinic</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
 
-                    <div class="form-group">
-                        <label for="editEventGender">Gender:</label>
-                        <select id="editEventGender">
-                            </select>
-                    </div>
+                <div class="form-group">
+                    <label for="eventGender">Gender:</label>
+                    <select id="eventGender" required>
+                        <option value="">Select Gender</option>
+                        <option value="men">Men</option>
+                        <option value="women">Women</option>
+                        <option value="both">Both</option>
+                        <option value="mixed">Mixed</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
 
-                    <div class="form-group">
-                        <label for="editEventStartDate">Start Date:</label>
-                        <input type="date" id="editEventStartDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="editEventEndDate">End Date:</label>
-                        <input type="date" id="editEventEndDate">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="editEventDescription">Description:</label>
-                        <textarea id="editEventDescription" rows="4"></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="editEventLink">More Info Link (optional):</label>
-                        <input type="url" id="editEventLink" placeholder="e.g., https://example.com/more-info">
-                    </div>
-					
-					<div class="form-group">
-						<label for="editContactEmail">Email di Contatto (Opzionale):</label>
-						<input type="text" id="editContactEmail" placeholder="es. info@tuoevento.com">
-					</div>
-                    
-                    <button type="submit" id="saveChangesButton" class="button">Save Changes</button>
-                    </form>
-            </div>
+                <div class="form-group">
+                    <label for="eventStartDate">Start Date:</label>
+                    <input type="date" id="eventStartDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventEndDate">End Date (optional, if multi-day):</label>
+                    <input type="date" id="eventEndDate">
+                    <small>Leave blank if it's a single-day event.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventCost">Cost (optional):</label>
+                    <input type="number" id="eventCost" step="0.01" min="0" placeholder="e.g., 25.00">
+                    <small>Leave blank if the event is free.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="costType">Cost Type:</label>
+                    <select id="costType">
+                        </select>
+                </div>
+                <div class="form-group">
+                    <label for="eventDescription">Description:</label>
+                    <textarea id="eventDescription" rows="4" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventLink">More Info Link (optional):</label>
+                    <input type="url" id="eventLink" placeholder="e.g., https://example.com/event-info">
+                </div>
+                
+                <div class="form-group">
+                    <label for="contactEmail">Contact Email (optional):</label>
+                    <input type="text" id="contactEmail" placeholder="e.g., info@yourevent.com">
+                </div>
+
+                <button type="submit" id="saveChangesButton" class="button">Save Changes</button>
+                <div id="message"></div>
+            </form>
         </div>
     </main>
-	  <div id="footer-placeholder"></div>
+    <div id="footer-placeholder"></div>
+    <script src="include.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script type="module" src="edit-event.js"></script>
-	<script src="load-header.js"></script>
+    <script src="load-header.js"></script>
 </body>
 </html>

@@ -1,63 +1,79 @@
 // edit-event.js
 
-import { 
+import {
     JSONBIN_MASTER_KEY,
-    JSONBIN_EVENTS_READ_URL,
     JSONBIN_EVENTS_WRITE_URL,
     JSONBIN_LOGS_WRITE_URL,
-    NOMINATIM_USER_AGENT 
+    NOMINATIM_USER_AGENT
 } from './config.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     console.log('edit-event.js loaded.');
 
     // --- HTML Element References ---
+    const editEventForm = document.getElementById('editEventForm');
     const messageDiv = document.getElementById('message');
     const geolocationMessageDiv = document.getElementById('geolocationMessage');
-    const searchEventIdInput = document.getElementById('searchEventId');
-    const searchButton = document.getElementById('searchButton');
-    const eventEditFormContainer = document.getElementById('eventEditFormContainer');
-    const editEventForm = document.getElementById('editEventForm');
-    const editEventLocationInput = document.getElementById('editEventLocation');
-
-    // Edit form fields
-    const eventIdInput = document.getElementById('eventId');
-    const editEventNameInput = document.getElementById('editEventName');
-    const editEventStartDateInput = document.getElementById('editEventStartDate');
-    const editEventEndDateInput = document.getElementById('editEventEndDate');
-    const editEventDescriptionInput = document.getElementById('editEventDescription');
-    const editLatitudeInput = document.getElementById('editLatitude');
-    const editLongitudeInput = document.getElementById('editLongitude');
-    const editEventTypeInput = document.getElementById('editEventType');
-    const editEventGenderInput = document.getElementById('editEventGender');
-    const editEventLinkInput = document.getElementById('editEventLink');
-    // --- NUOVA RIGA: Riferimento al campo email di contatto ---
-    const editContactEmailInput = document.getElementById('editContactEmail');
-
-
+    const eventLocationInput = document.getElementById('eventLocation');
+    const latitudeInput = document.getElementById('latitude');
+    const longitudeInput = document.getElementById('longitude');
     const saveChangesButton = document.getElementById('saveChangesButton');
 
-    // --- Data for Select Options ---
-    const gameTypes = ['Field', 'Box', 'Sixes', 'Clinic', 'Other'];
-    const genders = ['Men', 'Women', 'Both', 'Mixed', 'Other'];
+    const eventNameInput = document.getElementById('eventName');
+    const eventStartDateInput = document.getElementById('eventStartDate');
+    const eventEndDateInput = document.getElementById('eventEndDate');
+    const eventDescriptionInput = document.getElementById('eventDescription');
+    const eventLinkInput = document.getElementById('eventLink');
+    const contactEmailInput = document.getElementById('contactEmail');
 
-    // --- Utility Functions ---
+    const eventTypeInput = document.getElementById('eventType');
+    const eventGenderInput = document.getElementById('eventGender');
 
-    // Funzione per popolare i dropdown
-    function populateDropdown(selectElement, options, selectedValue = '') {
-        selectElement.innerHTML = ''; // Pulisce le opzioni esistenti
+    // --- NEW REFERENCES FOR COST ---
+    const eventCostInput = document.getElementById('eventCost');
+    const costTypeSelect = document.getElementById('costType');
+
+
+    // --- Data for Select Options (MUST MATCH add-event.js and script.js) ---
+    const gameTypesOptions = ['Field', 'Box', 'Sixes', 'Clinic', 'Other'];
+    const gendersOptions = ['Men', 'Women', 'Both', 'Mixed', 'Other'];
+    // --- NEW DATA FOR COST TYPE ---
+    const costTypeOptions = ['Not Specified', 'Per Person', 'Per Team'];
+
+    let currentEventId = null; // To store the ID of the event being edited
+
+    // --- Function to populate dropdowns ---
+    function populateDropdown(selectElement, options, placeholderText = "Select an option") {
+        selectElement.innerHTML = ''; // Clear existing options
+
+        const placeholderOption = document.createElement('option');
+        placeholderOption.value = '';
+        placeholderOption.textContent = placeholderText;
+        if (placeholderText.includes("Select")) { // Only for initial placeholders (Game Type, Gender)
+            placeholderOption.disabled = true;
+        }
+        placeholderOption.selected = true;
+        selectElement.appendChild(placeholderOption);
+
         options.forEach(optionText => {
             const option = document.createElement('option');
-            option.value = optionText.toLowerCase(); // Il valore sarà in minuscolo
-            option.textContent = optionText;        // Il testo visualizzato sarà con la maiuscola iniziale
-            if (option.value === selectedValue) {
-                option.selected = true;
-            }
+            option.value = optionText.toLowerCase().replace(/\s/g, '');
+            option.textContent = optionText;
             selectElement.appendChild(option);
         });
     }
 
+    // Populate dropdowns on page load
+    populateDropdown(eventTypeInput, gameTypesOptions, "Select Game Type");
+    populateDropdown(eventGenderInput, gendersOptions, "Select Gender");
+    // --- POPULATE THE NEW COST TYPE DROPDOWN ---
+    populateDropdown(costTypeSelect, costTypeOptions, "Not Specified");
+
+
+    // --- Utility Functions ---
+
     async function logActivity(action, eventDetails) {
+        // ... (same logActivity function as in add-event.js, no changes needed here) ...
         const timestamp = new Date().toISOString();
         let userIp = 'N/A';
 
@@ -117,9 +133,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function getCoordinatesFromLocation(locationName) {
+        // ... (same getCoordinatesFromLocation function as in add-event.js, no changes needed here) ...
         if (locationName.trim() === '') {
-            editLatitudeInput.value = '';
-            editLongitudeInput.value = '';
+            latitudeInput.value = '';
+            longitudeInput.value = '';
             geolocationMessageDiv.textContent = '';
             geolocationMessageDiv.className = 'message';
             return;
@@ -130,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName)}&limit=1`;
-            
+
             const response = await fetch(nominatimUrl, {
                 headers: {
                     'User-Agent': NOMINATIM_USER_AGENT
@@ -145,13 +162,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data && data.length > 0) {
                 const firstResult = data[0];
-                editLatitudeInput.value = parseFloat(firstResult.lat).toFixed(6); 
-                editLongitudeInput.value = parseFloat(firstResult.lon).toFixed(6);
+                latitudeInput.value = parseFloat(firstResult.lat).toFixed(6);
+                longitudeInput.value = parseFloat(firstResult.lon).toFixed(6);
                 geolocationMessageDiv.textContent = 'Coordinates found!';
                 geolocationMessageDiv.className = 'message success';
             } else {
-                editLatitudeInput.value = '';
-                editLongitudeInput.value = '';
+                latitudeInput.value = '';
+                longitudeInput.value = '';
                 geolocationMessageDiv.textContent = 'Location not found, please enter coordinates manually.';
                 geolocationMessageDiv.className = 'message warning';
             }
@@ -162,176 +179,197 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Initial setup: Populate dropdowns on page load ---
-    populateDropdown(editEventTypeInput, gameTypes);
-    populateDropdown(editEventGenderInput, genders);
-
-    // --- Event Listeners ---
-
-    searchButton.addEventListener('click', async () => {
-        const eventIdToSearch = searchEventIdInput.value.trim();
-        if (!eventIdToSearch) {
-            messageDiv.textContent = 'Please enter an event ID.';
-            messageDiv.className = 'message error';
-            eventEditFormContainer.style.display = 'none';
-            return;
-        }
-
-        messageDiv.textContent = 'Searching for event...';
-        messageDiv.className = 'message info';
-        eventEditFormContainer.style.display = 'none';
-        geolocationMessageDiv.textContent = ''; // Clear geolocation message
-
+    // --- Function to load event data into the form ---
+    async function loadEventForEdit(eventId) {
         try {
-            const response = await fetch(JSONBIN_EVENTS_READ_URL, {
-                headers: {
-                    'X-Master-Key': JSONBIN_MASTER_KEY
-                }
+            const response = await fetch(JSONBIN_EVENTS_WRITE_URL + '/latest', {
+                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
             });
 
             if (!response.ok) {
-                throw new Error(`Error reading events: ${response.status} - ${await response.text()}`);
+                throw new Error(`Failed to load events: ${response.status} - ${await response.text()}`);
             }
 
             const data = await response.json();
             const events = data.record || [];
-            
-            const foundEvent = events.find(event => event.id === eventIdToSearch);
+            const event = events.find(e => e.id === eventId);
 
-            if (foundEvent) {
-                // Populate the form with the found event's data
-                eventIdInput.value = foundEvent.id;
-                editEventNameInput.value = foundEvent.name;
-                
-                // Pre-valorizza le date
-                editEventStartDateInput.value = foundEvent.startDate ? new Date(foundEvent.startDate).toISOString().split('T')[0] : '';
-                editEventEndDateInput.value = foundEvent.endDate ? new Date(foundEvent.endDate).toISOString().split('T')[0] : '';
-                
-                editEventLocationInput.value = foundEvent.location;
-                editEventDescriptionInput.value = foundEvent.description || '';
-                editLatitudeInput.value = foundEvent.latitude;
-                editLongitudeInput.value = foundEvent.longitude;
-                
-                // Popola e seleziona i dropdown basandosi sui valori dell'evento
-                populateDropdown(editEventTypeInput, gameTypes, foundEvent.type);
-                populateDropdown(editEventGenderInput, genders, foundEvent.gender);
-                
-                editEventLinkInput.value = foundEvent.link || '';
-                // --- NUOVA RIGA: Popola il campo email di contatto ---
-                editContactEmailInput.value = foundEvent.contactEmail || '';
+            if (event) {
+                eventNameInput.value = event.name || '';
+                eventLocationInput.value = event.location || '';
+                latitudeInput.value = event.latitude !== null ? event.latitude.toFixed(6) : '';
+                longitudeInput.value = event.longitude !== null ? event.longitude.toFixed(6) : '';
+                eventStartDateInput.value = event.startDate || '';
+                eventEndDateInput.value = event.endDate || '';
+                eventDescriptionInput.value = event.description || '';
+                eventLinkInput.value = event.link || '';
+                contactEmailInput.value = event.contactEmail || '';
 
+                // Set dropdowns
+                eventTypeInput.value = event.type || '';
+                eventGenderInput.value = event.gender || '';
 
-                eventEditFormContainer.style.display = 'block';
-                messageDiv.textContent = `Event '${foundEvent.name}' found! You can now modify its values.`;
-                messageDiv.className = 'message success';
-                
+                // --- LOAD NEW COST FIELDS ---
+                eventCostInput.value = event.cost !== null ? event.cost : '';
+                costTypeSelect.value = event.costType || ''; // Select based on saved value, default to empty/placeholder if null/undefined
+
+                messageDiv.textContent = '';
+                messageDiv.className = 'message';
+                geolocationMessageDiv.textContent = ''; // Clear geo message on load
+                geolocationMessageDiv.className = 'message';
+
             } else {
-                messageDiv.textContent = 'No event found with the specified ID.';
-                messageDiv.className = 'message warning';
-                eventEditFormContainer.style.display = 'none';
+                messageDiv.textContent = 'Event not found.';
+                messageDiv.className = 'message error';
+                console.error('Event not found for ID:', eventId);
             }
         } catch (error) {
-            console.error('Error searching for the event:', error);
-            messageDiv.textContent = `Error: ${error.message}`;
+            console.error('Error loading event for edit:', error);
+            messageDiv.textContent = `Error loading event: ${error.message}`;
             messageDiv.className = 'message error';
         }
+    }
+
+    // --- Main execution flow for edit page ---
+    const urlParams = new URLSearchParams(window.location.search);
+    currentEventId = urlParams.get('id');
+
+    if (currentEventId) {
+        await loadEventForEdit(currentEventId);
+    } else {
+        messageDiv.textContent = 'No event ID provided in the URL.';
+        messageDiv.className = 'message error';
+    }
+
+
+    // --- Event Listeners ---
+
+    // Listener for coordinate lookup when the user leaves the location field
+    eventLocationInput.addEventListener('blur', () => {
+        getCoordinatesFromLocation(eventLocationInput.value);
     });
 
-    editEventLocationInput.addEventListener('blur', () => {
-        getCoordinatesFromLocation(editEventLocationInput.value);
-    });
-
+    // Listener for form submission (save changes)
     editEventForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        saveChangesButton.disabled = true;
+        saveChangesButton.textContent = 'Saving...';
         messageDiv.textContent = 'Saving changes...';
         messageDiv.className = 'message info';
 
-        const eventIdToUpdate = eventIdInput.value;
-
-        const updatedEventData = {
-            id: eventIdToUpdate,
-            name: editEventNameInput.value,
-            startDate: editEventStartDateInput.value,
-            endDate: editEventEndDateInput.value,
-            location: editEventLocationInput.value,
-            latitude: parseFloat(editLatitudeInput.value),
-            longitude: parseFloat(editLongitudeInput.value),
-            type: editEventTypeInput.value,
-            gender: editEventGenderInput.value,
-            description: editEventDescriptionInput.value,
-            link: editEventLinkInput.value,
-            // --- NUOVA RIGA: Includi il valore dell'email di contatto ---
-            contactEmail: editContactEmailInput.value === '' ? null : editContactEmailInput.value,
-            featured: false // Impostato a false in modo fisso dato che non c'è il campo nel form
-        };
-
-        // Gestione di campi opzionali che potrebbero essere vuoti o non validi
-        if (isNaN(updatedEventData.latitude)) updatedEventData.latitude = null;
-        if (isNaN(updatedEventData.longitude)) updatedEventData.longitude = null;
-        if (updatedEventData.endDate === '') updatedEventData.endDate = null;
-        if (updatedEventData.description === '') updatedEventData.description = null;
-        if (updatedEventData.link === '') updatedEventData.link = null;
-        // Non è necessario controllare updatedEventData.contactEmail qui,
-        // perché lo stiamo già impostando a null se è vuoto nella riga precedente.
-
-
         try {
-            const readResponse = await fetch(JSONBIN_EVENTS_READ_URL, {
-                headers: {
-                    'X-Master-Key': JSONBIN_MASTER_KEY
-                }
+            const eventName = eventNameInput.value;
+            const eventLocation = eventLocationInput.value;
+            const eventStartDate = eventStartDateInput.value;
+            const eventEndDate = eventEndDateInput.value;
+            const eventDescription = eventDescriptionInput.value;
+            const eventLink = eventLinkInput.value;
+            const contactEmail = contactEmailInput.value;
+            const eventType = eventTypeInput.value;
+            const eventGender = eventGenderInput.value;
+
+            // --- GET NEW COST FIELD VALUES ---
+            const eventCost = eventCostInput.value === '' ? null : parseFloat(eventCostInput.value);
+            const costType = costTypeSelect.value === '' ? 'not_specified' : costTypeSelect.value;
+
+
+            let latitude = parseFloat(latitudeInput.value);
+            let longitude = parseFloat(longitudeInput.value);
+
+            if (isNaN(latitude)) latitude = null;
+            if (isNaN(longitude)) longitude = null;
+
+            // Basic validation for dropdowns
+            if (eventType === '' || eventGender === '') {
+                messageDiv.textContent = 'Please select a Game Type and a Gender.';
+                messageDiv.className = 'message error';
+                saveChangesButton.disabled = false;
+                saveChangesButton.textContent = 'Save Changes';
+                return;
+            }
+            // --- VALIDATION FOR COST AND COST TYPE ---
+            if (eventCost !== null && costType === 'not_specified') {
+                messageDiv.textContent = 'Please specify the Cost Type (e.g., Per Person, Per Team) if you enter a cost.';
+                messageDiv.className = 'message error';
+                saveChangesButton.disabled = false;
+                saveChangesButton.textContent = 'Save Changes';
+                return;
+            }
+            if (eventCost === null && costType !== 'not_specified') {
+                messageDiv.textContent = 'You have selected a Cost Type but not entered a Cost. Please enter a cost or select "Not Specified".';
+                messageDiv.className = 'message error';
+                saveChangesButton.disabled = false;
+                saveChangesButton.textContent = 'Save Changes';
+                return;
+            }
+
+
+            const updatedEvent = {
+                id: currentEventId, // Ensure the ID remains the same
+                name: eventName,
+                startDate: eventStartDate,
+                endDate: eventEndDate === '' ? null : eventEndDate,
+                location: eventLocation,
+                latitude: latitude,
+                longitude: longitude,
+                type: eventType,
+                gender: eventGender,
+                description: eventDescription === '' ? null : eventDescription,
+                link: eventLink === '' ? null : eventLink,
+                contactEmail: contactEmail === '' ? null : contactEmail,
+                featured: false, // Assuming 'featured' status is not editable here
+                // --- ADD NEW COST FIELDS TO UPDATED EVENT OBJECT ---
+                cost: eventCost,
+                costType: costType
+            };
+
+            const readResponse = await fetch(JSONBIN_EVENTS_WRITE_URL + '/latest', {
+                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
             });
 
             if (!readResponse.ok) {
-                throw new Error(`Error reading existing events for modification: ${readResponse.status} - ${await readResponse.text()}`);
+                throw new Error(`Error reading existing events: ${readResponse.status} - ${await readResponse.text()}`);
             }
 
             const existingData = await readResponse.json();
             let events = existingData.record || [];
 
-            const eventIndex = events.findIndex(event => event.id === eventIdToUpdate);
-
-            if (eventIndex !== -1) {
-                // Prima di aggiornare, mantieni lo stato 'featured' esistente
-                // perché non è un campo modificabile dal form
-                updatedEventData.featured = events[eventIndex].featured || false;
-                
-                events[eventIndex] = updatedEventData;
-
-                const writeResponse = await fetch(JSONBIN_EVENTS_WRITE_URL, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_MASTER_KEY,
-                        'X-Bin-Meta': 'false'
-                    },
-                    body: JSON.stringify(events)
-                });
-
-                if (!writeResponse.ok) {
-                    const errorText = await writeResponse.text();
-                    throw new Error(`Error saving event modifications: ${writeResponse.status} - ${errorText}`);
-                }
-
-                messageDiv.textContent = `Event '${updatedEventData.name}' (ID: ${eventIdToUpdate}) updated successfully!`;
-                messageDiv.className = 'message success';
-                
-                // Opzionale: nascondi il modulo e resetta la ricerca
-                eventEditFormContainer.style.display = 'none';
-                searchEventIdInput.value = '';
-
-                logActivity('EDIT_EVENT', updatedEventData);
-
+            // Find and replace the event
+            const eventIndex = events.findIndex(e => e.id === currentEventId);
+            if (eventIndex > -1) {
+                events[eventIndex] = updatedEvent;
             } else {
-                messageDiv.textContent = 'Error: Event not found for modification (ID mismatch).';
-                messageDiv.className = 'message error';
+                throw new Error('Event to update not found in existing data.');
             }
 
+            const writeResponse = await fetch(JSONBIN_EVENTS_WRITE_URL, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_MASTER_KEY,
+                    'X-Bin-Meta': 'false'
+                },
+                body: JSON.stringify(events)
+            });
+
+            if (!writeResponse.ok) {
+                const errorText = await writeResponse.text();
+                throw new Error(`Error updating event: ${writeResponse.status} - ${errorText}`);
+            }
+
+            messageDiv.textContent = `Event '${eventName}' updated successfully!`;
+            messageDiv.className = 'message success';
+
+            logActivity('Event Updated', updatedEvent);
+
         } catch (error) {
-            console.error('Error during event modification:', error);
+            console.error('Error updating event:', error);
             messageDiv.textContent = `Error: ${error.message}`;
             messageDiv.className = 'message error';
+        } finally {
+            saveChangesButton.disabled = false;
+            saveChangesButton.textContent = 'Save Changes';
         }
     });
 });

@@ -23,27 +23,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const eventTypeInput = document.getElementById('eventType');
     const eventGenderInput = document.getElementById('eventGender');
 
+    // --- NEW REFERENCES FOR COST ---
+    const eventCostInput = document.getElementById('eventCost');
+    const costTypeSelect = document.getElementById('costType');
+
+
     // --- Data for Select Options (MUST MATCH edit-event.js and script.js) ---
-    // Ho cambiato i nomi delle variabili per chiarezza, le stringhe iniziali sono ora opzioni "placeholder"
     const gameTypesOptions = ['Field', 'Box', 'Sixes', 'Clinic', 'Other'];
     const gendersOptions = ['Men', 'Women', 'Both', 'Mixed', 'Other'];
+    // --- NEW DATA FOR COST TYPE ---
+    const costTypeOptions = ['Not Specified', 'Per Person', 'Per Team'];
+
 
     // --- Function to populate dropdowns ---
     function populateDropdown(selectElement, options, placeholderText = "Select an option") {
         selectElement.innerHTML = ''; // Clear existing options
 
-        // Crea e aggiungi l'opzione placeholder
+        // Create and add the placeholder option
         const placeholderOption = document.createElement('option');
-        placeholderOption.value = ''; // Valore vuoto per il placeholder
+        placeholderOption.value = ''; // Empty value for the placeholder
         placeholderOption.textContent = placeholderText;
-        placeholderOption.disabled = true; // Rende il placeholder non selezionabile (ma lo è di default)
-        placeholderOption.selected = true; // La rende l'opzione selezionata di default
+        // We are not making it disabled for cost types, because "Not Specified" could be a valid choice
+        // and we want the user to be able to explicitly select "Not Specified".
+        // For "Game Type" and "Gender" dropdowns that are required, the HTML `required` attribute will handle them.
+        if (placeholderText.includes("Select")) { // Only for initial placeholders (Game Type, Gender)
+            placeholderOption.disabled = true;
+        }
+        placeholderOption.selected = true; // Makes it the default selected option
         selectElement.appendChild(placeholderOption);
 
-        // Popola le altre opzioni
+        // Populate other options
         options.forEach(optionText => {
             const option = document.createElement('option');
-            option.value = optionText.toLowerCase(); // Value will be lowercase
+            option.value = optionText.toLowerCase().replace(/\s/g, ''); // Value will be lowercase, no spaces (e.g., 'perperson')
             option.textContent = optionText;        // Displayed text will be title case
             selectElement.appendChild(option);
         });
@@ -52,6 +64,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Populate dropdowns on page load with specific placeholder texts
     populateDropdown(eventTypeInput, gameTypesOptions, "Select Game Type");
     populateDropdown(eventGenderInput, gendersOptions, "Select Gender");
+    // --- POPULATE THE NEW COST TYPE DROPDOWN ---
+    populateDropdown(costTypeSelect, costTypeOptions, "Not Specified");
+
 
     // --- Utility Functions ---
 
@@ -218,6 +233,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Get the value from the new contact email input field
             const contactEmail = document.getElementById('contactEmail').value;
 
+            // --- GET THE VALUES OF THE NEW COST FIELDS ---
+            const eventCost = eventCostInput.value === '' ? null : parseFloat(eventCostInput.value);
+            const costType = costTypeSelect.value === '' ? 'not_specified' : costTypeSelect.value;
+
 
             let latitude = parseFloat(latitudeInput.value);
             let longitude = parseFloat(longitudeInput.value);
@@ -239,7 +258,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 link: eventLink === '' ? null : eventLink,
                 featured: false,
                 // Add the contactEmail to the new event object
-                contactEmail: contactEmail === '' ? null : contactEmail // Save as null if empty
+                contactEmail: contactEmail === '' ? null : contactEmail, // Save as null if empty
+                // --- ADD THE NEW COST FIELDS TO THE EVENT OBJECT ---
+                cost: eventCost,
+                costType: costType
             };
 
             // Basic validation for dropdowns (since they are required)
@@ -249,6 +271,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitButton.disabled = false;
                 submitButton.textContent = 'Add Event';
                 return; // Stop form submission
+            }
+            // --- Validation for cost and cost type ---
+            // If a cost is entered, but no type is specified, or if the type is specified but there's no cost
+            if (eventCost !== null && costType === 'not_specified') {
+                messageDiv.textContent = 'Please specify the Cost Type (e.g., Per Person, Per Team) if you enter a cost.';
+                messageDiv.className = 'message error';
+                submitButton.disabled = false;
+                submitButton.textContent = 'Add Event';
+                return;
+            }
+            if (eventCost === null && costType !== 'not_specified') {
+                messageDiv.textContent = 'You have selected a Cost Type but not entered a Cost. Please enter a cost or select "Not Specified".';
+                messageDiv.className = 'message error';
+                submitButton.disabled = false;
+                submitButton.textContent = 'Add Event';
+                return;
             }
 
 
@@ -292,6 +330,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // After reset, re-populate dropdowns to show placeholder
             populateDropdown(eventTypeInput, gameTypesOptions, "Select Game Type");
             populateDropdown(eventGenderInput, gendersOptions, "Select Gender");
+            // --- RE-POPULATE THE NEW COST DROPDOWN ---
+            populateDropdown(costTypeSelect, costTypeOptions, "Not Specified");
             
             geolocationMessageDiv.textContent = '';
             latitudeInput.value = '';
