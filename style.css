@@ -14,13 +14,14 @@ header .container {
     max-width: 1200px; /* Larghezza massima del contenuto */
     margin: 0 auto; /* Centra orizzontalmente il contenitore stesso */
     padding: 10px 20px; /* Spazio interno ai lati */
+    position: relative; /* Necessario per posizionare la nav mobile */
 }
 
 header {
     background-color: #3BB7B4;
     color: white;
-    padding: 1rem 0;
-    text-align: center;
+    padding: 1rem 0; /* padding verticale, 0 orizzontale perché .container ha padding */
+    text-align: center; /* Questo centrerà header h1 se fosse direttamente nell'header */
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
@@ -29,11 +30,21 @@ header h1 {
     font-size: 2.5rem;
 }
 
-nav {
-    margin-top: 0px;
+/* Stili per il logo */
+.logo img {
+    height: 50px; /* Imposta l'altezza desiderata qui */
+    width: auto; /* Mantiene le proporzioni */
+    display: block; /* Utile per rimuovere spazio extra sotto l'immagine */
+    max-width: 100%; /* Assicura che l'immagine non sborderà dal contenitore su schermi piccoli */
 }
 
-nav ul {
+/* --- Stili per la navigazione DESKTOP (visibile di default) --- */
+/* Targetta solo la nav con la classe desktop-nav */
+nav.desktop-nav {
+    margin-top: 0px; /* Mantiene il tuo margine esistente */
+}
+
+nav.desktop-nav ul {
     list-style: none;
     padding: 0;
     margin: 0;
@@ -43,7 +54,7 @@ nav ul {
     gap: 30px;
 }
 
-nav a {
+nav.desktop-nav a { /* Targetta solo i link della nav desktop */
     color: white;
     text-decoration: none;
     padding: 0.5rem 1rem;
@@ -51,10 +62,17 @@ nav a {
     transition: background-color 0.3s ease;
 }
 
-nav a:hover {
+nav.desktop-nav a:hover {
     background-color: #ED9B47;
     border-radius: 5px;
 }
+
+/* --- ELEMENTI PER IL MENU MOBILE (INIZIALMENTE NASCOSTI) --- */
+.hamburger-menu,
+.mobile-nav {
+    display: none; /* Nascondi di default su schermi grandi */
+}
+
 
 main {
     padding: 20px;
@@ -191,69 +209,28 @@ form button:hover {
     border: 1px solid #f5c6cb;
 }
 
-
-/* Media Queries per la responsività */
-@media (max-width: 768px) {
-    header h1 {
-        font-size: 2rem;
-    }
-
-    nav a {
-        padding: 0.5rem 0.8rem;
-    }
-
-    main {
-        padding: 15px;
-        margin: 15px auto;
-    }
-
-    #map {
-        height: 400px;
-    }
-}
-
-@media (max-width: 480px) {
-    header h1 {
-        font-size: 1.8rem;
-    }
-
-    nav a {
-        display: block;
-        padding: 0.5rem;
-    }
-
-    #map {
-        height: 300px;
-    }
-
-    .tournament-item {
-        padding: 10px;
-    }
-}
-
 /* Stile per rendere il nome del torneo cliccabile */
 .tournament-name-clickable {
-    cursor: pointer; /* Cambia il cursore in una mano quando si passa sopra */
-    color: #007bff; /* Colore del testo per indicare che è cliccabile (es. blu) */
-    text-decoration: none; /* Rimuove la sottolineatura predefinita per i link, se presente */
+    cursor: pointer;
+    color: #007bff;
+    text-decoration: none;
 }
 
-/* Stile per il nome del torneo quando il mouse ci passa sopra */
 .tournament-name-clickable:hover {
-    color: #20454E; /* Colore più scuro al passaggio del mouse */
-    text-decoration: underline; /* Aggiunge una sottolineatura al passaggio del mouse */
+    color: #20454E;
+    text-decoration: underline;
 }
 
 .filter-controls {
     display: flex;
-    flex-wrap: wrap; /* Allows items to wrap on smaller screens */
-    gap: 15px; /* Space between filter groups */
+    flex-wrap: wrap;
+    gap: 15px;
     margin-bottom: 20px;
     padding: 15px;
     background-color: #f9f9f9;
     border: 1px solid #ddd;
     border-radius: 8px;
-    justify-content: center; /* Center filters */
+    justify-content: center;
 }
 
 .filter-group {
@@ -275,7 +252,7 @@ form button:hover {
     background-color: white;
     font-size: 1rem;
     cursor: pointer;
-    min-width: 150px; /* Ensure dropdowns have a minimum width */
+    min-width: 150px;
 }
 
 .filter-group select:focus {
@@ -284,29 +261,15 @@ form button:hover {
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
-/* Responsive adjustments for smaller screens */
-@media (max-width: 768px) {
-    .filter-controls {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 10px;
-    }
-
-    .filter-group {
-        width: 100%;
-        margin-bottom: 10px;
-    }
-}
-
 .delete-button {
-    background-color: #dc3545; /* Red color */
+    background-color: #dc3545;
     color: white;
     padding: 8px 15px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     font-size: 0.9rem;
-    margin-top: 10px; /* Space above button */
+    margin-top: 10px;
 }
 
 .delete-button:hover {
@@ -315,13 +278,13 @@ form button:hover {
 
 .event-actions {
     margin-top: 10px;
-    display: flex; /* Rende i pulsanti affiancati */
-    gap: 10px; /* Spazio tra i pulsanti */
-    flex-wrap: wrap; /* Permette ai pulsanti di andare a capo su schermi piccoli */
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .feature-button {
-    background-color: #EB9B43; /* Green color for Make Featured */
+    background-color: #EB9B43;
     color: white;
     padding: 8px 15px;
     border: none;
@@ -335,8 +298,8 @@ form button:hover {
 }
 
 .unfeature-button {
-    background-color: #ffc107; /* Yellow color for Remove Featured */
-    color: #343a40; /* Dark text for contrast */
+    background-color: #ffc107;
+    color: #343a40;
     padding: 8px 15px;
     border: none;
     border-radius: 5px;
@@ -348,181 +311,102 @@ form button:hover {
     background-color: #e0a800;
 }
 
-/* Stile esistente per delete-button, assicurati che sia presente */
-.delete-button {
-    background-color: #dc3545; /* Red color */
-    color: white;
-    padding: 8px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-.delete-button:hover {
-    background-color: #c82333;
-}
-
 .tournament-item {
-    position: relative; /* Importante per posizionare la stellina in modo assoluto */
-    /* ... altri tuoi stili esistenti per tournament-item ... */
-    padding-right: 30px; /* Assicurati che ci sia spazio per la stellina */
+    position: relative;
+    padding-right: 30px;
 }
 
 /* Stile per la stellina featured */
 .featured-star {
     position: absolute;
-    top: 10px; /* Distanza dall'alto */
-    right: 10px; /* Distanza da destra */
-    color: gold; /* Colore della stellina, puoi cambiarlo */
-    font-size: 24px; /* Dimensione della stellina */
-    line-height: 1; /* Assicura che non ci sia spazio extra sotto l'icona */
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.3); /* Leggera ombra per farla risaltare */
-    /* Puoi usare un'icona SVG direttamente nel CSS come background-image se preferisci un'immagine */
-    /* Esempio con SVG come icona (alternativa al carattere Unicode): */
-    /*
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='gold'%3E%3Cpath d='M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-size: contain;
-    width: 24px;
-    height: 24px;
-    */
-}
-
-/* --- Media Query per schermi piccoli (mobile) --- */
-@media (max-width: 768px) {
-    header .container {
-        flex-direction: column; /* Impila gli elementi verticalmente (logo sopra, nav sotto) */
-        justify-content: center; /* Centra orizzontalmente gli elementi quando sono impilati */
-        text-align: center; /* Centra il testo all'interno del container */
-    }
-
-    header .logo {
-        margin-bottom: 10px; /* Aggiungi un po' di spazio sotto il logo */
-    }
-
-    nav ul {
-        flex-direction: column; /* Impila i link della nav verticalmente */
-        gap: 5px; /* Riduci lo spazio tra i link impilati */
-        width: 100%; /* La lista prende tutta la larghezza disponibile */
-    }
-
-    nav ul li {
-        width: 100%; /* Ogni elemento della lista prende tutta la larghezza */
-        text-align: center; /* Centra il testo di ogni link */
-    }
-
-    nav ul li a {
-        padding: 10px 0; /* Più padding verticale, meno orizzontale */
-    }
-
-    /* Riduci l'altezza del logo su mobile se 150px è troppo grande */
-    header .logo img {
-        height: 100px; /* O un valore più adatto */
-    }
+    top: 10px;
+    right: 10px;
+    color: gold;
+    font-size: 24px;
+    line-height: 1;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 
 /* Stili per il pulsante di donazione PayPal */
 .paypal-donate-button-container input[type="image"] {
-    width: 150px; /* Imposta una larghezza fissa, l'altezza si adatterà automaticamente */
-    height: auto; /* Mantiene le proporzioni originali dell'immagine */
-    max-width: 100%; /* Assicura che non superi la larghezza del suo contenitore */
+    width: 150px;
+    height: auto;
+    max-width: 100%;
 }
 
 /* Se vuoi che anche gli altri pulsanti di PayPal (es. per Featured) siano ridimensionati */
 form input[type="image"] {
-    width: 150px; /* Un esempio di larghezza */
+    width: 150px;
     height: auto;
     max-width: 100%;
 }
 
 /* Stili per le azioni degli eventi (contenitore dei bottoni e icone) */
 .event-actions {
-    display: flex; /* Usa flexbox per allineare bottoni e icone */
-    align-items: center; /* Centra verticalmente gli elementi */
-    gap: 10px; /* Spazio tra i bottoni/icone */
+    display: flex;
+    align-items: center;
+    gap: 10px;
     margin-top: 15px;
-    flex-wrap: wrap; /* Permette agli elementi di andare a capo su schermi piccoli */
+    flex-wrap: wrap;
 }
 
 /* Stili per la stellina all'interno dei bottoni featured */
 .feature-button, .unfeature-button {
-    position: relative; /* Necessario per posizionare la stellina in modo assoluto */
-    padding-right: 30px; /* Aumenta il padding per fare spazio alla stellina */
+    position: relative;
+    padding-right: 30px;
 }
 
 .star-icon {
     position: absolute;
-    top: 5px; /* Sposta la stellina più in alto */
-    right: 5px; /* Sposta la stellina più a destra */
-    color: gold; /* Colore oro per la stellina */
-    font-size: 1.2em; /* Dimensione della stellina */
-    line-height: 1; /* Assicura che non ci sia spazio extra sopra/sotto */
-    pointer-events: none; /* Rende la stellina non cliccabile */
+    top: 5px;
+    right: 5px;
+    color: gold;
+    font-size: 1.2em;
+    line-height: 1;
+    pointer-events: none;
 }
 
 /* Stili per l'icona "6" (Sixes) */
 .sixes-icon {
-    display: inline-block; /* Mantienilo per un corretto flusso del testo */
-    vertical-align: middle; /* Aiuta l'allineamento con il testo circostante */
-    margin-right: 5px; /* Spazio a destra dell'icona, se lo vuoi */
-     width: auto; 
-     height: auto; 
-     line-height: normal; 
-     text-align: left; 
-     border: none; 
-     border-radius: 0; 
-     font-size: inherit;  /* Puoi anche specificarlo se vuoi che sia leggermente diverso dal testo normale */
-     font-weight: normal; 
-     color: inherit; 
-     background-color: transparent; 
-     box-shadow: none; 
-     padding: 0; 
-}
-
-/* Media Query per schermi piccoli (mobile) - Adatta se necessario */
-@media (max-width: 768px) {
-    .event-actions {
-        flex-direction: column; /* Impila i bottoni e le icone verticalmente */
-        align-items: flex-start; /* Allinea a sinistra quando impilati */
-        gap: 8px; /* Riduci lo spazio */
-    }
-
-    .feature-button, .unfeature-button {
-        width: 100%; /* I bottoni prendono tutta la larghezza */
-        text-align: center; /* Centra il testo del bottone */
-    }
-
-    .star-icon {
-        top: 5px; /* Mantieni la posizione relativa al bottone */
-        right: 5px;
-    }
-
-   
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 5px;
+    width: auto;
+    height: auto;
+    line-height: normal;
+    text-align: left;
+    border: none;
+    border-radius: 0;
+    font-size: inherit;
+    font-weight: normal;
+    color: inherit;
+    background-color: transparent;
+    box-shadow: none;
+    padding: 0;
 }
 
 /* Stili per le icone nella lista eventi principale */
 .event-title-icons {
-    display: inline-flex; /* Permette alle icone di stare affiancate */
-    align-items: center; /* Allinea verticalmente le icone */
-    gap: 5px; /* Spazio tra le icone */
-    margin-left: 10px; /* Spazio a sinistra del titolo */
-    vertical-align: middle; /* Allinea le icone con il testo del titolo */
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: 10px;
+    vertical-align: middle;
 }
 
 /* Stili specifici per le icone nella lista eventi */
 .event-list-icon.star-icon {
-    position: static; /* Leve la posizione assoluta dai bottoni */
-    font-size: 1em; /* Dimensione base per la lista */
+    position: static;
+    font-size: 1em;
     top: auto;
     right: auto;
-    color: gold; /* Colore stella */
+    color: gold;
 }
 
 .event-list-icon.sixes-icon {
-    position: static; /* Leva la posizione assoluta dai bottoni */
-    font-size: 0.8em; /* Dimensione leggermente più piccola per il "6" */
-    width: 20px; /* Dimensione più piccola per il cerchio */
+    position: static;
+    font-size: 0.8em;
+    width: 20px;
     height: 20px;
     top: auto;
     right: auto;
@@ -530,7 +414,7 @@ form input[type="image"] {
 
 /* Stili per le icone nei popup della mappa */
 .popup-icon-line {
-    display: flex; /* Mette icona e testo affiancati */
+    display: flex;
     align-items: center;
     gap: 5px;
     margin-top: 5px;
@@ -538,65 +422,56 @@ form input[type="image"] {
 }
 
 .popup-icon-line .star-icon {
-    font-size: 1em; /* Dimensione della stella nel popup */
+    font-size: 1em;
     color: gold;
-    position: static; /* Assicurati che non ci siano posizionamenti assoluti */
+    position: static;
 }
 
 .popup-icon-line .sixes-icon {
-    font-size: 0.8em; /* Dimensione del "6" nel popup */
+    font-size: 0.8em;
     width: 20px;
     height: 20px;
-    position: static; /* Assicurati che non ci siano posizionamenti assoluti */
-}
-
-/* Assicurati che il .star-icon e .sixes-icon generali che avevi per i bottoni featured/unfeatured rimangano */
-/* Esempio (assicurati di averli già o aggiungili): */
-.star-icon {
-    color: gold;
-    /* Altri stili generici per la stella, es. text-shadow per un effetto migliore */
+    position: static;
 }
 
 .icon-margin-right {
-    margin-right: 8px; /* Regola questo valore a tuo piacimento */
-    color: #888; /* Un grigio chiaro per le icone generiche, puoi cambiarlo */
+    margin-right: 8px;
+    color: #888;
 }
 
-/* Puoi anche dare un colore diverso alle icone nei popup se vuoi */
 .leaflet-popup-content .icon-margin-right {
-    color: #555; /* Un grigio più scuro per i popup */
+    color: #555;
 }
-/* --- Stili per i filtri affiancati e centrati --- */
+
+/* Stili per i filtri affiancati e centrati */
 .filters-container {
-    display: flex;             /* Abilita Flexbox per il contenitore */
-    flex-wrap: wrap;           /* Permette ai filtri di andare a capo su schermi piccoli */
-    gap: 20px;                 /* Spazio tra i filtri - puoi provare anche 10px o 15px se 20px è troppo */
-    justify-content: center;   /* CENTRA GLI ELEMENTI ORIZZONTALMENTE */
-    align-items: center;       /* Allinea verticalmente al centro (se i filtri hanno altezze diverse) */
-    margin-bottom: 20px;       /* Spazio sotto i filtri */
-    padding: 10px;             /* Padding interno */
-    background-color: #f9f9f9; /* Sfondo leggero per evidenziare */
-    border-radius: 8px;        /* Bordi arrotondati */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Ombra leggera */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .filter-group {
-    display: flex;            /* Abilita Flexbox per ogni gruppo label/select */
-    align-items: center;      /* Allinea label e select verticalmente */
-    gap: 8px;                 /* Spazio tra label e select */
-    
-    /* MODIFICHE CHIAVE QUI PER MOBILE */
-    flex-basis: 0;           /* La base per la dimensione iniziale è 0 */
-    flex-grow: 1;            /* Permette all'elemento di crescere e occupare lo spazio disponibile */
-    min-width: 140px;        /* Larghezza minima per evitare che diventino troppo piccoli (adatta se necessario) */
-    max-width: 200px;        /* Larghezza massima per evitare che diventino troppo grandi e impediscano l'affiancamento */
-    justify-content: center; /* Centra il contenuto (label/select) all'interno del proprio gruppo */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-basis: 0;
+    flex-grow: 1;
+    min-width: 140px;
+    max-width: 200px;
+    justify-content: center;
 }
 
 .filters-container label {
     font-weight: bold;
     color: #333;
-    white-space: nowrap; /* Impedisce alla label di andare a capo */
+    white-space: nowrap;
 }
 
 .filters-container select {
@@ -623,59 +498,59 @@ form input[type="image"] {
 }
 
 #logsList table {
-    width: 100%; /* Fa sì che la tabella occupi il 100% della larghezza del suo contenitore */
-    border-collapse: collapse; /* Rimuove lo spazio tra i bordi delle celle */
+    width: 100%;
+    border-collapse: collapse;
     margin-top: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Aggiunge una leggera ombra per farla risaltare */
-    border-radius: 8px; /* Bordi arrotondati per la tabella */
-    overflow: hidden; /* Assicura che i bordi arrotondati siano visibili */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
 }
 
-#logsList th, 
+#logsList th,
 #logsList td {
-    border: 1px solid #e0e0e0; /* Bordi più chiari */
-    padding: 12px 15px; /* Aumenta il padding per più spazio */
-    text-align: left; /* Allinea il testo a sinistra */
-    font-size: 0.95em; /* Leggermente più piccolo per maggiore densità */
+    border: 1px solid #e0e0e0;
+    padding: 12px 15px;
+    text-align: left;
+    font-size: 0.95em;
 }
 
 #logsList th {
-    background-color: #22454C; /* Colore di sfondo scuro per l'header */
-    color: white; /* Testo bianco */
+    background-color: #22454C;
+    color: white;
     font-weight: bold;
-    text-transform: uppercase; /* Rende il testo delle intestazioni maiuscolo */
-    letter-spacing: 0.5px; /* Spaziatura tra le lettere */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 #logsList tbody tr:nth-child(even) {
-    background-color: #f8f8f8; /* Sfondo leggermente diverso per le righe pari */
+    background-color: #f8f8f8;
 }
 
 #logsList tbody tr:hover {
-    background-color: #eef; /* Cambia colore al passaggio del mouse per evidenziare */
-    cursor: default; /* Mantiene il cursore normale */
+    background-color: #eef;
+    cursor: default;
 }
 
 /* Stili specifici per le colonne per una migliore leggibilità */
 #logsList td:nth-child(1) { /* Timestamp */
-    white-space: nowrap; /* Evita che la data vada a capo */
-    width: 180px; /* Larghezza fissa per il timestamp */
+    white-space: nowrap;
+    width: 180px;
 }
 
 #logsList td:nth-child(2) { /* Action */
-    font-weight: bold; /* Rende il tipo di azione più leggibile */
+    font-weight: bold;
     width: 150px;
 }
 
 #logsList td:nth-child(3) { /* Event Name */
-    width: auto; /* Lascia che questa colonna si espanda */
+    width: auto;
 }
 
 #logsList td:nth-child(4) { /* Event ID */
     font-family: monospace;
     font-size: 0.85em;
     color: #666;
-    width: 200px; /* MODIFICATO QUI */
+    width: 200px;
 }
 
 #logsList td:nth-child(5) { /* Event Location */
@@ -684,55 +559,55 @@ form input[type="image"] {
 
 /* Stili per la tabella degli eventi (delete-event.html) */
 #eventList table {
-    width: 100%; /* Fondamentale: fa sì che la tabella occupi il 100% della larghezza */
-    border-collapse: collapse; /* Rimuove lo spazio tra i bordi delle celle */
+    width: 100%;
+    border-collapse: collapse;
     margin-top: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Aggiunge una leggera ombra */
-    border-radius: 8px; /* Bordi arrotondati */
-    overflow: hidden; /* Assicura che i bordi arrotondati siano visibili */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
 }
 
-#eventList th, 
+#eventList th,
 #eventList td {
-    border: 1px solid #e0e0e0; /* Bordi più chiari */
-    padding: 12px 15px; /* Padding aumentato per più spazio */
-    text-align: left; /* Allinea il testo a sinistra */
-    font-size: 0.95em; /* Leggermente più piccolo per maggiore densità */
+    border: 1px solid #e0e0e0;
+    padding: 12px 15px;
+    text-align: left;
+    font-size: 0.95em;
 }
 
 #eventList th {
-    background-color: #22454C; /* Colore di sfondo scuro per l'header */
-    color: white; /* Testo bianco */
+    background-color: #22454C;
+    color: white;
     font-weight: bold;
-    text-transform: uppercase; /* Rende il testo delle intestazioni maiuscolo */
-    letter-spacing: 0.5px; /* Spaziatura tra le lettere */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 #eventList tbody tr:nth-child(even) {
-    background-color: #f8f8f8; /* Sfondo leggermente diverso per le righe pari */
+    background-color: #f8f8f8;
 }
 
 #eventList tbody tr:hover {
-    background-color: #eef; /* Cambia colore al passaggio del mouse */
+    background-color: #eef;
 }
 
 /* Stili specifici per gli elementi nella tabella delete-event.html */
 #eventList td:last-child {
-    text-align: center; /* Centra il pulsante Elimina */
-    white-space: nowrap; /* Evita che il pulsante vada a capo */
-    width: 80px; /* Larghezza fissa per la colonna del pulsante */
+    text-align: center;
+    white-space: nowrap;
+    width: 80px;
 }
 
 #eventList td:nth-last-child(2) { /* Questa è la colonna "Featured" (il checkbox) */
-    text-align: center; /* Centra il checkbox */
+    text-align: center;
     white-space: nowrap;
-    width: 80px; /* Larghezza fissa */
+    width: 80px;
 }
 
 #eventList td input[type="checkbox"] {
-    transform: scale(1.2); /* Rende il checkbox leggermente più grande */
-    margin: 0; /* Rimuove margini extra */
-    padding: 0; /* Rimuove padding extra */
+    transform: scale(1.2);
+    margin: 0;
+    padding: 0;
 }
 
 .edit-button {
@@ -747,17 +622,160 @@ form input[type="image"] {
 }
 
 .full-width-input {
-    width: 100%; /* O una larghezza fissa come 400px */
+    width: 100%;
     box-sizing: border-box;
-    /* Altri stili per uniformare l'aspetto */
     padding: 10px;
     margin-bottom: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
 }
 
-.logo img {
-    height: 50px; /* Imposta l'altezza desiderata qui */
-    display: block; /* Utile per rimuovere spazio extra sotto l'immagine */
-    max-width: 100%; /* Assicura che l'immagine non sborderà dal contenitore su schermi piccoli */
+
+/* --- MEDIA QUERIES --- */
+
+/* Breakpoint per Mobile */
+@media (max-width: 768px) {
+    /* Nascondi la navigazione desktop su mobile */
+    nav.desktop-nav {
+        display: none;
+    }
+
+    /* Mostra l'hamburger menu su mobile */
+    .hamburger-menu {
+        display: flex; /* Flex per allineare le barre */
+        flex-direction: column;
+        justify-content: space-around;
+        width: 30px;
+        height: 25px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        z-index: 1001; /* Assicurati che sia sopra la nav mobile */
+    }
+
+    .hamburger-menu .bar {
+        width: 100%;
+        height: 3px;
+        background-color: white; /* Colore delle barrette - usa white perché l'header è scuro */
+        border-radius: 5px;
+        transition: all 0.3s ease-in-out;
+    }
+
+    /* Animazione del menu a panino (da barrette a X) */
+    .hamburger-menu.open .bar:nth-child(1) {
+        transform: translateY(11px) rotate(45deg);
+    }
+    .hamburger-menu.open .bar:nth-child(2) {
+        opacity: 0;
+    }
+    .hamburger-menu.open .bar:nth-child(3) {
+        transform: translateY(-11px) rotate(-45deg);
+    }
+
+    /* --- Navigazione MOBILE (inizialmente nascosta su mobile) --- */
+    nav.mobile-nav {
+        display: flex; /* Verrà mostrata/nascosta da JS */
+        flex-direction: column;
+        position: absolute; /* Posizionata rispetto al .container */
+        top: 100%; /* Sotto l'header */
+        left: 0;
+        width: 100%;
+        background-color: #3BB7B4; /* Stesso colore dell'header o un colore che si abbini */
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        z-index: 1000;
+        padding: 20px 0;
+        transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        transform: translateY(-150%); /* Inizialmente fuori schermo in alto */
+        opacity: 0;
+        pointer-events: none; /* Disabilita interazioni quando è nascosto */
+    }
+
+    nav.mobile-nav.active { /* Classe aggiunta da JS quando il menu è aperto */
+        transform: translateY(0); /* Porta il menu in vista */
+        opacity: 1;
+        pointer-events: auto; /* Abilita interazioni */
+    }
+
+    nav.mobile-nav ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        text-align: center;
+        flex-direction: column; /* Assicurati che i link siano verticali */
+        gap: 0; /* Rimuovi gap tra gli elementi della lista, padding sui link */
+    }
+
+    nav.mobile-nav ul li {
+        margin-bottom: 0; /* Rimuovi margini tra gli li */
+    }
+
+    nav.mobile-nav ul li a {
+        text-decoration: none;
+        color: white; /* Testo bianco per contrasto con sfondo scuro */
+        font-weight: bold;
+        padding: 15px 0; /* Più padding verticale per ogni link */
+        display: block; /* Rende il link cliccabile su tutta l'area del li */
+        font-size: 1.1em;
+        transition: background-color 0.3s ease;
+    }
+
+    nav.mobile-nav ul li a:hover {
+        background-color: #ED9B47; /* Colore hover come quello desktop */
+    }
+
+    /* Altri aggiustamenti responsivi esistenti */
+    header h1 {
+        font-size: 2rem;
+    }
+
+    main {
+        padding: 15px;
+        margin: 15px auto;
+    }
+
+    #map {
+        height: 400px;
+    }
+
+    .filter-controls {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 10px;
+    }
+
+    .filter-group {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .event-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .feature-button, .unfeature-button {
+        width: 100%;
+        text-align: center;
+    }
+
+    .star-icon {
+        top: 5px;
+        right: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    #map {
+        height: 300px;
+    }
+
+    .tournament-item {
+        padding: 10px;
+    }
 }
