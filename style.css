@@ -7,6 +7,15 @@ body {
     line-height: 1.6;
 }
 
+header .container {
+    display: flex; /* Attiva Flexbox */
+    justify-content: space-between; /* Sposta il logo a sinistra e la nav a destra */
+    align-items: center; /* Allinea verticalmente al centro */
+    max-width: 1200px; /* Larghezza massima del contenuto */
+    margin: 0 auto; /* Centra orizzontalmente il contenitore stesso */
+    padding: 10px 20px; /* Spazio interno ai lati */
+}
+
 header {
     background-color: #3BB7B4;
     color: white;
@@ -21,7 +30,7 @@ header h1 {
 }
 
 nav {
-    margin-top: 10px;
+    margin-top: 0px;
 }
 
 nav ul {
@@ -745,4 +754,10 @@ form input[type="image"] {
     margin-bottom: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
+}
+
+.logo img {
+    height: 50px; /* Imposta l'altezza desiderata qui */
+    display: block; /* Utile per rimuovere spazio extra sotto l'immagine */
+    max-width: 100%; /* Assicura che l'immagine non sborderà dal contenitore su schermi piccoli */
 }
