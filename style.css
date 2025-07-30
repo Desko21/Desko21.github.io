@@ -725,3 +725,14 @@ form input[type="image"] {
     margin: 0; /* Rimuove margini extra */
     padding: 0; /* Rimuove padding extra */
 }
+
+.edit-button {
+    background-color: #EB9B43;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease;
+}
