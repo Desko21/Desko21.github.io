@@ -54,7 +54,7 @@ nav.desktop-nav ul {
     gap: 30px;
 }
 
-nav.desktop-nav a { /* Targetta solo i link della nav desktop */
+nav.desktop-nav ul li a { /* Targetta solo i link della nav desktop */
     color: white;
     text-decoration: none;
     padding: 0.5rem 1rem;
@@ -62,12 +62,13 @@ nav.desktop-nav a { /* Targetta solo i link della nav desktop */
     transition: background-color 0.3s ease;
 }
 
-nav.desktop-nav a:hover {
+nav.desktop-nav ul li a:hover {
     background-color: #ED9B47;
     border-radius: 5px;
 }
 
 /* --- ELEMENTI PER IL MENU MOBILE (INIZIALMENTE NASCOSTI) --- */
+/* Questi elementi saranno visibili solo su schermi piccoli tramite media query */
 .hamburger-menu,
 .mobile-nav {
     display: none; /* Nascondi di default su schermi grandi */
@@ -724,6 +725,12 @@ form input[type="image"] {
         background-color: #ED9B47; /* Colore hover come quello desktop */
     }
 
+    /* --- NUOVA LOGICA: Nascondi i controlli della mappa quando il menu mobile è aperto --- */
+    /* La classe 'mobile-menu-open' viene aggiunta al <body> dal JavaScript */
+    body.mobile-menu-open .leaflet-control-container {
+        display: none !important; /* Nasconde tutti i controlli della mappa di Leaflet */
+    }
+
     /* Altri aggiustamenti responsivi esistenti */
     header h1 {
         font-size: 2rem;
@@ -742,6 +749,9 @@ form input[type="image"] {
         flex-direction: column;
         align-items: stretch;
         padding: 10px;
+        /* Assicurati che i filtri abbiano uno z-index inferiore al menu */
+        position: relative; 
+        z-index: 990; /* Il menu mobile ha z-index 1000 */
     }
 
     .filter-group {
@@ -763,6 +773,11 @@ form input[type="image"] {
     .star-icon {
         top: 5px;
         right: 5px;
+    }
+
+    /* Rimuovi lo scrolling dalla pagina quando il menu è aperto */
+    body.mobile-menu-open {
+        overflow: hidden; 
     }
 }
 
