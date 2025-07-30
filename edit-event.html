@@ -3,23 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modifica Evento</title>
+    <title>Edit Event</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
 </head>
 <body>
-    <nav class="navbar">
-        <a href="index.html" class="nav-item">Home</a>
-        <a href="add-event.html" class="nav-item">Aggiungi Evento</a>
-        <a href="edit-event.html" class="nav-item current">Modifica Evento</a>
-        <a href="delete-event.html" class="nav-item">Elimina Evento</a>
-        <a href="logs.html" class="nav-item">Log Attività</a>
-    </nav>
-
-    <header class="page-header">
-        <h1>Modifica Evento</h1>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="assets/logoCrop.png" alt="LaxMap Logo" style="height: 150px;">
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <a href="index.html">View Events</a>
+                </ul>
+            </nav>
+        </div>
     </header>
 
+ <main>
     <div class="container">
         <div id="message" class="message"></div>
 
@@ -85,7 +89,7 @@
             </form>
         </div>
     </div>
-
+ </main>
     <script src="edit-event.js"></script>
 </body>
 </html>

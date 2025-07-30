@@ -12,18 +12,24 @@
     
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-    <nav>
-        <ul>
-            <li><a href="index.html">Map & Events</a></li> 
-    </nav>
 </head>
 <body>
-    <header>
-        <h1>Activity Logs</h1>
-        <h2>Review all event modifications and additions.</h2>
+     <header>
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="assets/logoCrop.png" alt="LaxMap Logo" style="height: 150px;">
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <a href="index.html">View Events</a>
+                </ul>
+            </nav>
+        </div>
     </header>
 
+ <main>
     <div class="container">
         <div id="message" class="message"></div>
         <div id="logsList">
@@ -42,6 +48,7 @@
             </table>
         </div>
     </div>
+	  </main>
 
     <script src="logs.js"></script> </body>
 </html>
