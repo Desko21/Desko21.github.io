@@ -65,38 +65,18 @@ document.addEventListener('DOMContentLoaded', () => {
     populateFilterDropdown(genderFilter, genders);
 
 
-    // --- Funzione per creare icone Font Awesome personalizzate per i marker ---
-    function createCustomMarkerIcon(eventType) {
-        let iconClass = 'fas fa-map-marker-alt'; // Icona predefinita
-        const iconColor = '#22454C'; // Colore uniforme per tutti
+    function createCustomMarkerIcon() { // Non abbiamo più bisogno del parametro eventType
+    const iconClass = 'fas fa-map-marker-alt'; // Icona standard per tutti i marker
+    const iconColor = '#22454C'; // Colore uniforme per tutti
 
-        if (eventType && typeof eventType === 'string') {
-            switch (eventType.toLowerCase()) {
-                case 'clinic':
-                    iconClass = 'fas fa-book';
-                    break;
-                case 'field':
-                    iconClass = 'fa-solid fa-seedling';
-                    break;
-                case 'box':
-                    iconClass = 'fas fa-cube';
-                    break;
-                case 'sixes':
-                    iconClass = 'fa-solid fa-dice-six';
-                    break;
-                default:
-                    iconClass = 'fas fa-map-marker-alt';
-            }
-        }
-        
-        return L.divIcon({
-            className: 'custom-marker',
-            html: `<div style="color: ${iconColor}; font-size: 28px;"><i class="${iconClass}"></i></div>`,
-            iconSize: [30, 42],
-            iconAnchor: [15, 42],
-            popupAnchor: [0, -40]
-        });
-    }
+    return L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="color: ${iconColor}; font-size: 28px;"><i class="${iconClass}"></i></div>`,
+        iconSize: [30, 42],
+        iconAnchor: [15, 42],
+        popupAnchor: [0, -40]
+    });
+}
 
     async function loadEvents() {
         try {
