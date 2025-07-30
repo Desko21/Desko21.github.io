@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- NEW: Mappa per i nomi visualizzati dei tipi di costo (CORRECTED) ---
     const costTypeDisplayNames = {
-        'not_specified': '',       // When saved as 'not_specified'
+        'not_specified': '',        // When saved as 'not_specified'
         'perperson': 'Per person', // When saved as 'perperson'
         'perteam': 'Per Team'      // When saved as 'perteam'
     };
@@ -417,4 +417,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load events on startup
     loadEvents();
+
+    ---
+    // START: Hamburger Menu Management
+    const hamburgerMenu = document.querySelector('.hamburger-menu');
+    const mobileNav = document.querySelector('nav.mobile-nav');
+    const body = document.body; // Reference to the body element
+
+    // Ensure elements exist before adding listeners
+    if (hamburgerMenu && mobileNav) {
+        hamburgerMenu.addEventListener('click', () => {
+            hamburgerMenu.classList.toggle('open');
+            mobileNav.classList.toggle('active');
+            body.classList.toggle('mobile-menu-open'); // Toggle class on body
+        });
+
+        // Close the menu if a link inside is clicked
+        mobileNav.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                hamburgerMenu.classList.remove('open');
+                mobileNav.classList.remove('active');
+                body.classList.remove('mobile-menu-open');
+            });
+        });
+    } else {
+        console.warn('Hamburger menu or mobile navigation not found. Check your HTML structure.');
+    }
+    // END: Hamburger Menu Management
+    ---
 });
