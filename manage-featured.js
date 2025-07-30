@@ -4,7 +4,8 @@ import {
     JSONBIN_MASTER_KEY,
     // Note: JSONBIN_READ_URL and JSONBIN_UPDATE_URL are defined locally
     // If you prefer, you can also import them from config.js
-    JSONBIN_LOGS_WRITE_URL // Make sure this is imported from config.js
+	JSONBIN_LOGS_READ_URL
+	JSONBIN_LOGS_WRITE_URL // Make sure this is imported from config.js
 } from './config.js'; // Ensure JSONBIN_LOGS_WRITE_URL is in config.js
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -89,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadEventsForFeaturedManagement() {
         try {
-            const response = await fetch(JSONBIN_READ_URL, {
+            const response = await fetch(JSONBIN_LOGS_READ_URL, {
                 headers: {
                     'X-Master-Key': JSONBIN_MASTER_KEY
                 }
