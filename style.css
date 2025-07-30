@@ -1,13 +1,13 @@
 /* RESET SEMPLICE (Importante per coerenza) */
 body {
+    font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
     color: #333;
     line-height: 1.6;
 }
 
-/* Stili Header Base */
 header {
     background-color: #3BB7B4;
     color: white;
@@ -16,33 +16,45 @@ header {
 }
 
 header .container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 10px 20px;
-    position: relative; /* Cruciale per posizionare la nav mobile */
+    display: flex; /* Attiva Flexbox */
+    justify-content: space-between; /* Sposta il logo a sinistra e la nav a destra */
+    align-items: center; /* Allinea verticalmente al centro */
+    max-width: 1200px; /* Larghezza massima del contenuto */
+    margin: 0 auto; /* Centra orizzontalmente il contenitore stesso */
+    padding: 10px 20px; /* Spazio interno ai lati */
+    position: relative; /* Necessario per posizionare la nav mobile */
 }
 
-/* Logo */
+header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+}
+
+/* Stili per il logo */
 .logo img {
-    height: 50px;
-    width: auto;
-    display: block;
-    max-width: 100%;
+    height: 50px; /* Imposta l'altezza desiderata qui */
+    width: auto; /* Mantiene le proporzioni */
+    display: block; /* Utile per rimuovere spazio extra sotto l'immagine */
+    max-width: 100%; /* Assicura che l'immagine non sborderà dal contenitore su schermi piccoli */
 }
 
-/* Navigazione Desktop (Visibile di default) */
+/* --- Stili per la navigazione DESKTOP (visibile di default) --- */
+/* Targetta solo la nav con la classe desktop-nav */
+nav.desktop-nav {
+    margin-top: 0px; /* Mantiene il tuo margine esistente */
+}
+
 nav.desktop-nav ul {
     list-style: none;
     padding: 0;
     margin: 0;
     display: flex;
+    justify-content: center;
+    align-items: center;
     gap: 30px;
 }
 
-nav.desktop-nav ul li a {
+nav.desktop-nav ul li a { /* Targetta solo i link della nav desktop */
     color: white;
     text-decoration: none;
     padding: 0.5rem 1rem;
@@ -55,22 +67,602 @@ nav.desktop-nav ul li a:hover {
     border-radius: 5px;
 }
 
-/* Hamburger Menu e Mobile Nav (Nascosti di default) */
+/* --- ELEMENTI PER IL MENU MOBILE (INIZIALMENTE NASCOSTI) --- */
+/* Questi elementi saranno visibili solo su schermi piccoli tramite media query */
 .hamburger-menu,
 .mobile-nav {
-    display: none; /* Inizialmente nascosti su schermi grandi */
+    display: none; /* Nascondi di default su schermi grandi */
 }
 
-/* --- MEDIA QUERIES per MOBILE --- */
+main {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 20px auto;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    border-radius: 8px;
+}
+
+#map-section, #tournament-list-section {
+    margin-bottom: 30px;
+}
+
+#map {
+    height: 700px;
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.tournament-item {
+    background-color: #F9F9F9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.tournament-item h3 {
+    margin: 0 0 5px 0;
+    color: #0056b3;
+}
+
+.tournament-item.featured {
+    background-color: #fcf4cc; /* Light goldenrod yellow */
+    border-color: #ED9B47; /* Gold */
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+    order: -1; /* Puts featured items at the top */
+}
+
+.tournament-item p {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.tournament-item a {
+    color: #0056b3;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.tournament-item a:hover {
+    text-decoration: underline;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #333;
+    color: white;
+    margin-top: 30px;
+}
+
+/* Stili per add-tournament.html e edit-event.html form */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+}
+
+form input[type="text"],
+form input[type="date"],
+form input[type="url"],
+form input[type="number"], /* Added for cost/coordinates */
+form select, /* Added for type/gender/currency/cost type */
+form textarea {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box; /* Ensures padding doesn't add to width */
+}
+
+form textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+form button {
+    background-color: #EB9B43;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease;
+}
+
+form button:hover {
+    background-color: #218838;
+}
+
+#paypal-button-container {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.message {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 5px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Stile per rendere il nome del torneo cliccabile */
+.tournament-name-clickable {
+    cursor: pointer;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.tournament-name-clickable:hover {
+    color: #20454E;
+    text-decoration: underline;
+}
+
+.filter-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    justify-content: center;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.filter-group label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.filter-group select {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    min-width: 150px;
+}
+
+.filter-group select:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.delete-button {
+    background-color: #dc3545;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
+.delete-button:hover {
+    background-color: #c82333;
+}
+
+.edit-button { /* Applied to search button on edit-event.html */
+    background-color: #EB9B43;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease;
+}
+
+.edit-button:hover {
+    background-color: #218838;
+}
+
+.event-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.feature-button {
+    background-color: #EB9B43;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.feature-button:hover {
+    background-color: #218838;
+}
+
+.unfeature-button {
+    background-color: #ffc107;
+    color: #343a40;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.unfeature-button:hover {
+    background-color: #e0a800;
+}
+
+.tournament-item {
+    position: relative;
+    padding-right: 30px;
+}
+
+/* Stile per la stellina featured */
+.featured-star {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: gold;
+    font-size: 24px;
+    line-height: 1;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Stili per il pulsante di donazione PayPal */
+.paypal-donate-button-container input[type="image"] {
+    width: 150px;
+    height: auto;
+    max-width: 100%;
+}
+
+/* Se vuoi che anche gli altri pulsanti di PayPal (es. per Featured) siano ridimensionati */
+form input[type="image"] {
+    width: 150px;
+    height: auto;
+    max-width: 100%;
+}
+
+/* Stili per le azioni degli eventi (contenitore dei bottoni e icone) */
+.event-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+/* Stili per la stellina all'interno dei bottoni featured */
+.feature-button, .unfeature-button {
+    position: relative;
+    padding-right: 30px;
+}
+
+.star-icon {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    color: gold;
+    font-size: 1.2em;
+    line-height: 1;
+    pointer-events: none;
+}
+
+/* Stili per l'icona "6" (Sixes) */
+.sixes-icon {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 5px;
+    width: auto;
+    height: auto;
+    line-height: normal;
+    text-align: left;
+    border: none;
+    border-radius: 0;
+    font-size: inherit;
+    font-weight: normal;
+    color: inherit;
+    background-color: transparent;
+    box-shadow: none;
+    padding: 0;
+}
+
+/* Stili per le icone nella lista eventi principale */
+.event-title-icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+/* Stili specifici per le icone nella lista eventi */
+.event-list-icon.star-icon {
+    position: static;
+    font-size: 1em;
+    top: auto;
+    right: auto;
+    color: gold;
+}
+
+.event-list-icon.sixes-icon {
+    position: static;
+    font-size: 0.8em;
+    width: 20px;
+    height: 20px;
+    top: auto;
+    right: auto;
+}
+
+/* Stili per le icone nei popup della mappa */
+.popup-icon-line {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 5px;
+    font-size: 0.9em;
+}
+
+.popup-icon-line .star-icon {
+    font-size: 1em;
+    color: gold;
+    position: static;
+}
+
+.popup-icon-line .sixes-icon {
+    font-size: 0.8em;
+    width: 20px;
+    height: 20px;
+    position: static;
+}
+
+.icon-margin-right {
+    margin-right: 8px;
+    color: #888;
+}
+
+.leaflet-popup-content .icon-margin-right {
+    color: #555;
+}
+
+/* Stili per i filtri affiancati e centrati */
+.filters-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-basis: 0;
+    flex-grow: 1;
+    min-width: 140px;
+    max-width: 200px;
+    justify-content: center;
+}
+
+.filters-container label {
+    font-weight: bold;
+    color: #333;
+    white-space: nowrap;
+}
+
+.filters-container select {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    background-color: #fff;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000%22%20d%3D%22M287%2C197.3L159.2%2C69.5c-4-4-9.8-6-15.6-6s-11.6%2C2-15.6%2C6L5.4%2C197.3c-4%2C4-6%2C9.8-6%2C15.6s2%2C11.6%2C6%2C15.6l21.2%2C21.2c4%2C4%2C9.8%2C6%2C15.6%2C6s11.6%2C-2%2C15.6%2C-6L143%2C130.6c4-4%2C9.8-6%2C15.6-6s11.6%2C2%2C15.6%2C6l84.4%2C84.4c4%2C4%2C9.8%2C6%2C15.6%2C6s11.6%2C-2%2C15.6%2C-6l21.2%2C-21.2c4%2C-4%2C6%2C-9.8%2C6%2C-15.6S291%2C201.3%2C287%2C197.3z%22%2F%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 10px top 50%;
+    background-size: 12px;
+    padding-right: 30px;
+}
+
+.filters-container select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+#logsList table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#logsList th,
+#logsList td {
+    border: 1px solid #e0e0e0;
+    padding: 12px 15px;
+    text-align: left;
+    font-size: 0.95em;
+}
+
+#logsList th {
+    background-color: #22454C;
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#logsList tbody tr:nth-child(even) {
+    background-color: #f8f8f8;
+}
+
+#logsList tbody tr:hover {
+    background-color: #eef;
+    cursor: default;
+}
+
+/* Stili specifici per le colonne per una migliore leggibilità */
+#logsList td:nth-child(1) { /* Timestamp */
+    white-space: nowrap;
+    width: 180px;
+}
+
+#logsList td:nth-child(2) { /* Action */
+    font-weight: bold;
+    width: 150px;
+}
+
+#logsList td:nth-child(3) { /* Event Name */
+    width: auto;
+}
+
+#logsList td:nth-child(4) { /* Event ID */
+    font-family: monospace;
+    font-size: 0.85em;
+    color: #666;
+    width: 200px;
+}
+
+#logsList td:nth-child(5) { /* Event Location */
+    width: 180px;
+}
+
+/* Stili per la tabella degli eventi (delete-event.html) */
+/* Basic table styling for readability */
+#eventsList table {
+    width: 100%; /* La tabella occupa tutta la larghezza disponibile */
+    border-collapse: collapse; /* Rimuove lo spazio tra i bordi delle celle */
+    margin: 20px 0; /* Spazio sopra e sotto la tabella */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Una leggera ombra per farla risaltare */
+    background-color: #f8f8f8; /* Sfondo leggermente grigio */
+    border-radius: 8px; /* Bordi arrotondati per la tabella */
+    overflow: hidden; /* Assicura che i bordi arrotondati funzionino con l'ombra */
+}
+
+/* Table headers */
+#eventsList th {
+    background-color: #22454C; /* Colore di sfondo per l'intestazione (il tuo colore primario) */
+    color: white; /* Testo bianco */
+    padding: 12px 15px; /* Spaziatura interna */
+    text-align: left; /* Allineamento del testo a sinistra */
+    font-weight: bold; /* Grassetto */
+    text-transform: uppercase; /* Testo maiuscolo */
+    font-size: 0.9em; /* Dimensione del font leggermente più piccola */
+    border-bottom: 2px solid #1a363b; /* Bordo inferiore più spesso */
+}
+
+/* Table cells */
+#eventsList td {
+    padding: 10px 15px; /* Spaziatura interna */
+    border-bottom: 1px solid #ddd; /* Bordi sottili tra le righe */
+    vertical-align: middle; /* Allineamento verticale al centro */
+    color: #333; /* Colore del testo */
+}
+
+/* Zebra striping for readability */
+#eventsList tbody tr:nth-child(even) {
+    background-color: #eef2f5; /* Colore per le righe pari */
+}
+
+/* Hover effect for rows */
+#eventsList tbody tr:hover {
+    background-color: #e0e6eb; /* Cambia colore al passaggio del mouse */
+    cursor: default; /* Mantiene il cursore default per la riga, il pulsante avrà il suo */
+}
+
+/* Specific styling for the delete button column in the table */
+#eventsList td button.delete-button {
+    background-color: #dc3545; /* Rosso per il bottone di eliminazione */
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
+}
+
+#eventsList td button.delete-button:hover {
+    background-color: #c82333; /* Rosso più scuro al passaggio del mouse */
+}
+
+/* Stili per il checkbox "Featured" */
+#eventsList td input[type="checkbox"] {
+    transform: scale(1.2); /* Rende il checkbox leggermente più grande */
+    margin: 0;
+    padding: 0;
+    cursor: pointer; /* Indica che è interattivo */
+}
+
+/* Full width input on search event section */
+.full-width-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* --- MEDIA QUERIES --- */
+
+/* Breakpoint per Mobile */
 @media (max-width: 768px) {
-    /* Nascondi la navigazione desktop */
+    /* Nascondi la navigazione desktop su mobile */
     nav.desktop-nav {
-        display: none; /* Questo dovrebbe nascondere il menu normale */
+        display: none;
     }
 
-    /* Mostra il pulsante hamburger */
+    /* Mostra l'hamburger menu su mobile */
     .hamburger-menu {
-        display: flex; /* Questo dovrebbe mostrare il pulsante */
+        display: flex; /* <-- Importante: 'flex' per allineare le barre */
         flex-direction: column;
         justify-content: space-around;
         width: 30px;
@@ -79,44 +671,50 @@ nav.desktop-nav ul li a:hover {
         border: none;
         cursor: pointer;
         padding: 0;
-        z-index: 1001;
+        z-index: 1001; /* Assicurati che sia sopra la nav mobile */
     }
 
     .hamburger-menu .bar {
         width: 100%;
         height: 3px;
-        background-color: white;
+        background-color: white; /* Colore delle barrette - usa white perché l'header è scuro */
         border-radius: 5px;
         transition: all 0.3s ease-in-out;
     }
 
-    /* Animazione Hamburger */
-    .hamburger-menu.open .bar:nth-child(1) { transform: translateY(11px) rotate(45deg); }
-    .hamburger-menu.open .bar:nth-child(2) { opacity: 0; }
-    .hamburger-menu.open .bar:nth-child(3) { transform: translateY(-11px) rotate(-45deg); }
+    /* Animazione del menu a panino (da barrette a X) */
+    .hamburger-menu.open .bar:nth-child(1) {
+        transform: translateY(11px) rotate(45deg);
+    }
+    .hamburger-menu.open .bar:nth-child(2) {
+        opacity: 0;
+    }
+    .hamburger-menu.open .bar:nth-child(3) {
+        transform: translateY(-11px) rotate(-45deg);
+    }
 
-    /* Navigazione Mobile */
+    /* --- Navigazione MOBILE --- */
     nav.mobile-nav {
-        display: flex; /* Questo è il display base quando attivo */
+        display: flex; /* Settato a flex qui in mobile! */
         flex-direction: column;
-        position: absolute;
-        top: 100%;
+        position: absolute; /* Posizionata rispetto al .container */
+        top: 100%; /* Sotto l'header */
         left: 0;
         width: 100%;
-        background-color: #3BB7B4;
+        background-color: #3BB7B4; /* Stesso colore dell'header o un colore che si abbini */
         box-shadow: 0 8px 16px rgba(0,0,0,0.2);
         z-index: 1000;
         padding: 20px 0;
         transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-        transform: translateY(-150%); /* Nascosto */
+        transform: translateY(-150%); /* Inizialmente fuori schermo in alto */
         opacity: 0;
-        pointer-events: none; /* Non cliccabile quando nascosto */
+        pointer-events: none; /* Disabilita interazioni quando è nascosto */
     }
 
-    nav.mobile-nav.active { /* Attivato dal JS */
-        transform: translateY(0); /* Visibile */
+    nav.mobile-nav.active { /* Classe aggiunta da JS quando il menu è aperto */
+        transform: translateY(0); /* Porta il menu in vista */
         opacity: 1;
-        pointer-events: auto; /* Cliccabile */
+        pointer-events: auto; /* Abilita interazioni */
     }
 
     nav.mobile-nav ul {
@@ -124,25 +722,147 @@ nav.desktop-nav ul li a:hover {
         padding: 0;
         margin: 0;
         text-align: center;
-        flex-direction: column;
+        flex-direction: column; /* Assicurati che i link siano verticali */
+        gap: 0; /* Rimuovi gap tra gli elementi della lista, padding sui link */
+    }
+
+    nav.mobile-nav ul li {
+        margin-bottom: 0; /* Rimuovi margini tra gli li */
     }
 
     nav.mobile-nav ul li a {
         text-decoration: none;
-        color: white;
+        color: white; /* Testo bianco per contrasto con sfondo scuro */
         font-weight: bold;
-        padding: 15px 0;
-        display: block;
+        padding: 15px 0; /* Più padding verticale per ogni link */
+        display: block; /* Rende il link cliccabile su tutta l'area del li */
         font-size: 1.1em;
         transition: background-color 0.3s ease;
     }
 
     nav.mobile-nav ul li a:hover {
-        background-color: #ED9B47;
+        background-color: #ED9B47; /* Colore hover come quello desktop */
     }
 
-    /* Blocca lo scrolling del body quando il menu è aperto */
+    /* --- NUOVA LOGICA: Nascondi i controlli della mappa quando il menu mobile è aperto --- */
+    /* La classe 'mobile-menu-open' viene aggiunta al <body> dal JavaScript */
     body.mobile-menu-open {
-        overflow: hidden;
+        overflow: hidden; /* Blocca lo scrolling del body quando il menu è aperto */
+    }
+
+    body.mobile-menu-open .leaflet-control-container {
+        display: none !important; /* Nasconde tutti i controlli della mappa di Leaflet */
+    }
+
+    /* Altri aggiustamenti responsivi esistenti */
+    header h1 {
+        font-size: 2rem;
+    }
+
+    main {
+        padding: 15px;
+        margin: 15px auto;
+    }
+
+    #map {
+        height: 400px;
+    }
+
+    .filter-controls {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 10px;
+        /* Assicurati che i filtri abbiano uno z-index inferiore al menu */
+        position: relative;
+        z-index: 990; /* Il menu mobile ha z-index 1000 */
+    }
+
+    .filter-group {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .event-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .feature-button, .unfeature-button {
+        width: 100%;
+        text-align: center;
+    }
+
+    .star-icon {
+        top: 5px;
+        right: 5px;
+    }
+
+    /* Media query specific for the table on delete-event.html for smaller screens */
+    #eventsList th,
+    #eventsList td {
+        padding: 8px 10px;
+        font-size: 0.85em;
+    }
+}
+
+@media (max-width: 480px) {
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    #map {
+        height: 300px;
+    }
+
+    .tournament-item {
+        padding: 10px;
+    }
+
+    /* Further refine table styling for very small screens */
+    #eventsList table,
+    #eventsList thead,
+    #eventsList tbody,
+    #eventsList th,
+    #eventsList td,
+    #eventsList tr {
+        display: block; /* Trasforma gli elementi della tabella in blocchi su schermi piccoli */
+    }
+
+    #eventsList thead tr {
+        position: absolute; /* Nasconde l'intestazione su schermi molto piccoli */
+        top: -9999px;
+        left: -9999px;
+    }
+
+    #eventsList tr {
+        border: 1px solid #ccc; /* Aggiunge un bordo tra le "righe" simulate */
+        margin-bottom: 10px;
+        display: flex; /* Utilizza flexbox per disporre le celle in colonna */
+        flex-wrap: wrap; /* Permette alle celle di andare a capo */
+        padding: 10px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Leggera ombra per le schede delle righe */
+    }
+
+    #eventsList td {
+        border: none; /* Rimuove i bordi delle celle simulate */
+        position: relative;
+        padding-left: 50%; /* Spazio per la label */
+        text-align: right;
+        flex: 1 1 100%; /* Ogni cella occupa tutta la larghezza */
+    }
+
+    #eventsList td::before {
+        content: attr(data-label); /* Utilizza l'attributo data-label come pseudo-elemento */
+        position: absolute;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+        color: #555;
     }
 }
