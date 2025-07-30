@@ -1,3 +1,14 @@
+
+// Importa le costanti dal file config.js
+import { 
+    JSONBIN_MASTER_KEY,
+    JSONBIN_EVENTS_READ_URL,
+    JSONBIN_EVENTS_WRITE_URL,
+    JSONBIN_LOGS_BIN_ID, // Potrebbe non essere necessario se usi solo JSONBIN_LOGS_WRITE_URL
+    JSONBIN_LOGS_WRITE_URL,
+    NOMINATIM_USER_AGENT 
+} from './config.js'; // Il percorso è relativo a questo file .js
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('edit-event.js loaded.');
 
