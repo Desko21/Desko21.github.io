@@ -3,9 +3,9 @@
 // Importa le costanti dal file config.js
 import { 
     JSONBIN_MASTER_KEY,
-    JSONBIN_EVENTS_READ_URL, // Useremo questo per leggere gli eventi
-    JSONBIN_EVENTS_BIN_ID, // Manteniamo questo per chiarezza, anche se non direttamente usato nella URL di lettura se usi /latest
-    NOMINATIM_USER_AGENT // Potrebbe non essere usato qui, ma lo importiamo per consistenza
+    JSONBIN_EVENTS_READ_URL,
+    // JSONBIN_EVENTS_BIN_ID, // Non più usato direttamente qui
+    NOMINATIM_USER_AGENT 
 } from './config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -36,9 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Geolocation is not supported by this browser. Using default map view.");
     }
 
-    // Le costanti di JSONBin.io vengono ora importate da config.js
-    // JSONBIN_BIN_ID, JSONBIN_MASTER_KEY, JSONBIN_READ_URL sono importate!
-
     const eventListDiv = document.getElementById('event-list');
     const messageDiv = document.getElementById('message');
 
@@ -48,25 +45,44 @@ document.addEventListener('DOMContentLoaded', () => {
     let markers = L.featureGroup().addTo(map);
     let allEvents = []; // Contiene tutti gli eventi caricati
 
-    // --- AGGIORNATO: Funzione per creare icone Font Awesome personalizzate per i marker ---
-    // Ora usa 'eventType' come parametro
+    // --- AGGIUNTA: Popola i filtri Game Type e Gender con le stesse opzioni di add/edit-event.js ---
+    // Queste liste DEVONO CORRISPONDERE a quelle in add-event.js e edit-event.js per coerenza
+    const gameTypes = ['All', 'Field', 'Box', 'Sixes', 'Clinic', 'Other'];
+    const genders = ['All', 'Men', 'Women', 'Both', 'Mixed', 'Other'];
+
+    function populateFilterDropdown(selectElement, options) {
+        selectElement.innerHTML = '';
+        options.forEach(optionText => {
+            const option = document.createElement('option');
+            option.value = optionText.toLowerCase();
+            option.textContent = optionText;
+            selectElement.appendChild(option);
+        });
+    }
+
+    // Popola i dropdown dei filtri all'inizio
+    populateFilterDropdown(gameTypeFilter, gameTypes);
+    populateFilterDropdown(genderFilter, genders);
+
+
+    // --- Funzione per creare icone Font Awesome personalizzate per i marker ---
     function createCustomMarkerIcon(eventType) {
         let iconClass = 'fas fa-map-marker-alt'; // Icona predefinita
         const iconColor = '#22454C'; // Colore uniforme per tutti
 
         if (eventType && typeof eventType === 'string') {
-            switch (eventType.toLowerCase()) { // Usiamo eventType per la logica
+            switch (eventType.toLowerCase()) {
                 case 'clinic':
-                    iconClass = 'fas fa-book'; // Icona a forma di libro per le clinic
+                    iconClass = 'fas fa-book';
                     break;
                 case 'field':
-                    iconClass = 'fa-solid fa-seedling'; // Esempio per Field
+                    iconClass = 'fa-solid fa-seedling';
                     break;
                 case 'box':
-                    iconClass = 'fas fa-cube'; // Esempio per Box
+                    iconClass = 'fas fa-cube';
                     break;
                 case 'sixes':
-                    iconClass = 'fa-solid fa-dice-six'; // Esempio per Sixes (se hai l'icona)
+                    iconClass = 'fa-solid fa-dice-six';
                     break;
                 default:
                     iconClass = 'fas fa-map-marker-alt';
@@ -84,9 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadEvents() {
         try {
-            const response = await fetch(JSONBIN_EVENTS_READ_URL, { // Usa JSONBIN_EVENTS_READ_URL da config.js
+            const response = await fetch(JSONBIN_EVENTS_READ_URL, {
                 headers: {
-                    'X-Master-Key': JSONBIN_MASTER_KEY // Usa JSONBIN_MASTER_KEY da config.js
+                    'X-Master-Key': JSONBIN_MASTER_KEY
                 }
             });
 
@@ -99,7 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const data = await response.json();
-            allEvents = data.record || [];
+            // Assicurati che 'record' esista e sia un array, altrimenti usa un array vuoto
+            allEvents = Array.isArray(data.record) ? data.record : [];
             console.log('All events loaded:', allEvents);
 
             filterAndDisplayEvents(); // Ricrea la mappa e la lista con i dati caricati
@@ -114,66 +131,47 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateMapMarkers(eventsToMap) {
         markers.clearLayers();
 
-        // Filtra solo gli eventi con coordinate numeriche valide
+        // Il filtro qui è corretto e necessario.
+        // Assicurati che i dati in JSONBin.io abbiano latitude/longitude come numeri o null.
+        // Se sono null, typeof null è 'object', quindi il filtro li escluderebbe.
+        // Se sono stringhe vuote, parseFloat le rende NaN.
+        // Le modifiche recenti a edit-event.js dovrebbero garantire che siano numeri o null.
         const validEvents = eventsToMap.filter(event =>
-            typeof event.latitude === 'number' && typeof event.longitude === 'number' &&
-            !isNaN(event.latitude) && !isNaN(event.longitude) // Assicurati che non siano NaN
+            (typeof event.latitude === 'number' && typeof event.longitude === 'number' &&
+            !isNaN(event.latitude) && !isNaN(event.longitude))
         );
 
+        if (validEvents.length === 0) {
+            console.warn("No valid events with numerical coordinates to display on map.");
+            return;
+        }
+
         validEvents.forEach(event => {
-            // Passiamo event.type (il campo corretto dal tuo JSON) alla funzione per l'icona
             const customIcon = createCustomMarkerIcon(event.type);
             
-            // Crea il marker usando latitude e longitude
             const marker = L.marker([event.latitude, event.longitude], { icon: customIcon }).addTo(markers);
 
-            // Pop-up content: usa event.type e event.gender
             const eventType = event.type && typeof event.type === 'string' ? event.type : 'N/A';
             const gender = event.gender && typeof event.gender === 'string' ? event.gender : 'N/A';
 
             let gameTypeIcon = '';
-            if (eventType !== 'N/A') {
-                switch (eventType.toLowerCase()) { // Usa eventType qui
-                    case 'field':
-                        gameTypeIcon = '<i class="fa-solid fa-seedling icon-margin-right"></i>';
-                        break;
-                    case 'box':
-                        gameTypeIcon = '<i class="fas fa-cube icon-margin-right"></i>';
-                        break;
-                    case 'sixes':
-                        gameTypeIcon = '<span class="sixes-icon icon-margin-right">6</span>';
-                        break;
-                    case 'clinic':
-                        gameTypeIcon = '<i class="fas fa-book icon-margin-right"></i>';
-                        break;
-                    default:
-                        gameTypeIcon = '<i class="fas fa-gamepad icon-margin-right"></i>';
-                }
-            } else {
-                gameTypeIcon = '<i class="fas fa-gamepad icon-margin-right"></i>';
+            switch (eventType.toLowerCase()) {
+                case 'field': gameTypeIcon = '<i class="fa-solid fa-seedling icon-margin-right"></i>'; break;
+                case 'box': gameTypeIcon = '<i class="fas fa-cube icon-margin-right"></i>'; break;
+                case 'sixes': gameTypeIcon = '<span class="sixes-icon icon-margin-right">6</span>'; break;
+                case 'clinic': gameTypeIcon = '<i class="fas fa-book icon-margin-right"></i>'; break;
+                default: gameTypeIcon = '<i class="fas fa-gamepad icon-margin-right"></i>'; break;
             }
 
             let genderIcon = '';
-            if (gender !== 'N/A') {
-                switch (gender.toLowerCase()) {
-                    case 'men':
-                        genderIcon = '<i class="fas fa-mars icon-margin-right"></i>';
-                        break;
-                    case 'women':
-                        genderIcon = '<i class="fas fa-venus icon-margin-right"></i>';
-                        break;
-                    case 'both':
-                        genderIcon = '<i class="fas fa-venus-mars icon-margin-right"></i>';
-                        break;
-                    default:
-                        genderIcon = '<i class="fas fa-user icon-margin-right"></i>';
-                }
-            } else {
-                genderIcon = '<i class="fas fa-user icon-margin-right"></i>';
+            switch (gender.toLowerCase()) {
+                case 'men': genderIcon = '<i class="fas fa-mars icon-margin-right"></i>'; break;
+                case 'women': genderIcon = '<i class="fas fa-venus icon-margin-right"></i>'; break;
+                case 'both': genderIcon = '<i class="fas fa-venus-mars icon-margin-right"></i>'; break;
+                default: genderIcon = '<i class="fas fa-user icon-margin-right"></i>'; break;
             }
 
             let popupContent = `<h3>${event.name}</h3>`;
-            // Usa startDate e endDate dal tuo nuovo formato
             popupContent += `<p><i class="fas fa-calendar-alt icon-margin-right"></i><strong>Date:</strong> ${new Date(event.startDate).toLocaleDateString()}`;
             if (event.endDate && event.endDate !== event.startDate) {
                 popupContent += ` - ${new Date(event.endDate).toLocaleDateString()}`;
@@ -181,20 +179,10 @@ document.addEventListener('DOMContentLoaded', () => {
             popupContent += `</p>`;
             
             popupContent += `<p><i class="fas fa-map-marker-alt icon-margin-right"></i><strong>Location:</strong> ${event.location}</p>`;
-            popupContent += `<p>${gameTypeIcon}<strong>Game Type:</strong> ${eventType}</p>`; // Usa eventType qui
+            popupContent += `<p>${gameTypeIcon}<strong>Game Type:</strong> ${eventType}</p>`;
             popupContent += `<p>${genderIcon}<strong>Gender:</strong> ${gender}</p>`;
-            popupContent += `<p><i class="fas fa-info-circle icon-margin-right"></i>${event.description}</p>`;
+            popupContent += `<p><i class="fas fa-info-circle icon-margin-right"></i>${event.description || 'No description available.'}</p>`; // Default per descrizione vuota
 
-            // Verifica se event.featured esiste e è true
-            if (event.featured) {
-                popupContent += `<p class="popup-icon-line"><span class="star-icon">★</span> Featured Event</p>`;
-            }
-            // Verifica se event.type è 'sixes' per l'icona
-            if (eventType.toLowerCase() === 'sixes') {
-                popupContent += `<p class="popup-icon-line"><span class="sixes-icon">6</span> Sixes Format</p>`;
-            }
-
-            // Verifica se event.link esiste e è una stringa
             if (event.link && typeof event.link === 'string') {
                 popupContent += `<p><a href="${event.link}" target="_blank" class="more-info-link"><i class="fas fa-external-link-alt icon-margin-right"></i>More Info</a></p>`;
             }
@@ -209,52 +197,36 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedGameType = gameTypeFilter.value;
         const selectedGender = genderFilter.value;
 
-        let eventsToDisplay = []; // Eventi per la lista HTML
-        let eventsForMap = [];    // Eventi per i marker sulla mappa
+        // Filtra tutti gli eventi (featured e non) in base ai filtri di tipo e genere
+        const filteredByDropdowns = allEvents.filter(event => {
+            const eventTypeLower = event.type ? event.type.toLowerCase() : '';
+            const eventGenderLower = event.gender ? event.gender.toLowerCase() : '';
 
-        // Prima, aggiungi tutti gli eventi "featured" a entrambi gli array
-        const featuredEvents = allEvents.filter(event => event.featured);
-        eventsToDisplay.push(...featuredEvents);
-        eventsForMap.push(...featuredEvents); // Gli eventi featured sono sempre sulla mappa
-
-        // Poi filtra i non featured
-        const nonFeaturedFiltered = allEvents.filter(event => {
-            if (event.featured) return false; // Escludi i featured (già aggiunti)
-
-            // Usa event.type qui per il filtro del tipo di gioco
-            const matchesGameType = (selectedGameType === 'all' ||
-                                     (event.type && event.type.toLowerCase() === selectedGameType));
-
-            const matchesGender = (selectedGender === 'all' ||
-                                   (event.gender && event.gender.toLowerCase() === selectedGender) ||
-                                   (selectedGender === 'both' && (event.gender.toLowerCase() === 'men' || event.gender.toLowerCase() === 'women')));
+            const matchesGameType = (selectedGameType === 'all' || eventTypeLower === selectedGameType);
+            
+            let matchesGender = (selectedGender === 'all' || eventGenderLower === selectedGender);
+            // Logica per "Both" per il filtro di genere
+            if (selectedGender === 'both' && (eventGenderLower === 'men' || eventGenderLower === 'women')) {
+                matchesGender = true;
+            }
 
             return matchesGameType && matchesGender;
         });
 
-        // Eventi per la lista HTML: quelli non-featured che sono anche all'interno dei limiti della mappa
-        const nonFeaturedFilteredAndInBounds = nonFeaturedFiltered.filter(event => {
+        // Eventi da visualizzare nella lista HTML (filtrati per dropdown E all'interno dei limiti della mappa)
+        const eventsForHtmlList = filteredByDropdowns.filter(event => {
+            // Assicurati che l'evento abbia coordinate valide prima di controllare i limiti
             return (typeof event.latitude === 'number' && typeof event.longitude === 'number' &&
                     !isNaN(event.latitude) && !isNaN(event.longitude) &&
                     bounds.contains(L.latLng(event.latitude, event.longitude)));
         });
 
-        eventsToDisplay.push(...nonFeaturedFilteredAndInBounds);
-        // Tutti i non-featured filtrati (indipendentemente dai limiti della mappa) vanno nei marker per poterli filtrare quando la mappa si muove
-        eventsForMap.push(...nonFeaturedFiltered); 
+        // Eventi per i marker sulla mappa (solo filtrati per dropdown, indipendentemente dai limiti della mappa)
+        // Questo è cruciale per permettere ai marker di apparire quando si sposta la mappa
+        const eventsForMapMarkers = filteredByDropdowns;
 
-        // Rimuovi duplicati basandoti sull'ID univoco che hai generato (event.id)
-        const uniqueEventsListMap = new Map();
-        eventsToDisplay.forEach(event => uniqueEventsListMap.set(event.id, event)); // Usa event.id
-        const finalEventsList = Array.from(uniqueEventsListMap.values());
-
-        const uniqueEventsMapMarkers = new Map();
-        eventsForMap.forEach(event => uniqueEventsMapMarkers.set(event.id, event)); // Usa event.id
-        const finalEventsForMap = Array.from(uniqueEventsMapMarkers.values());
-
-
-        displayEventsListHtml(finalEventsList);
-        updateMapMarkers(finalEventsForMap);
+        displayEventsListHtml(eventsForHtmlList);
+        updateMapMarkers(eventsForMapMarkers);
     }
 
     function zoomToEvent(latitude, longitude, zoomLevel = 6) {
@@ -282,8 +254,6 @@ document.addEventListener('DOMContentLoaded', () => {
         eventsToDisplay.sort((a, b) => {
             if (a.featured && !b.featured) return -1;
             if (!a.featured && b.featured) return 1;
-            // Ordina dalla data più recente (o più vicina al futuro) a quella più vecchia
-            // Se startDate è una stringa, convertila in oggetto Date per il confronto
             return new Date(a.startDate) - new Date(b.startDate); 
         });
 
@@ -292,10 +262,8 @@ document.addEventListener('DOMContentLoaded', () => {
             eventItem.className = 'tournament-item';
 
             let featuredIconHtml = event.featured ? '<span class="star-icon event-list-icon">★</span>' : '';
-            // Usa event.type per Sixes
             let sixesTitleIconHtml = (event.type && event.type.toLowerCase() === 'sixes') ? '<span class="sixes-icon icon-margin-right">6</span>' : '';
 
-            // Formatta le date, includendo endDate se presente e diversa da startDate
             const formattedDate = new Date(event.startDate).toLocaleDateString();
             let dateRange = formattedDate;
             if (event.endDate && event.endDate !== event.startDate) {
@@ -303,50 +271,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const locationText = event.location;
-            const descriptionText = event.description;
-            // Usa event.type per il tipo di gioco
+            const descriptionText = event.description || '';
             const eventType = event.type && typeof event.type === 'string' ? event.type : 'N/A';
             const gender = event.gender && typeof event.gender === 'string' ? event.gender : 'N/A';
 
             let gameTypeIcon = '';
-            if (eventType !== 'N/A') {
-                switch (eventType.toLowerCase()) { // Usa eventType qui
-                    case 'field':
-                        gameTypeIcon = '<i class="fa-solid fa-seedling icon-margin-right"></i>';
-                        break;
-                    case 'box':
-                        gameTypeIcon = '<i class="fas fa-cube icon-margin-right"></i>';
-                        break;
-                    case 'sixes':
-                        gameTypeIcon = '<span class="sixes-icon icon-margin-right">6</span>';
-                        break;
-                    case 'clinic':
-                        gameTypeIcon = '<i class="fas fa-book icon-margin-right"></i>';
-                        break;
-                    default:
-                        gameTypeIcon = '<i class="fas fa-gamepad icon-margin-right"></i>';
-                }
-            } else {
-                gameTypeIcon = '<i class="fas fa-gamepad icon-margin-right"></i>';
+            switch (eventType.toLowerCase()) {
+                case 'field': gameTypeIcon = '<i class="fa-solid fa-seedling icon-margin-right"></i>'; break;
+                case 'box': gameTypeIcon = '<i class="fas fa-cube icon-margin-right"></i>'; break;
+                case 'sixes': gameTypeIcon = '<span class="sixes-icon icon-margin-right">6</span>'; break;
+                case 'clinic': gameTypeIcon = '<i class="fas fa-book icon-margin-right"></i>'; break;
+                default: gameTypeIcon = '<i class="fas fa-gamepad icon-margin-right"></i>'; break;
             }
 
             let genderIcon = '';
-            if (gender !== 'N/A') {
-                switch (gender.toLowerCase()) {
-                    case 'men':
-                        genderIcon = '<i class="fas fa-mars icon-margin-right"></i>';
-                        break;
-                    case 'women':
-                        genderIcon = '<i class="fas fa-venus icon-margin-right"></i>';
-                        break;
-                    case 'both':
-                        genderIcon = '<i class="fas fa-venus-mars icon-margin-right"></i>';
-                        break;
-                    default:
-                        genderIcon = '<i class="fas fa-user icon-margin-right"></i>';
-                }
-            } else {
-                genderIcon = '<i class="fas fa-user icon-margin-right"></i>';
+            switch (gender.toLowerCase()) {
+                case 'men': genderIcon = '<i class="fas fa-mars icon-margin-right"></i>'; break;
+                case 'women': genderIcon = '<i class="fas fa-venus icon-margin-right"></i>'; break;
+                case 'both': genderIcon = '<i class="fas fa-venus-mars icon-margin-right"></i>'; break;
+                default: genderIcon = '<i class="fas fa-user icon-margin-right"></i>'; break;
             }
 
             eventItem.innerHTML = `
