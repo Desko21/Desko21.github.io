@@ -74,7 +74,6 @@ nav.desktop-nav ul li a:hover {
     display: none; /* Nascondi di default su schermi grandi */
 }
 
-
 main {
     padding: 20px;
     max-width: 1200px;
@@ -141,7 +140,7 @@ footer {
     margin-top: 30px;
 }
 
-/* Stili per add-tournament.html */
+/* Stili per add-tournament.html e edit-event.html form */
 form {
     display: flex;
     flex-direction: column;
@@ -157,6 +156,8 @@ form label {
 form input[type="text"],
 form input[type="date"],
 form input[type="url"],
+form input[type="number"], /* Added for cost/coordinates */
+form select, /* Added for type/gender/currency/cost type */
 form textarea {
     padding: 10px;
     border: 1px solid #ccc;
@@ -275,6 +276,21 @@ form button:hover {
 
 .delete-button:hover {
     background-color: #c82333;
+}
+
+.edit-button { /* Applied to search button on edit-event.html */
+    background-color: #EB9B43;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease;
+}
+
+.edit-button:hover {
+    background-color: #218838;
 }
 
 .event-actions {
@@ -558,70 +574,76 @@ form input[type="image"] {
     width: 180px;
 }
 
+---
+
 /* Stili per la tabella degli eventi (delete-event.html) */
-#eventList table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    overflow: hidden;
+/* Basic table styling for readability */
+#eventsList table {
+    width: 100%; /* La tabella occupa tutta la larghezza disponibile */
+    border-collapse: collapse; /* Rimuove lo spazio tra i bordi delle celle */
+    margin: 20px 0; /* Spazio sopra e sotto la tabella */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Una leggera ombra per farla risaltare */
+    background-color: #f8f8f8; /* Sfondo leggermente grigio */
+    border-radius: 8px; /* Bordi arrotondati per la tabella */
+    overflow: hidden; /* Assicura che i bordi arrotondati funzionino con l'ombra */
 }
 
-#eventList th,
-#eventList td {
-    border: 1px solid #e0e0e0;
-    padding: 12px 15px;
-    text-align: left;
-    font-size: 0.95em;
+/* Table headers */
+#eventsList th {
+    background-color: #22454C; /* Colore di sfondo per l'intestazione (il tuo colore primario) */
+    color: white; /* Testo bianco */
+    padding: 12px 15px; /* Spaziatura interna */
+    text-align: left; /* Allineamento del testo a sinistra */
+    font-weight: bold; /* Grassetto */
+    text-transform: uppercase; /* Testo maiuscolo */
+    font-size: 0.9em; /* Dimensione del font leggermente più piccola */
+    border-bottom: 2px solid #1a363b; /* Bordo inferiore più spesso */
 }
 
-#eventList th {
-    background-color: #22454C;
+/* Table cells */
+#eventsList td {
+    padding: 10px 15px; /* Spaziatura interna */
+    border-bottom: 1px solid #ddd; /* Bordi sottili tra le righe */
+    vertical-align: middle; /* Allineamento verticale al centro */
+    color: #333; /* Colore del testo */
+}
+
+/* Zebra striping for readability */
+#eventsList tbody tr:nth-child(even) {
+    background-color: #eef2f5; /* Colore per le righe pari */
+}
+
+/* Hover effect for rows */
+#eventsList tbody tr:hover {
+    background-color: #e0e6eb; /* Cambia colore al passaggio del mouse */
+    cursor: default; /* Mantiene il cursore default per la riga, il pulsante avrà il suo */
+}
+
+/* Specific styling for the delete button column in the table */
+#eventsList td button.delete-button {
+    background-color: #dc3545; /* Rosso per il bottone di eliminazione */
     color: white;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-#eventList tbody tr:nth-child(even) {
-    background-color: #f8f8f8;
-}
-
-#eventList tbody tr:hover {
-    background-color: #eef;
-}
-
-/* Stili specifici per gli elementi nella tabella delete-event.html */
-#eventList td:last-child {
-    text-align: center;
-    white-space: nowrap;
-    width: 80px;
-}
-
-#eventList td:nth-last-child(2) { /* Questa è la colonna "Featured" (il checkbox) */
-    text-align: center;
-    white-space: nowrap;
-    width: 80px;
-}
-
-#eventList td input[type="checkbox"] {
-    transform: scale(1.2);
-    margin: 0;
-    padding: 0;
-}
-
-.edit-button {
-    background-color: #EB9B43;
-    color: white;
-    padding: 12px 20px;
     border: none;
+    padding: 8px 12px;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 1.1rem;
+    font-size: 0.9em;
     transition: background-color 0.3s ease;
 }
 
+#eventsList td button.delete-button:hover {
+    background-color: #c82333; /* Rosso più scuro al passaggio del mouse */
+}
+
+/* Stili per il checkbox "Featured" */
+#eventsList td input[type="checkbox"] {
+    transform: scale(1.2); /* Rende il checkbox leggermente più grande */
+    margin: 0;
+    padding: 0;
+    cursor: pointer; /* Indica che è interattivo */
+}
+
+/* Full width input on search event section */
 .full-width-input {
     width: 100%;
     box-sizing: border-box;
@@ -631,6 +653,7 @@ form input[type="image"] {
     border-radius: 4px;
 }
 
+---
 
 /* --- MEDIA QUERIES --- */
 
@@ -779,6 +802,13 @@ form input[type="image"] {
     body.mobile-menu-open {
         overflow: hidden; 
     }
+
+    /* Media query specific for the table on delete-event.html for smaller screens */
+    #eventsList th,
+    #eventsList td {
+        padding: 8px 10px;
+        font-size: 0.85em;
+    }
 }
 
 @media (max-width: 480px) {
@@ -792,5 +822,52 @@ form input[type="image"] {
 
     .tournament-item {
         padding: 10px;
+    }
+
+    /* Further refine table styling for very small screens */
+    #eventsList table,
+    #eventsList thead,
+    #eventsList tbody,
+    #eventsList th,
+    #eventsList td,
+    #eventsList tr {
+        display: block; /* Trasforma gli elementi della tabella in blocchi su schermi piccoli */
+    }
+
+    #eventsList thead tr {
+        position: absolute; /* Nasconde l'intestazione su schermi molto piccoli */
+        top: -9999px;
+        left: -9999px;
+    }
+
+    #eventsList tr {
+        border: 1px solid #ccc; /* Aggiunge un bordo tra le "righe" simulate */
+        margin-bottom: 10px;
+        display: flex; /* Utilizza flexbox per disporre le celle in colonna */
+        flex-wrap: wrap; /* Permette alle celle di andare a capo */
+        padding: 10px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Leggera ombra per le schede delle righe */
+    }
+
+    #eventsList td {
+        border: none; /* Rimuove i bordi delle celle simulate */
+        position: relative;
+        padding-left: 50%; /* Spazio per la label */
+        text-align: right;
+        flex: 1 1 100%; /* Ogni cella occupa tutta la larghezza */
+    }
+
+    #eventsList td::before {
+        content: attr(data-label); /* Utilizza l'attributo data-label come pseudo-elemento */
+        position: absolute;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+        color: #555;
     }
 }
