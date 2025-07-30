@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Event</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 </head>
 <body>
     <header>
@@ -33,7 +36,7 @@
                     <label for="searchEventId">Event ID:</label>
                     <input type="text" id="searchEventId" placeholder="Enter the unique event ID" required>
                 </div>
-                <button type="submit" id="searchButton" class="button" >Search Event</button>
+                <button type="submit" id="addEventButton" class="button" >Search Event</button>
             </div>
 
             <div id="eventEditFormContainer" style="display: none;">
