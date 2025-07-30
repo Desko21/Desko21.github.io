@@ -24,68 +24,68 @@
     </header>
 
  <main>
-    <div class="container">
+   <div class="container">
         <div id="message" class="message"></div>
 
         <div class="form-section">
-            <h2>Cerca Evento per ID</h2>
+            <h2>Search Event by ID</h2>
             <div class="form-group">
-                <label for="searchEventId">ID Evento:</label>
-                <input type="text" id="searchEventId" placeholder="Inserisci l'ID univoco dell'evento" required>
+                <label for="searchEventId">Event ID:</label>
+                <input type="text" id="searchEventId" placeholder="Enter the unique event ID" required>
             </div>
-            <button id="searchButton" class="button">Cerca Evento</button>
+            <button id="searchButton" class="button">Search Event</button>
         </div>
 
         <div id="eventEditFormContainer" style="display: none;">
-            <h2>Dettagli Evento</h2>
+            <h2>Event Details</h2>
             <form id="editEventForm">
                 <input type="hidden" id="eventId"> <div class="form-group">
-                    <label for="editEventName">Nome Evento:</label>
+                    <label for="editEventName">Event Name:</label>
                     <input type="text" id="editEventName" required>
                 </div>
                 <div class="form-group">
-                    <label for="editEventDate">Data:</label>
+                    <label for="editEventDate">Date:</label>
                     <input type="date" id="editEventDate" required>
                 </div>
                 <div class="form-group">
-                    <label for="editEventTime">Ora:</label>
+                    <label for="editEventTime">Time:</label>
                     <input type="time" id="editEventTime">
                 </div>
                 <div class="form-group">
-                    <label for="editEventLocation">Località:</label>
+                    <label for="editEventLocation">Location:</label>
                     <input type="text" id="editEventLocation" required>
                 </div>
                 <div class="form-group">
-                    <label for="editEventDescription">Descrizione:</label>
+                    <label for="editEventDescription">Description:</label>
                     <textarea id="editEventDescription" rows="4"></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="editLatitude">Latitudine:</label>
+                    <label for="editLatitude">Latitude:</label>
                     <input type="number" id="editLatitude" step="any">
                 </div>
                 <div class="form-group">
-                    <label for="editLongitude">Longitudine:</label>
+                    <label for="editLongitude">Longitude:</label>
                     <input type="number" id="editLongitude" step="any">
                 </div>
                 <div class="form-group">
-                    <label for="editEventType">Tipo:</label>
+                    <label for="editEventType">Type:</label>
                     <select id="editEventType">
-                        <option value="cultural">Culturale</option>
-                        <option value="sport">Sportivo</option>
-                        <option value="music">Musica</option>
-                        <option value="food">Cibo</option>
-                        <option value="other">Altro</option>
+                        <option value="cultural">Cultural</option>
+                        <option value="sport">Sport</option>
+                        <option value="music">Music</option>
+                        <option value="food">Food</option>
+                        <option value="other">Other</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="editEventImage">URL Immagine:</label>
+                    <label for="editEventImage">Image URL:</label>
                     <input type="url" id="editEventImage">
                 </div>
                 <div class="form-group checkbox-group">
                     <input type="checkbox" id="editIsFeatured">
-                    <label for="editIsFeatured">In Evidenza (Featured)</label>
+                    <label for="editIsFeatured">Featured</label>
                 </div>
-                <button type="submit" class="button">Salva Modifiche</button>
+                <button type="submit" class="button">Save Changes</button>
             </form>
         </div>
     </div>

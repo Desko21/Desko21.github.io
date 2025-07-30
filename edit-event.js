@@ -1,24 +1,26 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('edit-event.js loaded.');
 
-    const JSONBIN_MASTER_KEY = '$2a$10$moQg0NYbmqEkIUS1bTku2uiW8ywvcz0Bt8HKG3J/4qYU8dCZggiT6'; // La tua Master Key
-    const JSONBIN_EVENTS_READ_URL = 'https://api.jsonbin.io/v3/b/66923497e41b4d34e40e6c66/latest'; // Bin ID degli eventi
+    // --- JSONBin.io Configuration ---
+    const JSONBIN_MASTER_KEY = '$2a$10$moQg0NYbmqEkIUS1bTku2uiW8ywvcz0Bt8HKG3J/4qYU8dCZggiT6'; // YOUR MASTER KEY!
+    const JSONBIN_EVENTS_READ_URL = 'https://api.jsonbin.io/v3/b/66923497e41b4d34e40e6c66/latest'; // Events Bin ID
     const JSONBIN_EVENTS_WRITE_URL = 'https://api.jsonbin.io/v3/b/66923497e41b4d34e40e6c66';
-    const JSONBIN_LOGS_BIN_ID = '688924c7f7e7a370d1eff96b'; // Bin ID dei log
+    const JSONBIN_LOGS_BIN_ID = '688924c7f7e7a370d1eff96b'; // Logs Bin ID
     const JSONBIN_LOGS_WRITE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_LOGS_BIN_ID}`;
 
+    // --- HTML Element References ---
     const messageDiv = document.getElementById('message');
     const searchEventIdInput = document.getElementById('searchEventId');
     const searchButton = document.getElementById('searchButton');
     const eventEditFormContainer = document.getElementById('eventEditFormContainer');
     const editEventForm = document.getElementById('editEventForm');
+    const editEventLocationInput = document.getElementById('editEventLocation'); // Location field in edit form
 
-    // Campi del modulo di modifica
-    const eventIdInput = document.getElementById('eventId'); // Campo nascosto per l'ID
+    // Edit form fields
+    const eventIdInput = document.getElementById('eventId'); // Hidden field for the event ID
     const editEventNameInput = document.getElementById('editEventName');
     const editEventDateInput = document.getElementById('editEventDate');
     const editEventTimeInput = document.getElementById('editEventTime');
-    const editEventLocationInput = document.getElementById('editEventLocation');
     const editEventDescriptionInput = document.getElementById('editEventDescription');
     const editLatitudeInput = document.getElementById('editLatitude');
     const editLongitudeInput = document.getElementById('editLongitude');
@@ -26,10 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const editEventImageInput = document.getElementById('editEventImage');
     const editIsFeaturedInput = document.getElementById('editIsFeatured');
 
-    // Funzione per loggare le attività (copiata da add-event.js, assicurati che sia la stessa versione)
+    // --- Utility Functions ---
+
+    // Function to log activities (copied from add-event.js, ensure consistency)
     async function logActivity(action, eventDetails) {
         const timestamp = new Date().toISOString();
-        let userIp = 'N/A';
+        let userIp = 'N/A'; // Default value in case fetching fails
 
         try {
             const ipResponse = await fetch('https://api.ipify.org?format=json');
@@ -37,10 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const ipData = await ipResponse.json();
                 userIp = ipData.ip || 'N/A';
             } else {
-                console.warn("Impossibile recuperare l'IP:", await ipResponse.text());
+                console.warn("Could not retrieve IP:", await ipResponse.text());
             }
         } catch (ipError) {
-            console.error("Errore nel recupero dell'IP:", ipError);
+            console.error("Error retrieving IP:", ipError);
         }
 
         const logEntry = {
@@ -48,10 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
             action: action,
             ipAddress: userIp,
             event: {
-                id: eventDetails.id, // Ora usiamo l'ID generato da noi
+                id: eventDetails.id, // Use the generated ID
                 name: eventDetails.name,
                 location: eventDetails.location,
-                // createdAt: eventDetails.createdAt // Non serve più se l'ID è 'id'
             }
         };
 
@@ -64,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const logData = await readLogResponse.json();
                 existingLogs = logData.record || [];
             } else {
-                console.warn("Non è stato possibile leggere i log esistenti o il bin non esiste, inizio da zero.");
+                console.warn("Could not read existing logs or bin does not exist, starting fresh.");
             }
 
             existingLogs.push(logEntry);
@@ -80,27 +83,75 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!writeLogResponse.ok) {
-                console.error("Errore durante il salvataggio del log attività:", await writeLogResponse.text());
+                console.error("Failed to save activity log:", await writeLogResponse.text());
             }
         } catch (error) {
-            console.error('Errore durante il logging dell\'attività:', error);
+            console.error('Error logging activity:', error);
         }
     }
 
+    // Function for geocoding from location to coordinates (latitude/longitude)
+    // You might want to copy this from add-event.js if you need auto-fill on location change
+    // in the edit form as well. Remember to update the User-Agent.
+    async function getCoordinatesFromLocation(locationName) {
+        if (locationName.trim() === '') {
+            editLatitudeInput.value = ''; // Use edit form's lat/long inputs
+            editLongitudeInput.value = '';
+            return;
+        }
 
-    // Funzione per cercare l'evento
+        messageDiv.textContent = 'Searching for coordinates for the location...';
+        messageDiv.className = 'message info';
+
+        try {
+            const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName)}&limit=1`;
+            
+            const response = await fetch(nominatimUrl, {
+                headers: {
+                    'User-Agent': 'EventApp/1.0 (your-email@example.com)' // CHANGE THIS
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error searching for coordinates: ${response.status} - ${await response.text()}`);
+            }
+
+            const data = await response.json();
+
+            if (data && data.length > 0) {
+                const firstResult = data[0];
+                editLatitudeInput.value = parseFloat(firstResult.lat).toFixed(6); 
+                editLongitudeInput.value = parseFloat(firstResult.lon).toFixed(6);
+                messageDiv.textContent = 'Coordinates found!';
+                messageDiv.className = 'message success';
+            } else {
+                editLatitudeInput.value = '';
+                editLongitudeInput.value = '';
+                messageDiv.textContent = 'Location not found, please enter coordinates manually.';
+                messageDiv.className = 'message warning';
+            }
+        } catch (error) {
+            console.error('Error during geocoding:', error);
+            messageDiv.textContent = `Geocoding error: ${error.message}. Please enter coordinates manually.`;
+            messageDiv.className = 'message error';
+        }
+    }
+
+    // --- Event Listeners ---
+
+    // Event listener for the search button
     searchButton.addEventListener('click', async () => {
         const eventIdToSearch = searchEventIdInput.value.trim();
         if (!eventIdToSearch) {
-            messageDiv.textContent = 'Per favore, inserisci un ID evento.';
+            messageDiv.textContent = 'Please enter an event ID.';
             messageDiv.className = 'message error';
             eventEditFormContainer.style.display = 'none';
             return;
         }
 
-        messageDiv.textContent = 'Ricerca evento...';
+        messageDiv.textContent = 'Searching for event...';
         messageDiv.className = 'message info';
-        eventEditFormContainer.style.display = 'none';
+        eventEditFormContainer.style.display = 'none'; // Hide form until event is found
 
         try {
             const response = await fetch(JSONBIN_EVENTS_READ_URL, {
@@ -110,16 +161,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                throw new Error(`Errore durante la lettura degli eventi: ${response.status} - ${await response.text()}`);
+                throw new Error(`Error reading events: ${response.status} - ${await response.text()}`);
             }
 
             const data = await response.json();
             const events = data.record || [];
-            const foundEvent = events.find(event => event.id === eventIdToSearch); // Cerca l'evento per l'ID
+            // Find the event by its unique 'id' property
+            const foundEvent = events.find(event => event.id === eventIdToSearch);
 
             if (foundEvent) {
-                // Popola il modulo con i dati dell'evento trovato
-                eventIdInput.value = foundEvent.id; // Salva l'ID nell'input nascosto
+                // Populate the form with the found event's data
+                eventIdInput.value = foundEvent.id; // Store the ID in the hidden input
                 editEventNameInput.value = foundEvent.name;
                 editEventDateInput.value = foundEvent.date;
                 editEventTimeInput.value = foundEvent.time;
@@ -131,36 +183,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 editEventImageInput.value = foundEvent.image;
                 editIsFeaturedInput.checked = foundEvent.featured;
 
-                eventEditFormContainer.style.display = 'block'; // Mostra il modulo
-                messageDiv.textContent = `Evento '${foundEvent.name}' trovato! Modifica i valori.`;
+                eventEditFormContainer.style.display = 'block'; // Show the edit form
+                messageDiv.textContent = `Event '${foundEvent.name}' found! You can now modify its values.`;
                 messageDiv.className = 'message success';
                 
-                // Opzionale: Geolocalizzazione inversa se i campi lat/long sono vuoti o da aggiornare
-                // getCoordinatesFromLocation(editEventLocationInput.value); 
-
             } else {
-                messageDiv.textContent = 'Nessun evento trovato con l\'ID specificato.';
+                messageDiv.textContent = 'No event found with the specified ID.';
                 messageDiv.className = 'message warning';
                 eventEditFormContainer.style.display = 'none';
             }
         } catch (error) {
-            console.error('Errore durante la ricerca dell\'evento:', error);
-            messageDiv.textContent = `Errore: ${error.message}`;
+            console.error('Error searching for the event:', error);
+            messageDiv.textContent = `Error: ${error.message}`;
             messageDiv.className = 'message error';
         }
     });
 
-    // Funzione per salvare le modifiche all'evento
-    editEventForm.addEventListener('submit', async (e) => {
-        e.preventDefault(); // Previene il ricaricamento della pagina
+    // Event listener for auto-geocoding in the edit form
+    editEventLocationInput.addEventListener('blur', () => {
+        getCoordinatesFromLocation(editEventLocationInput.value);
+    });
 
-        messageDiv.textContent = 'Salvataggio modifiche...';
+    // Event listener for saving event modifications
+    editEventForm.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Prevent page reload
+
+        messageDiv.textContent = 'Saving changes...';
         messageDiv.className = 'message info';
 
-        const eventIdToUpdate = eventIdInput.value; // L'ID dell'evento che stiamo modificando
+        const eventIdToUpdate = eventIdInput.value; // The ID of the event being modified
 
         const updatedEventData = {
-            id: eventIdToUpdate, // Mantieni l'ID originale
+            id: eventIdToUpdate, // Keep the original ID
             name: editEventNameInput.value,
             date: editEventDateInput.value,
             time: editEventTimeInput.value,
@@ -174,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            // PRIMO PASSO: Carica tutti gli eventi esistenti
+            // STEP 1: Load all existing events
             const readResponse = await fetch(JSONBIN_EVENTS_READ_URL, {
                 headers: {
                     'X-Master-Key': JSONBIN_MASTER_KEY
@@ -182,20 +236,20 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!readResponse.ok) {
-                throw new Error(`Errore nel leggere gli eventi esistenti per la modifica: ${readResponse.status} - ${await readResponse.text()}`);
+                throw new Error(`Error reading existing events for modification: ${response.status} - ${await response.text()}`);
             }
 
             const existingData = await readResponse.json();
             let events = existingData.record || [];
 
-            // Trova l'indice dell'evento da aggiornare nell'array
+            // Find the index of the event to update in the array
             const eventIndex = events.findIndex(event => event.id === eventIdToUpdate);
 
             if (eventIndex !== -1) {
-                // Aggiorna l'evento con i nuovi dati
+                // Update the event with the new data
                 events[eventIndex] = updatedEventData;
 
-                // SECONDO PASSO: Scrivi l'intero array aggiornato nel bin
+                // STEP 2: Write the entire updated array back to the bin
                 const writeResponse = await fetch(JSONBIN_EVENTS_WRITE_URL, {
                     method: 'PUT',
                     headers: {
@@ -208,34 +262,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!writeResponse.ok) {
                     const errorText = await writeResponse.text();
-                    throw new Error(`Errore durante il salvataggio delle modifiche all'evento: ${writeResponse.status} - ${errorText}`);
+                    throw new Error(`Error saving event modifications: ${writeResponse.status} - ${errorText}`);
                 }
 
-                messageDiv.textContent = `Evento '${updatedEventData.name}' (ID: ${eventIdToUpdate}) modificato con successo!`;
+                messageDiv.textContent = `Event '${updatedEventData.name}' (ID: ${eventIdToUpdate}) updated successfully!`;
                 messageDiv.className = 'message success';
                 
-                // Nascondi il modulo dopo il successo
+                // Hide the form after success
                 eventEditFormContainer.style.display = 'none';
-                searchEventIdInput.value = ''; // Pulisci il campo di ricerca
+                searchEventIdInput.value = ''; // Clear the search field
 
-                // Logga l'azione di modifica
+                // Log the edit action
                 logActivity('EDIT_EVENT', updatedEventData);
 
             } else {
-                messageDiv.textContent = 'Errore: Evento non trovato per la modifica (ID non corrispondente).';
+                messageDiv.textContent = 'Error: Event not found for modification (ID mismatch).';
                 messageDiv.className = 'message error';
             }
 
         } catch (error) {
-            console.error('Errore durante la modifica dell\'evento:', error);
-            messageDiv.textContent = `Errore: ${error.message}`;
+            console.error('Error during event modification:', error);
+            messageDiv.textContent = `Error: ${error.message}`;
             messageDiv.className = 'message error';
         }
     });
-
-    // Opzionale: Geocoding della località in tempo reale nel modulo di modifica (simil add-event.js)
-    // Se vuoi che anche nella pagina di modifica lat/long vengano calcolate automaticamente
-    // quando l'utente cambia la località, devi aggiungere una funzione simile a getCoordinatesFromLocation
-    // e un event listener su editEventLocationInput.
-    // Per brevità non la includo qui, ma puoi copiarla e adattarla da add-event.js
 });
