@@ -26,12 +26,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const eventLinkInput = document.getElementById('eventLink');
     const contactEmailInput = document.getElementById('contactEmail');
 
-    const eventTypeInput = document.getElementById('eventType');
-    const eventGenderInput = document.getElementById('eventGender');
+    // Assicurati che questi ID corrispondano ESATTAMENTE a quelli nel tuo HTML
+    // E che il tuo HTML abbia <select id="eventType"> e <select id="eventGender">
+    const eventTypeInput = document.getElementById('eventType'); // <-- CORRETTO
+    const eventGenderInput = document.getElementById('eventGender'); // <-- CORRETTO
 
     // --- NEW REFERENCES FOR COST ---
     const eventCostInput = document.getElementById('eventCost');
-    const costTypeSelect = document.getElementById('costType');
+    // Assicurati che l'ID sia 'costType' nel tuo HTML per la dropdown del tipo di costo
+    const costTypeSelect = document.getElementById('costType'); // <-- CORRETTO
 
 
     // --- Data for Select Options (MUST MATCH add-event.js and script.js) ---
@@ -44,6 +47,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- Function to populate dropdowns ---
     function populateDropdown(selectElement, options, placeholderText = "Select an option") {
+        // AGGIUNGI UN CONTROLLO PER NULL QUI!
+        if (!selectElement) {
+            console.error(`Error: The provided selectElement is null or undefined. Cannot populate dropdown.`);
+            return; // Esci dalla funzione se l'elemento non è valido
+        }
         selectElement.innerHTML = ''; // Clear existing options
 
         const placeholderOption = document.createElement('option');
@@ -64,16 +72,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Populate dropdowns on page load
+    // MODIFICA QUI: Passa le VARIABILI degli elementi DOM, non le stringhe ID
     populateDropdown(eventTypeInput, gameTypesOptions, "Select Game Type");
     populateDropdown(eventGenderInput, gendersOptions, "Select Gender");
-    // --- POPULATE THE NEW COST TYPE DROPDOWN ---
     populateDropdown(costTypeSelect, costTypeOptions, "Not Specified");
 
 
     // --- Utility Functions ---
 
     async function logActivity(action, eventDetails) {
-        // ... (same logActivity function as in add-event.js, no changes needed here) ...
+        // ... (resto del codice della funzione logActivity) ...
         const timestamp = new Date().toISOString();
         let userIp = 'N/A';
 
@@ -133,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function getCoordinatesFromLocation(locationName) {
-        // ... (same getCoordinatesFromLocation function as in add-event.js, no changes needed here) ...
+        // ... (resto del codice della funzione getCoordinatesFromLocation) ...
         if (locationName.trim() === '') {
             latitudeInput.value = '';
             longitudeInput.value = '';
@@ -206,12 +214,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 contactEmailInput.value = event.contactEmail || '';
 
                 // Set dropdowns
-                eventTypeInput.value = event.type || '';
-                eventGenderInput.value = event.gender || '';
+                // Questi valori dovrebbero corrispondere ai VALUES delle opzioni create da populateDropdown
+                eventTypeInput.value = (event.type || '').toLowerCase().replace(/\s/g, ''); // Normalizza per matchare il value
+                eventGenderInput.value = (event.gender || '').toLowerCase().replace(/\s/g, ''); // Normalizza per matchare il value
 
                 // --- LOAD NEW COST FIELDS ---
                 eventCostInput.value = event.cost !== null ? event.cost : '';
-                costTypeSelect.value = event.costType || ''; // Select based on saved value, default to empty/placeholder if null/undefined
+                costTypeSelect.value = (event.costType || '').toLowerCase().replace(/\s/g, ''); // Select based on saved value, default to empty/placeholder if null/undefined
 
                 messageDiv.textContent = '';
                 messageDiv.className = 'message';
@@ -266,8 +275,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const eventDescription = eventDescriptionInput.value;
             const eventLink = eventLinkInput.value;
             const contactEmail = contactEmailInput.value;
-            const eventType = eventTypeInput.value;
-            const eventGender = eventGenderInput.value;
+            const eventType = eventTypeInput.value; // Questo sarà il valore normalizzato (es. 'field')
+            const eventGender = eventGenderInput.value; // Questo sarà il valore normalizzato (es. 'men')
 
             // --- GET NEW COST FIELD VALUES ---
             const eventCost = eventCostInput.value === '' ? null : parseFloat(eventCostInput.value);
@@ -293,7 +302,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 messageDiv.textContent = 'Please specify the Cost Type (e.g., Per Person, Per Team) if you enter a cost.';
                 messageDiv.className = 'message error';
                 saveChangesButton.disabled = false;
-                saveChangesButton.textContent = 'Save Changes';
+                saveChangesButton.C = 'Save Changes';
                 return;
             }
             if (eventCost === null && costType !== 'not_specified') {
