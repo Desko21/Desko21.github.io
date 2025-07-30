@@ -169,26 +169,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 const eventName = e.target.dataset.eventName;
                 const eventLocation = e.target.dataset.eventLocation; // Get location for logging
                 
-                // --- NEW: Log the activity before initiating PayPal ---
-                // We need to find the full event object for logActivity
-                const selectedEvent = allEvents.find(event => event.createdAt === eventId);
-                if (selectedEvent) {
-                    // Use a more generic action for the button click
-                    logActivity('CLICK_MAKE_FEATURED_BUTTON', { 
-                        id: selectedEvent.id, // Use the actual event ID if available, otherwise createdAt
-                        name: selectedEvent.name, 
-                        location: selectedEvent.location 
-                    });
-                } else {
-                    console.warn('Could not find event in allEvents for logging.');
-                    // Fallback log with available data
-                    logActivity('CLICK_MAKE_FEATURED_BUTTON_FALLBACK', { 
-                        id: eventId, 
-                        name: eventName, 
-                        location: eventLocation 
-                    });
-                }
-                // --- END NEW ---
+                // --- We can remove the previous log here since we are logging inside initiatePayPalPayment ---
+                // No longer needed here as the more precise log happens inside initiatePayPalPayment
+                // const selectedEvent = allEvents.find(event => event.createdAt === eventId);
+                // if (selectedEvent) {
+                //     logActivity('CLICK_MAKE_FEATURED_BUTTON', { 
+                //         id: selectedEvent.id, 
+                //         name: selectedEvent.name, 
+                //         location: selectedEvent.location 
+                //     });
+                // } else {
+                //     console.warn('Could not find event in allEvents for logging.');
+                //     logActivity('CLICK_MAKE_FEATURED_BUTTON_FALLBACK', { 
+                //         id: eventId, 
+                //         name: eventName, 
+                //         location: eventLocation 
+                //     });
+                // }
+                // --- END removed NEW ---
 
                 initiatePayPalPayment(eventId, eventName); // PayPal call
             });
@@ -196,6 +194,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initiatePayPalPayment(eventId, eventName) {
+        // --- NUOVA RIGA: Logga l'inizio del pagamento PayPal ---
+        const selectedEvent = allEvents.find(event => event.createdAt === eventId);
+        if (selectedEvent) {
+            logActivity('INITIATE_PAYPAL_PAYMENT', { 
+                id: selectedEvent.id, 
+                name: selectedEvent.name, 
+                location: selectedEvent.location 
+            });
+        } else {
+            console.warn('Could not find event in allEvents for logging PayPal initiation.');
+            logActivity('INITIATE_PAYPAL_PAYMENT_FALLBACK', { 
+                id: eventId, 
+                name: eventName, 
+                location: 'Unknown (from PayPal initiation)' 
+            });
+        }
+        // --- Fine NUOVA RIGA ---
+
         const confirmation = confirm(`You are about to pay ${PAYPAL_AMOUNT} ${PAYPAL_CURRENCY_CODE} to make "${eventName}" a featured event. Continue to PayPal?`);
         if (!confirmation) {
             showMessage('PayPal payment cancelled by user.', 'warning');
