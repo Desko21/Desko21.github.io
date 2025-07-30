@@ -112,7 +112,7 @@ main {
 }
 
 .tournament-item.featured {
-    background-color: #ffed93; /* Light goldenrod yellow */
+    background-color: #fcf4cc; /* Light goldenrod yellow */
     border-color: #ED9B47; /* Gold */
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
     order: -1; /* Puts featured items at the top */
