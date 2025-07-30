@@ -94,17 +94,19 @@
                         <input type="number" id="editEventCost" step="0.01" placeholder="e.g., 50.00" class="full-width-input">
                     </div>
 
+					<div class="form-group">
+                        <label for="currencyType">Currency:</label>
+                        <select id="currencyType" class="full-width-input">
+                            </select>
+                    </div>
+					
                     <div class="form-group">
                         <label for="costType">Cost Type:</label>
                         <select id="costType" class="full-width-input">
                             </select>
                     </div>
 
-                    <div class="form-group">
-                        <label for="currencyType">Currency:</label>
-                        <select id="currencyType" class="full-width-input">
-                            </select>
-                    </div>
+                    
 
                     <button type="submit" id="saveChangesButton" class="button">Save Changes</button>
                 </form>
@@ -114,6 +116,6 @@
 
     <div id="footer-placeholder"></div>
     <script type="module" src="edit-event.js"></script>
-    <script src="load-header.js"></script>
+	<script src="load-header.js"></script>
 </body>
 </html>

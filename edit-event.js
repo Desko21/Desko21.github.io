@@ -1,433 +1,330 @@
 // edit-event.js
 
-import {
-    JSONBIN_MASTER_KEY,
-    JSONBIN_EVENTS_WRITE_URL,
-    JSONBIN_LOGS_WRITE_URL,
-    NOMINATIM_USER_AGENT
-} from './config.js';
+// Importa le costanti dal file config.js
+import { JSONBIN_MASTER_KEY, JSONBIN_EVENTS_READ_URL, JSONBIN_EVENTS_UPDATE_URL, NOMINATIM_USER_AGENT } from './config.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    console.log('edit-event.js loaded.');
+// Riferimenti agli elementi del DOM
+const searchEventIdInput = document.getElementById('searchEventId');
+const searchButton = document.getElementById('searchButton');
+const messageDiv = document.getElementById('message');
+const eventEditFormContainer = document.getElementById('eventEditFormContainer');
+const editEventForm = document.getElementById('editEventForm');
 
-    // --- HTML Element References ---
-    // Elementi del FORM DI RICERCA EVENTO
-    const searchEventIdInput = document.getElementById('searchEventId');
-    const searchButton = document.getElementById('searchButton');
-    const eventEditFormContainer = document.getElementById('eventEditFormContainer'); // Contenitore del form di modifica
+const eventIdInput = document.getElementById('eventId'); // Campo hidden per l'ID
+const editEventNameInput = document.getElementById('editEventName');
+const editEventLocationInput = document.getElementById('editEventLocation');
+const editLatitudeInput = document.getElementById('editLatitude');
+const editLongitudeInput = document.getElementById('editLongitude');
+const geolocationMessageDiv = document.getElementById('geolocationMessage');
+const editEventTypeSelect = document.getElementById('editEventType');
+const editEventGenderSelect = document.getElementById('editEventGender');
+const editEventStartDateInput = document.getElementById('editEventStartDate');
+const editEventEndDateInput = document.getElementById('editEventEndDate');
+const editEventDescriptionTextarea = document.getElementById('editEventDescription');
+const editEventLinkInput = document.getElementById('editEventLink');
+const editContactEmailInput = document.getElementById('editContactEmail');
+const editEventCostInput = document.getElementById('editEventCost');
+const currencyTypeSelect = document.getElementById('currencyType');
+const costTypeSelect = document.getElementById('costType');
+const saveChangesButton = document.getElementById('saveChangesButton');
 
-    const messageDiv = document.getElementById('message');
-    const geolocationMessageDiv = document.getElementById('geolocationMessage');
-
-    // Elementi del FORM DI MODIFICA EVENTO
-    const editEventForm = document.getElementById('editEventForm');
-    const eventIdHiddenInput = document.getElementById('eventId'); // L'ID nascosto dentro il form
-
-    const eventNameInput = document.getElementById('editEventName');
-    const eventLocationInput = document.getElementById('editEventLocation');
-    const latitudeInput = document.getElementById('editLatitude');
-    const longitudeInput = document.getElementById('editLongitude');
-    const eventStartDateInput = document.getElementById('editEventStartDate');
-    const eventEndDateInput = document.getElementById('editEventEndDate');
-    const eventDescriptionInput = document.getElementById('editEventDescription');
-    const eventLinkInput = document.getElementById('editEventLink');
-    const contactEmailInput = document.getElementById('editContactEmail');
-
-    const eventTypeInput = document.getElementById('editEventType');
-    const eventGenderInput = document.getElementById('editEventGender');
-
-    const eventCostInput = document.getElementById('editEventCost');
-    const costTypeSelect = document.getElementById('costType');
-    const currencyTypeSelect = document.getElementById('currencyType'); // NUOVA REFERENZA PER LA VALUTA
-
-    const saveChangesButton = document.getElementById('saveChangesButton');
+// Definizione delle opzioni per i select
+const gameTypes = ['Field', 'Box', 'Sixes', 'Clinic', 'Other'];
+const genders = ['Men', 'Women', 'Both', 'Mixed', 'Other'];
+const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'BRL'];
+const costTypes = ['Not Specified', 'Per Person', 'Per Team'];
 
 
-    // --- Data for Select Options (MUST MATCH add-event.js and script.js) ---
-    const gameTypesOptions = ['Field', 'Box', 'Sixes', 'Clinic', 'Other'];
-    const gendersOptions = ['Men', 'Women', 'Both', 'Mixed', 'Other'];
-    const costTypeOptions = ['Not Specified', 'Per Person', 'Per Team'];
-    const currencyOptions = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY']; // NUOVE OPZIONI PER LA VALUTA
-
-    let currentEventId = null; // To store the ID of the event being edited
-
-    // --- Function to populate dropdowns ---
-    function populateDropdown(selectElement, options, placeholderText = "Select an option") {
-        if (!selectElement) {
-            console.error(`Error: The provided selectElement is null or undefined. Cannot populate dropdown. Check if ID exists in HTML.`);
-            return;
-        }
-        selectElement.innerHTML = ''; // Clear existing options
-
-        const placeholderOption = document.createElement('option');
-        placeholderOption.value = '';
-        placeholderOption.textContent = placeholderText;
-        if (placeholderText.includes("Select") || placeholderText.includes("Not Specified")) {
-            // Solo per i placeholder iniziali (Game Type, Gender, Cost Type)
-            placeholderOption.disabled = true;
-        }
-        placeholderOption.selected = true;
-        selectElement.appendChild(placeholderOption);
-
-        options.forEach(optionText => {
-            const option = document.createElement('option');
-            // La valuta potrebbe non voler essere normalizzata con toLowerCase().replace(/\s/g, '')
-            // Per valute, il valore e il testo sono spesso identici (es. USD, EUR)
-            option.value = optionText; // Per valute, usa il testo come valore
-            option.textContent = optionText;
-            selectElement.appendChild(option);
-        });
+// Funzione per mostrare messaggi all'utente
+function showMessage(msg, type = 'info') {
+    messageDiv.textContent = msg;
+    messageDiv.className = `message ${type}`;
+    // Rimuovi il messaggio dopo un certo tempo, se non è un errore persistente
+    if (type !== 'error') {
+        setTimeout(() => {
+            messageDiv.textContent = '';
+            messageDiv.className = 'message';
+        }, 5000);
     }
+}
 
-    // Populate dropdowns on page load for the edit form
-    populateDropdown(eventTypeInput, gameTypesOptions, "Select Game Type");
-    populateDropdown(eventGenderInput, gendersOptions, "Select Gender");
+// Funzione per popolare un dropdown select
+function populateSelectOptions(selectElement, optionsArray) {
+    if (!selectElement) return;
+    selectElement.innerHTML = ''; // Pulisci le opzioni esistenti
 
-    if (costTypeSelect) {
-        populateDropdown(costTypeSelect, costTypeOptions, "Not Specified");
-    } else {
-        console.warn("Element with ID 'costType' not found. Cost Type dropdown will not be populated.");
-    }
-
-    // Popola la nuova dropdown della valuta
-    if (currencyTypeSelect) {
-        populateDropdown(currencyTypeSelect, currencyOptions, "Select Currency");
-    } else {
-        console.warn("Element with ID 'currencyType' not found. Currency dropdown will not be populated.");
+    // Aggiungi un'opzione vuota o di default solo se è un campo non richiesto o per la selezione iniziale
+    if (selectElement.id === 'currencyType' || selectElement.id === 'costType') {
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Select...';
+        selectElement.appendChild(defaultOption);
     }
 
 
-    // --- Utility Functions ---
+    optionsArray.forEach(optionText => {
+        const option = document.createElement('option');
+        // Importante: il valore dell'opzione è in minuscolo per il confronto con i dati dell'API
+        option.value = optionText.toLowerCase().replace(/\s/g, ''); // Rimuove spazi per cost types
+        option.textContent = optionText;
+        selectElement.appendChild(option);
+    });
+}
 
-    async function logActivity(action, eventDetails) {
-        const timestamp = new Date().toISOString();
-        let userIp = 'N/A';
+// Popola tutti i dropdown all'avvio
+function initializeFormOptions() {
+    populateSelectOptions(editEventTypeSelect, gameTypes);
+    populateSelectOptions(editEventGenderSelect, genders);
+    populateSelectOptions(currencyTypeSelect, currencies);
+    populateSelectOptions(costTypeSelect, costTypes);
+}
 
-        try {
-            const ipResponse = await fetch('https://api.ipify.org?format=json');
-            if (ipResponse.ok) {
-                const ipData = await ipResponse.json();
-                userIp = ipData.ip || 'N/A';
-            } else {
-                console.warn("Could not retrieve IP:", await ipResponse.text());
-            }
-        } catch (ipError) {
-            console.error("Error retrieving IP:", ipError);
-        }
 
-        const logEntry = {
-            timestamp: timestamp,
-            action: action,
-            ipAddress: userIp,
-            event: {
-                id: eventDetails.id,
-                name: eventDetails.name,
-                location: eventDetails.location,
-            }
-        };
-
-        try {
-            const readLogResponse = await fetch(JSONBIN_LOGS_WRITE_URL + '/latest', {
-                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-            });
-            let existingLogs = [];
-            if (readLogResponse.ok) {
-                const logData = await readLogResponse.json();
-                existingLogs = logData.record || [];
-            } else {
-                console.warn("Could not read existing logs or bin does not exist, starting fresh.");
-            }
-
-            existingLogs.push(logEntry);
-
-            const writeLogResponse = await fetch(JSONBIN_LOGS_WRITE_URL, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': JSONBIN_MASTER_KEY,
-                    'X-Bin-Meta': 'false'
-                },
-                body: JSON.stringify(existingLogs)
-            });
-
-            if (!writeLogResponse.ok) {
-                console.error("Failed to save activity log:", await writeLogResponse.text());
-            }
-        } catch (error) {
-            console.error('Error logging activity:', error);
-        }
+// Funzione per geocodificare una posizione (da add-event.js)
+async function geocodeLocation(locationString) {
+    if (!locationString) {
+        geolocationMessageDiv.textContent = 'Please enter a location.';
+        geolocationMessageDiv.className = 'message info';
+        return null;
     }
 
-    async function getCoordinatesFromLocation(locationName) {
-        if (locationName.trim() === '') {
-            latitudeInput.value = '';
-            longitudeInput.value = '';
-            geolocationMessageDiv.textContent = '';
-            geolocationMessageDiv.className = 'message';
-            return;
-        }
-
-        geolocationMessageDiv.textContent = 'Searching for coordinates for the location...';
+    try {
+        geolocationMessageDiv.textContent = 'Searching for location...';
         geolocationMessageDiv.className = 'message info';
 
-        try {
-            const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName)}&limit=1`;
-
-            const response = await fetch(nominatimUrl, {
-                headers: {
-                    'User-Agent': NOMINATIM_USER_AGENT
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`Error searching for coordinates: ${response.status} - ${await response.text()}`);
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(locationString)}&format=json&limit=1`, {
+            headers: {
+                'User-Agent': NOMINATIM_USER_AGENT
             }
+        });
 
-            const data = await response.json();
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
 
-            if (data && data.length > 0) {
-                const firstResult = data[0];
-                latitudeInput.value = parseFloat(firstResult.lat).toFixed(6);
-                longitudeInput.value = parseFloat(firstResult.lon).toFixed(6);
-                geolocationMessageDiv.textContent = 'Coordinates found!';
-                geolocationMessageDiv.className = 'message success';
-            } else {
-                latitudeInput.value = '';
-                longitudeInput.value = '';
-                geolocationMessageDiv.textContent = 'Location not found, please enter coordinates manually.';
-                geolocationMessageDiv.className = 'message warning';
-            }
-        } catch (error) {
-            console.error('Error during geocoding:', error);
-            geolocationMessageDiv.textContent = `Geocoding error: ${error.message}. Please enter coordinates manually.`;
+        const data = await response.json();
+
+        if (data && data.length > 0) {
+            const lat = parseFloat(data[0].lat);
+            const lon = parseFloat(data[0].lon);
+
+            editLatitudeInput.value = lat;
+            editLongitudeInput.value = lon;
+            geolocationMessageDiv.textContent = `Coordinates found for ${data[0].display_name}.`;
+            geolocationMessageDiv.className = 'message success';
+            return { lat, lon };
+        } else {
+            geolocationMessageDiv.textContent = 'Location not found. Please try a more specific address (e.g., "Rome, Italy").';
             geolocationMessageDiv.className = 'message error';
+            editLatitudeInput.value = '';
+            editLongitudeInput.value = '';
+            return null;
         }
+    } catch (error) {
+        console.error('Error during geocoding:', error);
+        geolocationMessageDiv.textContent = 'Error finding location. Please try again.';
+        geolocationMessageDiv.className = 'message error';
+        editLatitudeInput.value = '';
+        editLongitudeInput.value = '';
+        return null;
     }
-
-    // --- Function to load event data into the form ---
-    async function loadEventForEdit(eventId) {
-        try {
-            messageDiv.textContent = 'Loading event data...';
-            messageDiv.className = 'message info';
-            eventEditFormContainer.style.display = 'none'; // Nascondi il form durante il caricamento
-
-            const response = await fetch(JSONBIN_EVENTS_WRITE_URL + '/latest', {
-                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to load events: ${response.status} - ${await response.text()}`);
-            }
-
-            const data = await response.json();
-            const events = data.record || [];
-            const event = events.find(e => e.id === eventId);
-
-            if (event) {
-                // Popola i campi del form con i dati dell'evento
-                eventIdHiddenInput.value = event.id; // Imposta l'ID nascosto
-                eventNameInput.value = event.name || '';
-                eventLocationInput.value = event.location || '';
-                latitudeInput.value = event.latitude !== null ? event.latitude.toFixed(6) : '';
-                longitudeInput.value = event.longitude !== null ? event.longitude.toFixed(6) : '';
-                eventStartDateInput.value = event.startDate || '';
-                eventEndDateInput.value = event.endDate || '';
-                eventDescriptionInput.value = event.description || '';
-                eventLinkInput.value = event.link || '';
-                contactEmailInput.value = event.contactEmail || '';
-
-                // Imposta le dropdown, assicurandoti che il valore corrisponda alle opzioni (normalizzato)
-                eventTypeInput.value = (event.type || '').toLowerCase().replace(/\s/g, '');
-                eventGenderInput.value = (event.gender || '').toLowerCase().replace(/\s/g, '');
-
-                // Carica i campi del costo
-                eventCostInput.value = event.cost !== null ? event.cost : '';
-                if (costTypeSelect) {
-                    costTypeSelect.value = (event.costType || '').toLowerCase().replace(/\s/g, '');
-                }
-                // Carica il valore della valuta
-                if (currencyTypeSelect) {
-                    currencyTypeSelect.value = event.currency || ''; // Carica il valore salvato
-                }
+}
 
 
-                messageDiv.textContent = 'Event loaded successfully. You can now edit its details.';
-                messageDiv.className = 'message success';
-                geolocationMessageDiv.textContent = '';
-                geolocationMessageDiv.className = 'message';
-
-                eventEditFormContainer.style.display = 'block'; // Mostra il form di modifica
-            } else {
-                messageDiv.textContent = 'Event not found with this ID. Please check the ID and try again.';
-                messageDiv.className = 'message error';
-                console.error('Event not found for ID:', eventId);
-                eventEditFormContainer.style.display = 'none'; // Nasconde il form se l'evento non viene trovato
-            }
-        } catch (error) {
-            console.error('Error loading event for edit:', error);
-            messageDiv.textContent = `Error loading event: ${error.message}`;
-            messageDiv.className = 'message error';
-            eventEditFormContainer.style.display = 'none'; // Nasconde il form in caso di errore
-        }
-    }
-
-    // --- Main execution flow for edit page ---
-
-    // Listener per il pulsante di ricerca
-    if (searchButton) {
-        searchButton.addEventListener('click', async () => {
-            const idToSearch = searchEventIdInput.value.trim();
-            if (idToSearch) {
-                currentEventId = idToSearch; // Imposta l'ID corrente
-                await loadEventForEdit(currentEventId);
-            } else {
-                messageDiv.textContent = 'Please enter an Event ID to search.';
-                messageDiv.className = 'message warning';
-                eventEditFormContainer.style.display = 'none'; // Nasconde il form se non c'è ID
-            }
+// Funzione per caricare un evento specifico dal JSONBin
+async function loadEventDetails(id) {
+    showMessage('Loading event details...', 'info');
+    try {
+        const response = await fetch(JSONBIN_EVENTS_READ_URL, {
+            headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
         });
-    } else {
-        console.error("The 'searchButton' element was not found.");
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const allEvents = Array.isArray(data.record) ? data.record : [];
+
+        const eventToEdit = allEvents.find(event => event.id === id);
+
+        if (eventToEdit) {
+            console.log('Event found for editing:', eventToEdit);
+            populateForm(eventToEdit);
+            showMessage('Event loaded successfully!', 'success');
+        } else {
+            console.error(`Event with ID ${id} not found.`);
+            showMessage(`Error: Event with ID ${id} not found. Please check the ID.`, 'error');
+            eventEditFormContainer.style.display = 'none'; // Nascondi il form se l'evento non è trovato
+        }
+    } catch (error) {
+        console.error('Error loading events:', error);
+        showMessage('Error loading event data. Please check your JSONBin.io Master Key and Bin ID.', 'error');
+        eventEditFormContainer.style.display = 'none';
     }
+}
+
+// Funzione per popolare il form con i dettagli dell'evento
+function populateForm(event) {
+    eventIdInput.value = event.id || '';
+    editEventNameInput.value = event.name || '';
+    editEventLocationInput.value = event.location || '';
+    editLatitudeInput.value = event.latitude || '';
+    editLongitudeInput.value = event.longitude || '';
+
+    // Formatta le date per il campo input type="date"
+    editEventStartDateInput.value = event.startDate ? new Date(event.startDate).toISOString().split('T')[0] : '';
+    editEventEndDateInput.value = event.endDate ? new Date(event.endDate).toISOString().split('T')[0] : '';
+
+    editEventDescriptionTextarea.value = event.description || '';
+    editEventLinkInput.value = event.link || '';
+    editContactEmailInput.value = event.contactEmail || '';
+    editEventCostInput.value = event.cost !== null && event.cost !== undefined ? event.cost : ''; // Gestisce 0 come valore valido
+
+    // Popola i select per Game Type, Gender, Currency, Cost Type
+    // Importante: i valori salvati nel bin potrebbero non essere esattamente in minuscolo
+    // o avere spazi diversi. Assicurati che il .toLowerCase() e .replace()
+    // corrispondano alla logica con cui hai popolato le opzioni.
+    editEventTypeSelect.value = (event.type || '').toLowerCase();
+    editEventGenderSelect.value = (event.gender || '').toLowerCase();
+    currencyTypeSelect.value = (event.currency || '').toLowerCase();
+    // Per costType, rimuoviamo anche gli spazi per il confronto
+    costTypeSelect.value = (event.costType || '').toLowerCase().replace(/\s/g, '');
 
 
-    // Gestione dell'ID dalla URL (se l'utente arriva con un ID già in URL)
+    eventEditFormContainer.style.display = 'block'; // Mostra il form
+}
+
+// Funzione per aggiornare l'evento su JSONBin
+async function updateEvent(eventData) {
+    showMessage('Saving changes...', 'info');
+    try {
+        const response = await fetch(JSONBIN_EVENTS_UPDATE_URL, {
+            method: 'PUT', // Usa PUT per aggiornare l'intero bin
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': JSONBIN_MASTER_KEY
+            },
+            body: JSON.stringify(eventData)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+
+        const result = await response.json();
+        console.log('Update successful:', result);
+        showMessage('Event updated successfully!', 'success');
+
+        // Reindirizza o ricarica la pagina dopo l'aggiornamento se necessario
+        // setTimeout(() => window.location.href = 'index.html', 2000);
+
+    } catch (error) {
+        console.error('Error updating event:', error);
+        showMessage(`Error saving changes: ${error.message}`, 'error');
+    }
+}
+
+
+// --- Event Listeners ---
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Inizializza le opzioni dei dropdown una volta che il DOM è pronto
+    initializeFormOptions();
+
+    // Gestione dell'ID dall'URL (se presente all'avvio della pagina)
     const urlParams = new URLSearchParams(window.location.search);
-    const initialEventId = urlParams.get('id');
-    if (initialEventId) {
-        searchEventIdInput.value = initialEventId; // Precompila il campo di ricerca
-        currentEventId = initialEventId;
-        await loadEventForEdit(currentEventId);
+    const eventIdFromUrl = urlParams.get('id');
+    if (eventIdFromUrl) {
+        searchEventIdInput.value = eventIdFromUrl; // Precompila il campo di ricerca
+        loadEventDetails(eventIdFromUrl); // Carica i dettagli dell'evento
+    }
+});
+
+
+// Listener per il pulsante di ricerca
+searchButton.addEventListener('click', () => {
+    const id = searchEventIdInput.value.trim();
+    if (id) {
+        loadEventDetails(id);
+    } else {
+        showMessage('Please enter an Event ID to search.', 'warning');
+    }
+});
+
+// Listener per la geocodifica quando si esce dal campo Location
+editEventLocationInput.addEventListener('blur', () => {
+    geocodeLocation(editEventLocationInput.value);
+});
+
+
+// Listener per il salvataggio delle modifiche
+editEventForm.addEventListener('submit', async (e) => {
+    e.preventDefault(); // Previene il ricaricamento della pagina
+
+    const id = eventIdInput.value.trim();
+    if (!id) {
+        showMessage('No event ID found for saving.', 'error');
+        return;
     }
 
+    // Costruisci l'oggetto evento aggiornato
+    const updatedEvent = {
+        id: id,
+        name: editEventNameInput.value.trim(),
+        location: editEventLocationInput.value.trim(),
+        latitude: parseFloat(editLatitudeInput.value) || null, // Assicurati che sia un numero o null
+        longitude: parseFloat(editLongitudeInput.value) || null, // Assicurati che sia un numero o null
+        type: editEventTypeSelect.value,
+        gender: editEventGenderSelect.value,
+        startDate: editEventStartDateInput.value,
+        endDate: editEventEndDateInput.value || null, // Può essere null
+        description: editEventDescriptionTextarea.value.trim(),
+        link: editEventLinkInput.value.trim() || null, // Può essere null
+        contactEmail: editContactEmailInput.value.trim() || null, // Può essere null
+        cost: parseFloat(editEventCostInput.value) || null, // Può essere null/0, controlla `cost !== null && cost !== undefined` prima di salvare
+        currency: currencyTypeSelect.value || null,
+        costType: costTypeSelect.value || null,
+        // Mantieni lo stato "featured" se esiste (dovrai recuperarlo dall'evento originale se non lo gestisci nel form)
+        // featured: true/false (dovresti caricarlo dall'evento originale)
+    };
 
-    // --- Event Listeners for the edit form ---
-    if (editEventForm) {
-        eventLocationInput.addEventListener('blur', () => {
-            getCoordinatesFromLocation(eventLocationInput.value);
+    // Aggiungi un campo 'featured' all'oggetto aggiornato
+    // Per fare ciò in modo sicuro, dovresti recuperare lo stato 'featured' dall'evento
+    // originale quando lo carichi, e poi includerlo qui.
+    // Per ora, lo lascio fuori, ma è un punto importante da considerare per un'implementazione completa.
+    // Alternativa: aggiorni solo i campi che hai nel form, e mantieni gli altri.
+
+    // Carica tutti gli eventi, trova quello da aggiornare, e poi invia l'intero array aggiornato
+    try {
+        const response = await fetch(JSONBIN_EVENTS_READ_URL, {
+            headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
         });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        let allEvents = Array.isArray(data.record) ? data.record : [];
 
-        editEventForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        // Trova l'indice dell'evento da aggiornare
+        const eventIndex = allEvents.findIndex(event => event.id === id);
 
-            saveChangesButton.disabled = true;
-            saveChangesButton.textContent = 'Saving...';
-            messageDiv.textContent = 'Saving changes...';
-            messageDiv.className = 'message info';
+        if (eventIndex !== -1) {
+            // Aggiorna solo i campi che sono nel form
+            // **IMPORTANTE**: Questo mantiene i campi non inclusi nel form (es. 'featured')
+            // Se vuoi sovrascrivere tutto, puoi fare allEvents[eventIndex] = updatedEvent;
+            // Ma è più sicuro aggiornare campo per campo se il form non mostra tutto
+            allEvents[eventIndex] = { ...allEvents[eventIndex], ...updatedEvent };
 
-            try {
-                const eventName = eventNameInput.value;
-                const eventLocation = eventLocationInput.value;
-                const eventStartDate = eventStartDateInput.value;
-                const eventEndDate = eventEndDateInput.value;
-                const eventDescription = eventDescriptionInput.value;
-                const eventLink = eventLinkInput.value;
-                const contactEmail = contactEmailInput.value;
-                const eventType = eventTypeInput.value;
-                const eventGender = eventGenderInput.value;
+            // Esegui l'aggiornamento
+            await updateEvent(allEvents);
+        } else {
+            showMessage('Error: Event not found in the database for update.', 'error');
+        }
 
-                const eventCost = eventCostInput.value === '' ? null : parseFloat(eventCostInput.value);
-                const costType = costTypeSelect.value === '' ? 'not_specified' : costTypeSelect.value;
-                const currency = currencyTypeSelect.value === '' ? null : currencyTypeSelect.value; // NUOVO CAMPO VALUTA
-
-                let latitude = parseFloat(latitudeInput.value);
-                let longitude = parseFloat(longitudeInput.value);
-
-                if (isNaN(latitude)) latitude = null;
-                if (isNaN(longitude)) longitude = null;
-
-                // Validazione di base per le dropdown
-                if (eventType === '' || eventGender === '') {
-                    messageDiv.textContent = 'Please select a Game Type and a Gender.';
-                    messageDiv.className = 'message error';
-                    saveChangesButton.disabled = false;
-                    saveChangesButton.textContent = 'Save Changes';
-                    return;
-                }
-                // Validazione per costo, tipo di costo e valuta
-                if (eventCost !== null && (costType === 'not_specified' || costType === '') && (currency === null || currency === '')) {
-                    messageDiv.textContent = 'Please specify the Cost Type AND Currency if you enter a cost.';
-                    messageDiv.className = 'message error';
-                    saveChangesButton.disabled = false;
-                    saveChangesButton.textContent = 'Save Changes';
-                    return;
-                }
-                if (eventCost === null && (costType !== 'not_specified' || costType !== '' || currency !== null || currency !== '')) {
-                    messageDiv.textContent = 'You have selected a Cost Type or Currency but not entered a Cost. Please enter a cost or select "Not Specified" for Cost Type and "Select Currency" for Currency.';
-                    messageDiv.className = 'message error';
-                    saveChangesButton.disabled = false;
-                    saveChangesButton.textContent = 'Save Changes';
-                    return;
-                }
-
-
-                const updatedEvent = {
-                    id: currentEventId,
-                    name: eventName,
-                    startDate: eventStartDate,
-                    endDate: eventEndDate === '' ? null : eventEndDate,
-                    location: eventLocation,
-                    latitude: latitude,
-                    longitude: longitude,
-                    type: eventType,
-                    gender: eventGender,
-                    description: eventDescription === '' ? null : eventDescription,
-                    link: eventLink === '' ? null : eventLink,
-                    contactEmail: contactEmail === '' ? null : contactEmail,
-                    featured: false,
-                    cost: eventCost,
-                    costType: costType,
-                    currency: currency // AGGIUNGI LA VALUTA ALL'OGGETTO EVENTO
-                };
-
-                const readResponse = await fetch(JSONBIN_EVENTS_WRITE_URL + '/latest', {
-                    headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-                });
-
-                if (!readResponse.ok) {
-                    throw new Error(`Error reading existing events: ${readResponse.status} - ${await readResponse.text()}`);
-                }
-
-                const existingData = await readResponse.json();
-                let events = existingData.record || [];
-
-                const eventIndex = events.findIndex(e => e.id === currentEventId);
-                if (eventIndex > -1) {
-                    events[eventIndex] = updatedEvent;
-                } else {
-                    throw new Error('Event to update not found in existing data.');
-                }
-
-                const writeResponse = await fetch(JSONBIN_EVENTS_WRITE_URL, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_MASTER_KEY,
-                        'X-Bin-Meta': 'false'
-                    },
-                    body: JSON.stringify(events)
-                });
-
-                if (!writeResponse.ok) {
-                    const errorText = await writeResponse.text();
-                    throw new Error(`Error updating event: ${writeResponse.status} - ${errorText}`);
-                }
-
-                messageDiv.textContent = `Event '${eventName}' updated successfully!`;
-                messageDiv.className = 'message success';
-
-                logActivity('Event Updated', updatedEvent);
-
-            } catch (error) {
-                console.error('Error updating event:', error);
-                messageDiv.textContent = `Error: ${error.message}`;
-                messageDiv.className = 'message error';
-            } finally {
-                saveChangesButton.disabled = false;
-                saveChangesButton.textContent = 'Save Changes';
-            }
-        });
-    } else {
-        console.error("The 'editEventForm' element was not found in the DOM. Ensure its ID is correct in edit-event.html.");
+    } catch (error) {
+        console.error('Error preparing update:', error);
+        showMessage('Error preparing update: ' + error.message, 'error');
     }
 });
