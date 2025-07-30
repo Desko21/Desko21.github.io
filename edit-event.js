@@ -1,6 +1,5 @@
 // edit-event.js
 
-// Importa le costanti dal file config.js
 import { 
     JSONBIN_MASTER_KEY,
     JSONBIN_EVENTS_READ_URL,
@@ -14,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- HTML Element References ---
     const messageDiv = document.getElementById('message');
-    const geolocationMessageDiv = document.getElementById('geolocationMessage'); // Riferimento al div per i messaggi di geolocalizzazione
+    const geolocationMessageDiv = document.getElementById('geolocationMessage');
     const searchEventIdInput = document.getElementById('searchEventId');
     const searchButton = document.getElementById('searchButton');
     const eventEditFormContainer = document.getElementById('eventEditFormContainer');
@@ -22,24 +21,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const editEventLocationInput = document.getElementById('editEventLocation');
 
     // Edit form fields
-    const eventIdInput = document.getElementById('eventId'); // Hidden field for the event ID
+    const eventIdInput = document.getElementById('eventId');
     const editEventNameInput = document.getElementById('editEventName');
-    const editEventStartDateInput = document.getElementById('editEventStartDate'); // Riferimento aggiornato
-    const editEventEndDateInput = document.getElementById('editEventEndDate');     // Nuovo riferimento
-    // const editEventTimeInput = document.getElementById('editEventTime'); // RIMOSSO
+    const editEventStartDateInput = document.getElementById('editEventStartDate');
+    const editEventEndDateInput = document.getElementById('editEventEndDate');
     const editEventDescriptionInput = document.getElementById('editEventDescription');
     const editLatitudeInput = document.getElementById('editLatitude');
     const editLongitudeInput = document.getElementById('editLongitude');
-    const editEventTypeInput = document.getElementById('editEventType');     // Sarà Game Type
-    const editEventGenderInput = document.getElementById('editEventGender'); // Nuovo riferimento
-    const editEventLinkInput = document.getElementById('editEventLink');     // Nuovo riferimento
-    // const editEventImageInput = document.getElementById('editEventImage'); // RIMOSSO
-    // const editIsFeaturedInput = document.getElementById('editIsFeatured'); // RIMOSSO
+    const editEventTypeInput = document.getElementById('editEventType');
+    const editEventGenderInput = document.getElementById('editEventGender');
+    const editEventLinkInput = document.getElementById('editEventLink');
 
-    const saveChangesButton = document.getElementById('saveChangesButton'); // Pulsante per salvare
-    const deleteEventButton = document.getElementById('deleteEventButton'); // Nuovo pulsante per eliminare
+    const saveChangesButton = document.getElementById('saveChangesButton');
+    // const deleteEventButton = document.getElementById('deleteEventButton'); // RIMOSSO
+
+    // --- Data for Select Options ---
+    // Queste liste DEVONO CORRISPONDERE a quelle in add-event.js per coerenza
+    const gameTypes = ['Field', 'Box', 'Sixes', 'Clinic', 'Other'];
+    const genders = ['Men', 'Women', 'Both', 'Mixed', 'Other'];
 
     // --- Utility Functions ---
+
+    // Funzione per popolare i dropdown
+    function populateDropdown(selectElement, options, selectedValue = '') {
+        selectElement.innerHTML = ''; // Pulisce le opzioni esistenti
+        options.forEach(optionText => {
+            const option = document.createElement('option');
+            option.value = optionText.toLowerCase(); // Il valore sarà in minuscolo
+            option.textContent = optionText;         // Il testo visualizzato sarà con la maiuscola iniziale
+            if (option.value === selectedValue) {
+                option.selected = true;
+            }
+            selectElement.appendChild(option);
+        });
+    }
 
     async function logActivity(action, eventDetails) {
         const timestamp = new Date().toISOString();
@@ -104,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (locationName.trim() === '') {
             editLatitudeInput.value = '';
             editLongitudeInput.value = '';
-            geolocationMessageDiv.textContent = ''; // Clear message
+            geolocationMessageDiv.textContent = '';
             geolocationMessageDiv.className = 'message';
             return;
         }
@@ -117,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const response = await fetch(nominatimUrl, {
                 headers: {
-                    'User-Agent': NOMINATIM_USER_AGENT // Usa la costante importata
+                    'User-Agent': NOMINATIM_USER_AGENT
                 }
             });
 
@@ -146,6 +161,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Initial setup: Populate dropdowns on page load ---
+    populateDropdown(editEventTypeInput, gameTypes);
+    populateDropdown(editEventGenderInput, genders);
+
     // --- Event Listeners ---
 
     searchButton.addEventListener('click', async () => {
@@ -159,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         messageDiv.textContent = 'Searching for event...';
         messageDiv.className = 'message info';
-        eventEditFormContainer.style.display = 'none'; // Hide form until event is found
+        eventEditFormContainer.style.display = 'none';
         geolocationMessageDiv.textContent = ''; // Clear geolocation message
 
         try {
@@ -188,14 +207,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 editEventEndDateInput.value = foundEvent.endDate ? new Date(foundEvent.endDate).toISOString().split('T')[0] : '';
                 
                 editEventLocationInput.value = foundEvent.location;
-                editEventDescriptionInput.value = foundEvent.description || ''; // Può essere vuoto
+                editEventDescriptionInput.value = foundEvent.description || '';
                 editLatitudeInput.value = foundEvent.latitude;
                 editLongitudeInput.value = foundEvent.longitude;
-                editEventTypeInput.value = foundEvent.type || 'other'; // 'type' è ora Game Type
-                editEventGenderInput.value = foundEvent.gender || 'other'; // Nuovo campo
-                editEventLinkInput.value = foundEvent.link || ''; // Nuovo campo, può essere vuoto
+                
+                // Popola e seleziona i dropdown basandosi sui valori dell'evento
+                populateDropdown(editEventTypeInput, gameTypes, foundEvent.type);
+                populateDropdown(editEventGenderInput, genders, foundEvent.gender);
+                
+                editEventLinkInput.value = foundEvent.link || '';
 
-                eventEditFormContainer.style.display = 'block'; // Show the edit form
+                eventEditFormContainer.style.display = 'block';
                 messageDiv.textContent = `Event '${foundEvent.name}' found! You can now modify its values.`;
                 messageDiv.className = 'message success';
                 
@@ -211,14 +233,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Event listener for auto-geocoding in the edit form
     editEventLocationInput.addEventListener('blur', () => {
         getCoordinatesFromLocation(editEventLocationInput.value);
     });
 
-    // Event listener for saving event modifications
     editEventForm.addEventListener('submit', async (e) => {
-        e.preventDefault(); // Prevent page reload
+        e.preventDefault();
 
         messageDiv.textContent = 'Saving changes...';
         messageDiv.className = 'message info';
@@ -228,25 +248,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const updatedEventData = {
             id: eventIdToUpdate,
             name: editEventNameInput.value,
-            startDate: editEventStartDateInput.value, // Data di inizio
-            endDate: editEventEndDateInput.value,     // Data di fine
+            startDate: editEventStartDateInput.value,
+            endDate: editEventEndDateInput.value,
             location: editEventLocationInput.value,
-            latitude: parseFloat(editLatitudeInput.value), // Assicurati che siano numeri
+            latitude: parseFloat(editLatitudeInput.value),
             longitude: parseFloat(editLongitudeInput.value),
-            type: editEventTypeInput.value,           // Game Type
-            gender: editEventGenderInput.value,       // Gender
+            type: editEventTypeInput.value,
+            gender: editEventGenderInput.value,
             description: editEventDescriptionInput.value,
             link: editEventLinkInput.value,
-            featured: false // 'featured' è rimosso dal form, impostalo sempre a false qui se non lo gestisci altrove
+            featured: false // Impostato a false in modo fisso dato che non c'è il campo nel form
         };
 
-        // Gestione di campi opzionali che potrebbero essere vuoti
+        // Gestione di campi opzionali che potrebbero essere vuoti o non validi
         if (isNaN(updatedEventData.latitude)) updatedEventData.latitude = null;
         if (isNaN(updatedEventData.longitude)) updatedEventData.longitude = null;
         if (updatedEventData.endDate === '') updatedEventData.endDate = null;
         if (updatedEventData.description === '') updatedEventData.description = null;
         if (updatedEventData.link === '') updatedEventData.link = null;
-
 
         try {
             const readResponse = await fetch(JSONBIN_EVENTS_READ_URL, {
@@ -265,7 +284,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const eventIndex = events.findIndex(event => event.id === eventIdToUpdate);
 
             if (eventIndex !== -1) {
-                // Aggiorna l'evento con i nuovi dati
                 events[eventIndex] = updatedEventData;
 
                 const writeResponse = await fetch(JSONBIN_EVENTS_WRITE_URL, {
@@ -303,80 +321,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Event listener for deleting an event
-    deleteEventButton.addEventListener('click', async () => {
-        const eventIdToDelete = eventIdInput.value; // L'ID dell'evento attualmente caricato nel form
-
-        if (!eventIdToDelete) {
-            messageDiv.textContent = 'No event loaded to delete.';
-            messageDiv.className = 'message error';
-            return;
-        }
-
-        if (!confirm(`Are you sure you want to delete event with ID: ${eventIdToDelete}? This action cannot be undone.`)) {
-            return; // L'utente ha annullato l'operazione
-        }
-
-        messageDiv.textContent = 'Deleting event...';
-        messageDiv.className = 'message info';
-
-        try {
-            // STEP 1: Load all existing events
-            const readResponse = await fetch(JSONBIN_EVENTS_READ_URL, {
-                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-            });
-
-            if (!readResponse.ok) {
-                throw new Error(`Error reading existing events for deletion: ${readResponse.status} - ${await readResponse.text()}`);
-            }
-
-            const existingData = await readResponse.json();
-            let events = existingData.record || [];
-            
-            // Trova l'evento da eliminare e rimuovilo dall'array
-            const initialEventCount = events.length;
-            const eventToDelete = events.find(event => event.id === eventIdToDelete); // Salva l'evento prima di rimuoverlo per il log
-            events = events.filter(event => event.id !== eventIdToDelete);
-
-            if (events.length < initialEventCount) { // Se un evento è stato effettivamente rimosso
-                // STEP 2: Write the updated array (without the deleted event) back to the bin
-                const writeResponse = await fetch(JSONBIN_EVENTS_WRITE_URL, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': JSONBIN_MASTER_KEY,
-                        'X-Bin-Meta': 'false'
-                    },
-                    body: JSON.stringify(events)
-                });
-
-                if (!writeResponse.ok) {
-                    const errorText = await writeResponse.text();
-                    throw new Error(`Error deleting event: ${writeResponse.status} - ${errorText}`);
-                }
-
-                messageDiv.textContent = `Event (ID: ${eventIdToDelete}) deleted successfully!`;
-                messageDiv.className = 'message success';
-                
-                // Nascondi il form e pulisci il campo di ricerca
-                eventEditFormContainer.style.display = 'none';
-                searchEventIdInput.value = '';
-
-                // Logga l'azione di eliminazione
-                if (eventToDelete) {
-                    logActivity('DELETE_EVENT', eventToDelete);
-                }
-
-            } else {
-                messageDiv.textContent = 'Error: Event not found for deletion (ID mismatch).';
-                messageDiv.className = 'message error';
-            }
-
-        } catch (error) {
-            console.error('Error during event deletion:', error);
-            messageDiv.textContent = `Error: ${error.message}`;
-            messageDiv.className = 'message error';
-        }
-    });
-
+    // deleteEventButton.addEventListener('click', ...); // RIMOSSO IL LISTENER DEL PULSANTE DI ELIMINAZIONE
 });
