@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifica Evento</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="nav-item">Home</a>
+        <a href="add-event.html" class="nav-item">Aggiungi Evento</a>
+        <a href="edit-event.html" class="nav-item current">Modifica Evento</a>
+        <a href="delete-event.html" class="nav-item">Elimina Evento</a>
+        <a href="logs.html" class="nav-item">Log Attività</a>
+    </nav>
+
+    <header class="page-header">
+        <h1>Modifica Evento</h1>
+    </header>
+
+    <div class="container">
+        <div id="message" class="message"></div>
+
+        <div class="form-section">
+            <h2>Cerca Evento per ID</h2>
+            <div class="form-group">
+                <label for="searchEventId">ID Evento:</label>
+                <input type="text" id="searchEventId" placeholder="Inserisci l'ID univoco dell'evento" required>
+            </div>
+            <button id="searchButton" class="button">Cerca Evento</button>
+        </div>
+
+        <div id="eventEditFormContainer" style="display: none;">
+            <h2>Dettagli Evento</h2>
+            <form id="editEventForm">
+                <input type="hidden" id="eventId"> <div class="form-group">
+                    <label for="editEventName">Nome Evento:</label>
+                    <input type="text" id="editEventName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editEventDate">Data:</label>
+                    <input type="date" id="editEventDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="editEventTime">Ora:</label>
+                    <input type="time" id="editEventTime">
+                </div>
+                <div class="form-group">
+                    <label for="editEventLocation">Località:</label>
+                    <input type="text" id="editEventLocation" required>
+                </div>
+                <div class="form-group">
+                    <label for="editEventDescription">Descrizione:</label>
+                    <textarea id="editEventDescription" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editLatitude">Latitudine:</label>
+                    <input type="number" id="editLatitude" step="any">
+                </div>
+                <div class="form-group">
+                    <label for="editLongitude">Longitudine:</label>
+                    <input type="number" id="editLongitude" step="any">
+                </div>
+                <div class="form-group">
+                    <label for="editEventType">Tipo:</label>
+                    <select id="editEventType">
+                        <option value="cultural">Culturale</option>
+                        <option value="sport">Sportivo</option>
+                        <option value="music">Musica</option>
+                        <option value="food">Cibo</option>
+                        <option value="other">Altro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editEventImage">URL Immagine:</label>
+                    <input type="url" id="editEventImage">
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="editIsFeatured">
+                    <label for="editIsFeatured">In Evidenza (Featured)</label>
+                </div>
+                <button type="submit" class="button">Salva Modifiche</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="edit-event.js"></script>
+</body>
+</html>
