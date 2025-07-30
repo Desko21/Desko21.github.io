@@ -65,6 +65,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add more if needed
     };
 
+    // --- NEW: Mappa per i nomi visualizzati dei tipi di costo (CORRECTED) ---
+    const costTypeDisplayNames = {
+        'not_specified': '',       // When saved as 'not_specified'
+        'perperson': 'Per person', // When saved as 'perperson'
+        'perteam': 'Per Team'      // When saved as 'perteam'
+    };
+
     function populateFilterDropdown(selectElement, options) {
         selectElement.innerHTML = '';
         options.forEach(optionText => {
@@ -122,14 +129,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Helper function to format cost type (e.g., 'per_person' to 'Per Person')
+    // --- MODIFICA QUI LA FUNZIONE formatCostType ---
+    // Helper function to format cost type (e.g., 'perperson' to 'Per person')
     function formatCostType(costTypeString) {
-        if (!costTypeString || costTypeString === 'not_specified') return '';
-        return costTypeString
-            .replace(/_/g, ' ')
-            .split(' ')
-            .map(word => word.charAt(0).toUpperCase() + ' ' + word.slice(1))
-            .join(' ');
+        // Usa la mappa per ottenere il nome di visualizzazione esatto
+        // Se costTypeString non è nella mappa o è vuoto/null, restituisce una stringa vuota
+        return costTypeDisplayNames[costTypeString] || '';
     }
 
     // Helper function to get currency symbol
@@ -201,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (event.cost !== null && event.cost !== undefined && typeof event.cost === 'number') {
                 const currencySym = event.currency ? getCurrencySymbol(event.currency) : '';
                 const formattedCost = `${currencySym}${event.cost.toFixed(2)}`;
-                const formattedCostType = formatCostType(event.costType);
+                const formattedCostType = formatCostType(event.costType); // Now uses the map
                 // Combiniamo il tutto in un'unica riga
                 costPopup = `<p><strong>Cost:</strong> ${formattedCost} ${formattedCostType}</p>`;
             }
@@ -365,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (event.cost !== null && event.cost !== undefined && typeof event.cost === 'number') {
                 const currencySym = event.currency ? getCurrencySymbol(event.currency) : '';
                 const formattedCost = `${currencySym}${event.cost.toFixed(2)}`;
-                const formattedCostType = formatCostType(event.costType);
+                const formattedCostType = formatCostType(event.costType); // Now uses the map
                 // Combiniamo il tutto in un'unica riga
                 costDisplay = `<p><i class="fas fa-dollar-sign icon-margin-right"></i><strong>Cost:</strong> ${formattedCost} ${formattedCostType}</p>`;
             }
@@ -384,7 +389,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p>${genderIcon}<strong>Gender:</strong> ${gender}</p>
                 ${costDisplay} ${event.contactEmail ? `<p><i class="fas fa-envelope icon-margin-right"></i><strong>Email:</strong> <a href="mailto:${event.contactEmail}">${event.contactEmail}</a></p>` : ''}
                 <p><i class="fas fa-info-circle icon-margin-right"></i>${descriptionText}</p>
-
             `;
 
             if (event.link && typeof event.link === 'string') {
