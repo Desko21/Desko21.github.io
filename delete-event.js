@@ -83,8 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Funzione per aggiornare lo stato "featured" di un evento ---
-    async function toggleFeaturedStatus(eventId, newFeaturedStatus) {
+     async function toggleFeaturedStatus(eventId, newFeaturedStatus) {
         console.log('toggleFeaturedStatus chiamata.');
         console.log('  ID Evento da trovare (passato dall\'HTML):', eventId);
         console.log('  Nuovo stato featured:', newFeaturedStatus);
@@ -103,7 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
             let events = data.record || [];
 
             console.log('  Totale eventi caricati da JSONBin.io:', events.length);
-            // console.log('  ID dagli eventi caricati:', events.map(event => event.id)); // Decommenta per debug approfondito
 
             // Trova l'indice dell'evento da aggiornare
             const eventIndex = events.findIndex(event => event.id === eventId);
@@ -112,6 +110,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error(`  ERRORE: Evento con ID "${eventId}" non trovato nei dati caricati.`);
                 throw new Error('Evento non trovato per l\'aggiornamento dello stato featured.');
             }
+
+            // Salva il vecchio stato featured per il log
+            const oldFeaturedStatus = events[eventIndex].featured;
 
             // Aggiorna lo stato 'featured' dell'evento
             events[eventIndex].featured = newFeaturedStatus;
@@ -122,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Master-Key': JSONBIN_MASTER_KEY,
-                    'X-Bin-Meta': 'false' // Non aggiornare i metadati del bin
+                    'X-Bin-Meta': 'false'
                 },
                 body: JSON.stringify(events)
             });
@@ -133,13 +134,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             console.log(`Stato 'featured' per l'evento ${eventId} aggiornato a ${newFeaturedStatus}.`);
             
-            // Logga l'azione di toggle featured
-            logActivity('TOGGLE_FEATURED', { 
+            // --- LOGGING SPECIFICO AGGIUNTO QUI ---
+            const actionType = newFeaturedStatus ? 'FEATURED_ADDED' : 'FEATURED_REMOVED';
+            logActivity(actionType, { 
                 id: eventId, 
                 name: events[eventIndex].name, 
                 location: events[eventIndex].location, 
-                featuredStatus: newFeaturedStatus 
+                // Puoi anche aggiungere oldFeaturedStatus e newFeaturedStatus se vuoi più dettagli nel log
+                oldStatus: oldFeaturedStatus, 
+                newStatus: newFeaturedStatus 
             });
+            // --- FINE LOGGING SPECIFICO ---
 
             return true; // Operazione riuscita
         } catch (error) {
@@ -149,6 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
             throw error; // Rilancia l'errore per gestione esterna
         }
     }
+
 
     // --- Funzione per eliminare un evento ---
     async function deleteEvent(eventId, eventName) { // Passiamo eventName per il log
