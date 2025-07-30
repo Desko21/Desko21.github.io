@@ -374,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
             latitudeInput.value = '';
             longitudeInput.value = '';
 
-            logActivity('Event Added', newEvent);
+            logActivity('ADDED_EVENT', newEvent);
 
         } catch (error) {
             console.error('Error adding event:', error);
