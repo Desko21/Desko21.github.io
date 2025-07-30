@@ -1,67 +1,209 @@
-// Importa le costanti dal file config.js
-import { 
+// delete-event.js
+
+// Importa le costanti dal file di configurazione
+import {
     JSONBIN_MASTER_KEY,
     JSONBIN_EVENTS_READ_URL,
-    JSONBIN_EVENTS_WRITE_URL,
-    JSONBIN_LOGS_BIN_ID, // Potrebbe non essere necessario se usi solo JSONBIN_LOGS_WRITE_URL
-    JSONBIN_LOGS_WRITE_URL,
-	JSONBIN_LOGS_READ_URL,
-    NOMINATIM_USER_AGENT 
-} from './config.js'; // Il percorso è relativo a questo file .js
+    JSONBIN_EVENTS_WRITE_URL, // Necessario per scrivere i dati aggiornati (es. dopo delete o featured toggle)
+    JSONBIN_LOGS_WRITE_URL
+} from './config.js';
 
+// Attendi che il DOM sia completamente caricato prima di eseguire lo script
 document.addEventListener('DOMContentLoaded', () => {
     console.log('delete-event.js loaded.');
 
+    // Riferimenti agli elementi HTML
+    const eventsListDiv = document.getElementById('eventsList');
     const messageDiv = document.getElementById('message');
-    const eventsTableBody = document.getElementById('eventsTableBody');
 
-    let allEvents = [];
+    // --- Funzioni Utility ---
 
-    // Funzione per inviare i log
-    async function logAction(action, eventDetails) {
+    // Funzione per loggare le attività (come in add-event.js)
+    async function logActivity(action, eventDetails) {
+        const timestamp = new Date().toISOString();
+        let userIp = 'N/A';
+
         try {
-            const responseRead = await fetch(`${JSONBIN_LOGS_WRITE_URL}/latest`, {
+            const ipResponse = await fetch('https://api.ipify.org?format=json');
+            if (ipResponse.ok) {
+                const ipData = await ipResponse.json();
+                userIp = ipData.ip || 'N/A';
+            } else {
+                console.warn("Could not retrieve IP:", await ipResponse.text());
+            }
+        } catch (ipError) {
+            console.error("Error retrieving IP:", ipError);
+        }
+
+        const logEntry = {
+            timestamp: timestamp,
+            action: action,
+            ipAddress: userIp,
+            event: {
+                id: eventDetails.id,
+                name: eventDetails.name,
+                location: eventDetails.location,
+            }
+        };
+
+        try {
+            // Leggi i log esistenti (se ci sono)
+            const readLogResponse = await fetch(JSONBIN_LOGS_WRITE_URL + '/latest', {
                 headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
             });
-            let currentLogs = [];
-            if (responseRead.ok) {
-                const data = await responseRead.json();
-                currentLogs = data.record || [];
+            let existingLogs = [];
+            if (readLogResponse.ok) {
+                const logData = await readLogResponse.json();
+                existingLogs = logData.record || [];
             } else {
-                console.warn('Could not read existing logs, starting new log array.');
+                console.warn("Could not read existing logs or bin does not exist, starting fresh for logs.");
             }
 
-            const logEntry = {
-                timestamp: new Date().toISOString(),
-                action: action,
-                event: eventDetails
-            };
-            currentLogs.push(logEntry);
+            // Aggiungi la nuova entry di log
+            existingLogs.push(logEntry);
 
-            const responseWrite = await fetch(JSONBIN_LOGS_WRITE_URL, {
+            // Scrivi l'array aggiornato dei log nel bin
+            const writeLogResponse = await fetch(JSONBIN_LOGS_WRITE_URL, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Master-Key': JSONBIN_MASTER_KEY,
                     'X-Bin-Meta': 'false'
                 },
-                body: JSON.stringify(currentLogs)
+                body: JSON.stringify(existingLogs)
             });
 
-            if (!responseWrite.ok) {
-                const errorText = await responseWrite.text();
-                console.error(`Error logging action: ${responseWrite.status} - ${errorText}`);
-            } else {
-                console.log(`Action logged: ${action}`);
+            if (!writeLogResponse.ok) {
+                console.error("Failed to save activity log:", await writeLogResponse.text());
             }
         } catch (error) {
-            console.error('An unexpected error occurred during logging:', error);
+            console.error('Error logging activity:', error);
         }
     }
 
-    async function loadEvents() {
-        messageDiv.textContent = 'Loading events...';
+    // --- Funzione per aggiornare lo stato "featured" di un evento ---
+    async function toggleFeaturedStatus(eventId, newFeaturedStatus) {
+        console.log('toggleFeaturedStatus chiamata.');
+        console.log('  ID Evento da trovare (passato dall\'HTML):', eventId);
+        console.log('  Nuovo stato featured:', newFeaturedStatus);
+
+        try {
+            // Leggi gli eventi attuali dal bin
+            const response = await fetch(JSONBIN_EVENTS_READ_URL, {
+                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Errore nella lettura degli eventi per l'aggiornamento dello stato featured: ${response.status} - ${await response.text()}`);
+            }
+
+            const data = await response.json();
+            let events = data.record || [];
+
+            console.log('  Totale eventi caricati da JSONBin.io:', events.length);
+            // console.log('  ID dagli eventi caricati:', events.map(event => event.id)); // Decommenta per debug approfondito
+
+            // Trova l'indice dell'evento da aggiornare
+            const eventIndex = events.findIndex(event => event.id === eventId);
+
+            if (eventIndex === -1) {
+                console.error(`  ERRORE: Evento con ID "${eventId}" non trovato nei dati caricati.`);
+                throw new Error('Evento non trovato per l\'aggiornamento dello stato featured.');
+            }
+
+            // Aggiorna lo stato 'featured' dell'evento
+            events[eventIndex].featured = newFeaturedStatus;
+
+            // Salva l'array aggiornato di eventi nel bin
+            const writeResponse = await fetch(JSONBIN_EVENTS_WRITE_URL, {
+                method: 'PUT', // Usa PUT per sovrascrivere l'intero bin
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_MASTER_KEY,
+                    'X-Bin-Meta': 'false' // Non aggiornare i metadati del bin
+                },
+                body: JSON.stringify(events)
+            });
+
+            if (!writeResponse.ok) {
+                throw new Error(`Errore nel salvataggio dello stato featured nel bin: ${writeResponse.status} - ${await writeResponse.text()}`);
+            }
+
+            console.log(`Stato 'featured' per l'evento ${eventId} aggiornato a ${newFeaturedStatus}.`);
+            return true; // Operazione riuscita
+        } catch (error) {
+            console.error('Errore durante l\'aggiornamento dello stato featured:', error);
+            messageDiv.textContent = `Errore nell'aggiornamento dello stato featured: ${error.message}`;
+            messageDiv.className = 'message error';
+            throw error; // Rilancia l'errore per gestione esterna
+        }
+    }
+
+    // --- Funzione per eliminare un evento ---
+    async function deleteEvent(eventId, eventName) { // Passiamo eventName per il log
+        if (!confirm(`Sei sicuro di voler eliminare l'evento "${eventName}" (ID: ${eventId})?`)) {
+            return; // L'utente ha annullato
+        }
+
+        messageDiv.textContent = `Eliminazione di "${eventName}"...`;
         messageDiv.className = 'message info';
+
+        try {
+            // Leggi tutti gli eventi
+            const readResponse = await fetch(JSONBIN_EVENTS_READ_URL, {
+                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+            });
+
+            if (!readResponse.ok) {
+                throw new Error(`Errore nella lettura degli eventi per l'eliminazione: ${readResponse.status} - ${await readResponse.text()}`);
+            }
+
+            const data = await readResponse.json();
+            let events = data.record || [];
+
+            // Filtra per rimuovere l'evento con l'ID specificato
+            const initialLength = events.length;
+            events = events.filter(event => event.id !== eventId);
+
+            if (events.length === initialLength) {
+                throw new Error('Evento non trovato per l\'eliminazione.');
+            }
+
+            // Scrivi l'array filtrato (senza l'evento eliminato) nel bin
+            const writeResponse = await fetch(JSONBIN_EVENTS_WRITE_URL, {
+                method: 'PUT', // Usa PUT per sovrascrivere l'intero bin
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_MASTER_KEY,
+                    'X-Bin-Meta': 'false'
+                },
+                body: JSON.stringify(events)
+            });
+
+            if (!writeResponse.ok) {
+                throw new Error(`Errore nell'eliminazione dell'evento dal bin: ${writeResponse.status} - ${await writeResponse.text()}`);
+            }
+
+            messageDiv.textContent = `Evento "${eventName}" eliminato con successo!`;
+            messageDiv.className = 'message success';
+            logActivity('DELETE_EVENT', { id: eventId, name: eventName });
+
+            // Ricarica la lista per riflettere le modifiche
+            loadEvents();
+
+        } catch (error) {
+            console.error('Errore durante l\'eliminazione dell\'evento:', error);
+            messageDiv.textContent = `Errore: ${error.message}`;
+            messageDiv.className = 'message error';
+        }
+    }
+
+    // --- Funzione per caricare e visualizzare gli eventi ---
+    async function loadEvents() {
+        messageDiv.textContent = 'Caricamento eventi...';
+        messageDiv.className = 'message info';
+        eventsListDiv.innerHTML = ''; // Pulisci la lista precedente
+
         try {
             const response = await fetch(JSONBIN_EVENTS_READ_URL, {
                 headers: {
@@ -70,140 +212,107 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error("Error reading bin:", response.status, errorText);
-                messageDiv.textContent = `Error loading events: ${response.status} - ${errorText}`;
-                messageDiv.className = 'message error';
-                return;
+                // Se il bin è vuoto o non esiste, potremmo ottenere un 404
+                if (response.status === 404) {
+                    messageDiv.textContent = 'Nessun evento trovato nel database.';
+                    messageDiv.className = 'message warning';
+                    return [];
+                }
+                throw new Error(`Errore nel caricamento degli eventi: ${response.status} - ${await response.text()}`);
             }
 
             const data = await response.json();
-            allEvents = data.record || [];
-            console.log('Events loaded:', allEvents);
-            displayEvents();
-            messageDiv.textContent = '';
-            messageDiv.className = 'message';
+            const events = data.record || [];
+
+            if (events.length === 0) {
+                messageDiv.textContent = 'Nessun evento disponibile.';
+                messageDiv.className = 'message warning';
+            } else {
+                messageDiv.textContent = ''; // Pulisci il messaggio
+                displayEventsList(events);
+            }
+            return events; // Ritorna gli eventi caricati
         } catch (error) {
-            console.error('An unexpected error occurred:', error);
-            messageDiv.textContent = 'An unexpected error occurred while loading events.';
+            console.error('Errore nel caricamento degli eventi:', error);
+            messageDiv.textContent = `Errore nel caricamento degli eventi: ${error.message}`;
             messageDiv.className = 'message error';
+            return [];
         }
     }
 
-    function displayEvents() {
-        eventsTableBody.innerHTML = '';
+    // --- Funzione per visualizzare gli eventi in una lista ---
+    function displayEventsList(events) {
+        eventsListDiv.innerHTML = ''; // Pulisci la lista
 
-        if (allEvents.length === 0) {
-            eventsTableBody.innerHTML = '<tr><td colspan="7">No events found.</td></tr>';
-            return;
-        }
-
-        allEvents.sort((a, b) => {
-            if (a.featured && !b.featured) return -1;
-            if (!a.featured && b.featured) return 1;
-            return new Date(a.startDate) - new Date(b.startDate);
+        // Ordina gli eventi per data di inizio (dal più recente al più vecchio)
+        // Se la data di fine è presente, ordina prima per quella, poi per data di inizio
+        events.sort((a, b) => {
+            const dateA = a.endDate ? new Date(a.endDate) : new Date(a.startDate);
+            const dateB = b.endDate ? new Date(b.endDate) : new Date(b.startDate);
+            return dateB - dateA; // Dal più recente al più vecchio
         });
 
-        allEvents.forEach(event => {
-            const row = eventsTableBody.insertRow();
-            const formattedDate = new Date(event.startDate).toLocaleDateString();
+        events.forEach(event => {
+            const eventItem = document.createElement('div');
+            eventItem.className = 'event-item';
+            eventItem.innerHTML = `
+                <h3>${event.name}</h3>
+                <p><strong>Località:</strong> ${event.location}</p>
+                <p><strong>Periodo:</strong> ${event.startDate} ${event.endDate ? ' - ' + event.endDate : ''}</p>
+                <p><strong>Tipo:</strong> ${event.type || 'N/A'} | <strong>Genere:</strong> ${event.gender || 'N/A'}</p>
+                <p><strong>Descrizione:</strong> ${event.description || 'N/A'}</p>
+                ${event.link ? `<p><a href="${event.link}" target="_blank">Link Evento</a></p>` : ''}
+                <div class="actions">
+                    <label>
+                        <input type="checkbox" class="feature-toggle" data-event-id="${event.id}" ${event.featured ? 'checked' : ''}> Featured
+                    </label>
+                    <button class="edit-button" data-event-id="${event.id}">Modifica</button>
+                    <button class="delete-button" data-event-id="${event.id}" data-event-name="${event.name}">Elimina</button>
+                </div>
+            `;
+            eventsListDiv.appendChild(eventItem);
 
-            row.insertCell().textContent = event.name;
-            row.insertCell().textContent = formattedDate;
-            row.insertCell().textContent = event.location;
-            row.insertCell().textContent = event.gameType || 'N/A';
-            row.insertCell().textContent = event.gender || 'N/A';
+            // Aggiungi event listener per il toggle "featured"
+            const featureToggle = eventItem.querySelector(`.feature-toggle[data-event-id="${event.id}"]`);
+            if (featureToggle) {
+                featureToggle.addEventListener('change', async (e) => {
+                    const eventId = e.target.dataset.eventId;
+                    const newFeaturedStatus = e.target.checked;
+                    console.log('  Checkbox cliccata. ID dell\'elemento HTML:', eventId, 'Nuovo stato:', newFeaturedStatus);
+                    try {
+                        await toggleFeaturedStatus(eventId, newFeaturedStatus);
+                        messageDiv.textContent = `Stato 'featured' per '${event.name}' aggiornato!`;
+                        messageDiv.className = 'message success';
+                        // Non ricaricare loadEvents() qui per evitare un loop infinito se ci sono molti eventi
+                        // Il toggleFeaturedStatus ha già salvato il nuovo stato.
+                        // Se vuoi aggiornare visivamente, potresti solo aggiornare l'elemento specifico.
+                    } catch (error) {
+                        // Il messaggio di errore è già gestito all'interno di toggleFeaturedStatus
+                    }
+                });
+            }
 
-            const featuredCell = row.insertCell();
-            const featuredToggle = document.createElement('input');
-            featuredToggle.type = 'checkbox';
-            featuredToggle.checked = event.featured || false;
-            featuredToggle.dataset.createdAt = event.createdAt;
-            featuredToggle.addEventListener('change', toggleFeaturedStatus);
-            featuredCell.appendChild(featuredToggle);
+            // Aggiungi event listener per il pulsante Modifica
+            const editButton = eventItem.querySelector(`.edit-button[data-event-id="${event.id}"]`);
+            if (editButton) {
+                editButton.addEventListener('click', () => {
+                    // Reindirizza alla pagina di modifica con l'ID dell'evento
+                    window.location.href = `edit-event.html?id=${event.id}`;
+                });
+            }
 
-            const deleteCell = row.insertCell();
-            const deleteButton = document.createElement('button');
-            deleteButton.textContent = 'Delete';
-            deleteButton.className = 'delete-button';
-            deleteButton.dataset.createdAt = event.createdAt;
-            deleteButton.addEventListener('click', deleteEvent);
-            deleteCell.appendChild(deleteButton);
+            // Aggiungi event listener per il pulsante Elimina
+            const deleteButton = eventItem.querySelector(`.delete-button[data-event-id="${event.id}"]`);
+            if (deleteButton) {
+                deleteButton.addEventListener('click', async (e) => {
+                    const eventId = e.target.dataset.eventId;
+                    const eventName = e.target.dataset.eventName; // Recupera il nome per la conferma
+                    await deleteEvent(eventId, eventName);
+                });
+            }
         });
     }
 
-   // Funzione per aggiornare lo stato "featured" di un evento
-async function toggleFeaturedStatus(eventId, isFeatured) {
-    console.log('toggleFeaturedStatus chiamata.');
-    console.log('  ID Evento da trovare (passato dall\'HTML):', eventId); // <<< AGGIUNGI QUESTO LOG
-    console.log('  Nuovo stato featured:', isFeatured);             // <<< AGGIUNGI QUESTO LOG
-
-    try {
-        // Leggi gli eventi attuali dal bin
-        const response = await fetch(JSONBIN_EVENTS_READ_URL, {
-            headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Errore nella lettura degli eventi per l'aggiornamento dello stato featured: ${response.status} - ${await response.text()}`);
-        }
-
-        const data = await response.json();
-        let events = data.record || [];
-
-        console.log('  Totale eventi caricati da JSONBin.io:', events.length); // <<< AGGIUNGI QUESTO LOG
-        // Opzionale: Logga tutti gli ID degli eventi caricati per confrontare
-        // console.log('  ID dagli eventi caricati:', events.map(event => event.id)); // <<< DECOMMENTA PER DEBUG PIÙ APPROFONDITO
-
-        const eventIndex = events.findIndex(event => event.id === eventId);
-
-        if (eventIndex === -1) {
-            // Questa è la riga che attualmente genera l'errore (o simile)
-            console.error(`  ERRORE: Evento con ID "${eventId}" non trovato nei dati caricati.`); // <<< AGGIUNGI QUESTO LOG
-            throw new Error('Evento non trovato per l\'aggiornamento dello stato featured.');
-        }
-
-        // Aggiorna lo stato featured
-        events[eventIndex].featured = isFeatured;
-
-        // ... (il resto della tua logica di salvataggio) ...
-
-    } catch (error) {
-        console.error('Errore durante l\'aggiornamento dello stato featured:', error);
-        // Non rilanciare qui se vuoi gestire il messaggio di errore nell'UI
-        // throw error;
-    }
-}
-
-// ... (resto di delete-event.js) ...
-
-// IMPORTANTE: Assicurati che questa parte del tuo codice recuperi correttamente l'eventId
-// quando imposti gli event listener per i toggle featured.
-// Questo è tipicamente fatto all'interno di un ciclo dove visualizzi gli eventi.
-function displayEventsList(events) { // Assumendo che tu abbia una funzione simile
-    // ... (pulisci la lista precedente) ...
-    events.forEach(event => {
-        // ... (crea gli elementi HTML per l'evento) ...
-
-        const featureToggle = eventItem.querySelector('.feature-toggle'); // O qualsiasi selettore per la tua checkbox/pulsante
-        if (featureToggle) {
-            // Assicurati che questo attributo data sia impostato correttamente durante la creazione dell'HTML!
-            featureToggle.dataset.eventId = event.id; // <<< RIGA CRUCIALE
-            featureToggle.checked = event.featured;
-
-            featureToggle.addEventListener('change', async (e) => {
-                const eventIdFromHtml = e.target.dataset.eventId; // Recupera l'ID dall'elemento HTML
-                const newFeaturedStatus = e.target.checked;
-                console.log('  Checkbox cliccata. ID dell\'elemento HTML:', eventIdFromHtml); // <<< AGGIUNGI QUESTO LOG
-
-                try {
-                    await toggleFeaturedStatus(eventIdFromHtml, newFeaturedStatus);
-                    // ... (messaggio di successo e loadEvents) ...
-                } catch (error) {
-                    // ... (messaggio di errore) ...
-                }
-            });
-        }
-        // ... (resto della creazione dell'elemento evento) ...
-    });
-}
+    // --- Carica gli eventi all'avvio della pagina ---
+    loadEvents();
+});
