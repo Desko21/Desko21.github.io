@@ -43,6 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 id: eventDetails.id,
                 name: eventDetails.name,
                 location: eventDetails.location,
+                // Aggiungi qui dettagli specifici per il log di 'featured'
+                featuredStatus: action === 'TOGGLE_FEATURED' ? eventDetails.featuredStatus : undefined 
             }
         };
 
@@ -130,6 +132,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             console.log(`Stato 'featured' per l'evento ${eventId} aggiornato a ${newFeaturedStatus}.`);
+            
+            // Logga l'azione di toggle featured
+            logActivity('TOGGLE_FEATURED', { 
+                id: eventId, 
+                name: events[eventIndex].name, 
+                location: events[eventIndex].location, 
+                featuredStatus: newFeaturedStatus 
+            });
+
             return true; // Operazione riuscita
         } catch (error) {
             console.error('Errore durante l\'aggiornamento dello stato featured:', error);
@@ -163,6 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Filtra per rimuovere l'evento con l'ID specificato
             const initialLength = events.length;
+            const eventToDelete = events.find(event => event.id === eventId); // Trova l'evento per i dettagli di log
             events = events.filter(event => event.id !== eventId);
 
             if (events.length === initialLength) {
@@ -186,8 +198,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             messageDiv.textContent = `Evento "${eventName}" eliminato con successo!`;
             messageDiv.className = 'message success';
-            logActivity('DELETE_EVENT', { id: eventId, name: eventName });
-
+            
+            // Logga l'azione di eliminazione
+            if (eventToDelete) {
+                logActivity('DELETE_EVENT', { id: eventToDelete.id, name: eventToDelete.name, location: eventToDelete.location });
+            } else {
+                logActivity('DELETE_EVENT', { id: eventId, name: eventName || 'Unknown Event' }); // Fallback
+            }
+            
             // Ricarica la lista per riflettere le modifiche
             loadEvents();
 
@@ -258,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
             eventItem.innerHTML = `
                 <h3>${event.name}</h3>
                 <p><strong>Località:</strong> ${event.location}</p>
-                <p><strong>Periodo:</strong> ${event.startDate} ${event.endDate ? ' - ' + event.endDate : ''}</p>
+                <p><strong>ID Evento:</strong> ${event.id}</p> <p><strong>Periodo:</strong> ${event.startDate} ${event.endDate ? ' - ' + event.endDate : ''}</p>
                 <p><strong>Tipo:</strong> ${event.type || 'N/A'} | <strong>Genere:</strong> ${event.gender || 'N/A'}</p>
                 <p><strong>Descrizione:</strong> ${event.description || 'N/A'}</p>
                 ${event.link ? `<p><a href="${event.link}" target="_blank">Link Evento</a></p>` : ''}
@@ -266,7 +284,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <label>
                         <input type="checkbox" class="feature-toggle" data-event-id="${event.id}" ${event.featured ? 'checked' : ''}> Featured
                     </label>
-                    <button class="edit-button" data-event-id="${event.id}">Modifica</button>
                     <button class="delete-button" data-event-id="${event.id}" data-event-name="${event.name}">Elimina</button>
                 </div>
             `;
@@ -283,21 +300,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         await toggleFeaturedStatus(eventId, newFeaturedStatus);
                         messageDiv.textContent = `Stato 'featured' per '${event.name}' aggiornato!`;
                         messageDiv.className = 'message success';
-                        // Non ricaricare loadEvents() qui per evitare un loop infinito se ci sono molti eventi
-                        // Il toggleFeaturedStatus ha già salvato il nuovo stato.
-                        // Se vuoi aggiornare visivamente, potresti solo aggiornare l'elemento specifico.
                     } catch (error) {
                         // Il messaggio di errore è già gestito all'interno di toggleFeaturedStatus
                     }
-                });
-            }
-
-            // Aggiungi event listener per il pulsante Modifica
-            const editButton = eventItem.querySelector(`.edit-button[data-event-id="${event.id}"]`);
-            if (editButton) {
-                editButton.addEventListener('click', () => {
-                    // Reindirizza alla pagina di modifica con l'ID dell'evento
-                    window.location.href = `edit-event.html?id=${event.id}`;
                 });
             }
 
