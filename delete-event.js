@@ -1,14 +1,16 @@
+// Importa le costanti dal file config.js
+import { 
+    JSONBIN_MASTER_KEY,
+    JSONBIN_EVENTS_READ_URL,
+    JSONBIN_EVENTS_WRITE_URL,
+    JSONBIN_LOGS_BIN_ID, // Potrebbe non essere necessario se usi solo JSONBIN_LOGS_WRITE_URL
+    JSONBIN_LOGS_WRITE_URL,
+	JSONBIN_LOGS_READ_URL,
+    NOMINATIM_USER_AGENT 
+} from './config.js'; // Il percorso è relativo a questo file .js
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('delete-event.js loaded.');
-
-    const JSONBIN_BIN_ID = '68870d4d7b4b8670d8a868e8'; // IL TUO BIN ID PRINCIPALE DEGLI EVENTI
-    const JSONBIN_MASTER_KEY = '$2a$10$moQg0NYbmqEkIUS1bTku2uiW8ywvcz0Bt8HKG3J/4qYU8dCZggiT6'; // LA TUA MASTER KEY
-    const JSONBIN_READ_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`;
-    const JSONBIN_WRITE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
-
-    // DETTAGLI PER IL BIN DI LOG - AGGIORNATO CON IL TUO ID
-    const JSONBIN_LOGS_BIN_ID = '688924c7f7e7a370d1eff96b';
-    const JSONBIN_LOGS_WRITE_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_LOGS_BIN_ID}`;
 
     const messageDiv = document.getElementById('message');
     const eventsTableBody = document.getElementById('eventsTableBody');
