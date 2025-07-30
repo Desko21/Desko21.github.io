@@ -116,6 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (validEvents.length === 0) {
             console.warn("No valid events with numerical coordinates to display on map.");
+            // Optionally, you might want to hide the map or display a message here
+            return; // Exit if no valid events to map
         }
 
         validEvents.forEach(event => {
@@ -143,6 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 default: genderIcon = '<i class="fas fa-user icon-margin-right"></i>'; break;
             }
 
+            // --- MODIFICATION START: Simplified popup content ---
             let popupContent = `<h3>${event.name}</h3>`;
             popupContent += `<p><i class="fas fa-calendar-alt icon-margin-right"></i><strong>Date:</strong> ${new Date(event.startDate).toLocaleDateString()}`;
             if (event.endDate && event.endDate !== event.startDate) {
@@ -153,15 +156,11 @@ document.addEventListener('DOMContentLoaded', () => {
             popupContent += `<p><i class="fas fa-map-marker-alt icon-margin-right"></i><strong>Location:</strong> ${event.location}</p>`;
             popupContent += `<p>${gameTypeIcon}<strong>Game Type:</strong> ${eventType}</p>`;
             popupContent += `<p>${genderIcon}<strong>Gender:</strong> ${gender}</p>`;
-            popupContent += `<p><i class="fas fa-info-circle icon-margin-right"></i>${event.description || 'No description available.'}</p>`; 
-
-            if (event.link && typeof event.link === 'string') {
-                popupContent += `<p><a href="${event.link}" target="_blank" class="more-info-link"><i class="fas fa-external-link-alt icon-margin-right"></i>More Info</a></p>`;
-            }
-            // --- MODIFICATION START (Add Contact Email to Popup) ---
-            if (event.contactEmail && typeof event.contactEmail === 'string') {
-                popupContent += `<p><i class="fas fa-envelope icon-margin-right"></i><strong>Email:</strong> <a href="mailto:${event.contactEmail}">${event.contactEmail}</a></p>`;
-            }
+            
+            // Add a "More Info" link that points to the list item
+            // The ID for the list item will be 'event-${event.id}'
+            popupContent += `<p><a href="#event-${event.id}" class="more-info-link-popup" onclick="this.closest('.leaflet-popup').remove();"><i class="fas fa-external-link-alt icon-margin-right"></i>More Info</a></p>`;
+            // The onclick event is added to close the popup after clicking the link.
             // --- MODIFICATION END ---
 
             marker.bindPopup(popupContent, { autoPan: false });
@@ -194,8 +193,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Initially, include only events that are within map bounds AND filtered by dropdowns.
         let eventsForHtmlList = filteredByDropdowns.filter(event => {
             return (typeof event.latitude === 'number' && typeof event.longitude === 'number' &&
-                    !isNaN(event.latitude) && !isNaN(event.longitude) &&
-                    bounds.contains(L.latLng(event.latitude, event.longitude)));
+                            !isNaN(event.latitude) && !isNaN(event.longitude) &&
+                            bounds.contains(L.latLng(event.latitude, event.longitude)));
         });
 
         // Collect all featured events from the complete 'allEvents' array
@@ -263,8 +262,11 @@ document.addEventListener('DOMContentLoaded', () => {
         eventsToDisplay.forEach(event => {
             const eventItem = document.createElement('div');
             eventItem.className = 'tournament-item';
-
-            // Add 'featured' class to the tournament item if it's featured
+            // --- MODIFICATION START: Assign unique ID to the list item ---
+            // This ID is crucial for the "More Info" link in the map popup to target it.
+            eventItem.id = `event-${event.id}`;
+            // --- MODIFICATION END ---
+            
             if (event.featured) {
                 eventItem.classList.add('featured');
             }
@@ -313,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p>${genderIcon}<strong>Gender:</strong> ${gender}</p>
                 <p><i class="fas fa-info-circle icon-margin-right"></i>${descriptionText}</p>
                 ${event.contactEmail ? `<p><i class="fas fa-envelope icon-margin-right"></i><strong>Email:</strong> <a href="mailto:${event.contactEmail}">${event.contactEmail}</a></p>` : ''}
-                `;
+            `;
 
             if (event.link && typeof event.link === 'string') {
                 const moreInfoParagraph = document.createElement('p');
