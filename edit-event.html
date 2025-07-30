@@ -23,73 +23,92 @@
         </div>
     </header>
 
- <main>
-   <div class="container">
-        <div id="message" class="message"></div>
+    <main>
+        <div class="container">
+            <div id="message" class="message"></div>
 
-        <div class="form-section">
-            <h2>Search Event by ID</h2>
-            <div class="form-group">
-                <label for="searchEventId">Event ID:</label>
-                <input type="text" id="searchEventId" placeholder="Enter the unique event ID" required>
+            <div class="form-section">
+                <h2>Search Event by ID</h2>
+                <div class="form-group">
+                    <label for="searchEventId">Event ID:</label>
+                    <input type="text" id="searchEventId" placeholder="Enter the unique event ID" required>
+                </div>
+                <button id="searchButton" class="button">Search Event</button>
             </div>
-            <button id="searchButton" class="button">Search Event</button>
-        </div>
 
-        <div id="eventEditFormContainer" style="display: none;">
-            <h2>Event Details</h2>
-            <form id="editEventForm">
-                <input type="hidden" id="eventId"> <div class="form-group">
-                    <label for="editEventName">Event Name:</label>
-                    <input type="text" id="editEventName" required>
-                </div>
-                <div class="form-group">
-                    <label for="editEventDate">Date:</label>
-                    <input type="date" id="editEventDate" required>
-                </div>
-                <div class="form-group">
-                    <label for="editEventTime">Time:</label>
-                    <input type="time" id="editEventTime">
-                </div>
-                <div class="form-group">
-                    <label for="editEventLocation">Location:</label>
-                    <input type="text" id="editEventLocation" required>
-                </div>
-                <div class="form-group">
-                    <label for="editEventDescription">Description:</label>
-                    <textarea id="editEventDescription" rows="4"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="editLatitude">Latitude:</label>
-                    <input type="number" id="editLatitude" step="any">
-                </div>
-                <div class="form-group">
-                    <label for="editLongitude">Longitude:</label>
-                    <input type="number" id="editLongitude" step="any">
-                </div>
-                <div class="form-group">
-                    <label for="editEventType">Type:</label>
-                    <select id="editEventType">
-                        <option value="cultural">Cultural</option>
-                        <option value="sport">Sport</option>
-                        <option value="music">Music</option>
-                        <option value="food">Food</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="editEventImage">Image URL:</label>
-                    <input type="url" id="editEventImage">
-                </div>
-                <div class="form-group checkbox-group">
-                    <input type="checkbox" id="editIsFeatured">
-                    <label for="editIsFeatured">Featured</label>
-                </div>
-                <button type="submit" class="button">Save Changes</button>
-            </form>
+            <div id="eventEditFormContainer" style="display: none;">
+                <h2>Event Details</h2>
+                <form id="editEventForm">
+                    <input type="hidden" id="eventId"> 
+                    
+                    <div class="form-group">
+                        <label for="editEventName">Event Name:</label>
+                        <input type="text" id="editEventName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editEventLocation">Location (City, Country):</label>
+                        <input type="text" id="editEventLocation" required>
+                        <small>Type a city and click outside the box to get coordinates.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editLatitude">Latitude:</label>
+                        <input type="number" id="editLatitude" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label for="editLongitude">Longitude:</label>
+                        <input type="number" id="editLongitude" step="any">
+                    </div>
+                    <div id="geolocationMessage" class="message" style="margin-top: 5px; margin-bottom: 15px;"></div>
+
+                    <div class="form-group">
+                        <label for="editEventType">Game Type:</label>
+                        <select id="editEventType">
+                            <option value="field">Field</option>
+                            <option value="box">Box</option>
+                            <option value="sixes">Sixes</option>
+                            <option value="clinic">Clinic</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editEventGender">Gender:</label>
+                        <select id="editEventGender">
+                            <option value="men">Men</option>
+                            <option value="women">Women</option>
+                            <option value="both">Both</option>
+                            <option value="mixed">Mixed</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editEventStartDate">Start Date:</label>
+                        <input type="date" id="editEventStartDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editEventEndDate">End Date:</label>
+                        <input type="date" id="editEventEndDate">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editEventDescription">Description:</label>
+                        <textarea id="editEventDescription" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editEventLink">More Info Link (optional):</label>
+                        <input type="url" id="editEventLink" placeholder="e.g., https://example.com/more-info">
+                    </div>
+                    
+                    <button type="submit" id="saveChangesButton" class="button">Save Changes</button>
+                    <button type="button" id="deleteEventButton" class="button delete-button">Delete Event</button>
+                </form>
+            </div>
         </div>
-    </div>
- </main>
+    </main>
     <script type="module" src="edit-event.js"></script>
 </body>
 </html>

@@ -1,43 +1,49 @@
+// edit-event.js
 
 // Importa le costanti dal file config.js
 import { 
     JSONBIN_MASTER_KEY,
     JSONBIN_EVENTS_READ_URL,
     JSONBIN_EVENTS_WRITE_URL,
-    JSONBIN_LOGS_BIN_ID, // Potrebbe non essere necessario se usi solo JSONBIN_LOGS_WRITE_URL
     JSONBIN_LOGS_WRITE_URL,
     NOMINATIM_USER_AGENT 
-} from './config.js'; // Il percorso è relativo a questo file .js
+} from './config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('edit-event.js loaded.');
 
     // --- HTML Element References ---
     const messageDiv = document.getElementById('message');
+    const geolocationMessageDiv = document.getElementById('geolocationMessage'); // Riferimento al div per i messaggi di geolocalizzazione
     const searchEventIdInput = document.getElementById('searchEventId');
     const searchButton = document.getElementById('searchButton');
     const eventEditFormContainer = document.getElementById('eventEditFormContainer');
     const editEventForm = document.getElementById('editEventForm');
-    const editEventLocationInput = document.getElementById('editEventLocation'); // Location field in edit form
+    const editEventLocationInput = document.getElementById('editEventLocation');
 
     // Edit form fields
     const eventIdInput = document.getElementById('eventId'); // Hidden field for the event ID
     const editEventNameInput = document.getElementById('editEventName');
-    const editEventDateInput = document.getElementById('editEventDate');
-    const editEventTimeInput = document.getElementById('editEventTime');
+    const editEventStartDateInput = document.getElementById('editEventStartDate'); // Riferimento aggiornato
+    const editEventEndDateInput = document.getElementById('editEventEndDate');     // Nuovo riferimento
+    // const editEventTimeInput = document.getElementById('editEventTime'); // RIMOSSO
     const editEventDescriptionInput = document.getElementById('editEventDescription');
     const editLatitudeInput = document.getElementById('editLatitude');
     const editLongitudeInput = document.getElementById('editLongitude');
-    const editEventTypeInput = document.getElementById('editEventType');
-    const editEventImageInput = document.getElementById('editEventImage');
-    const editIsFeaturedInput = document.getElementById('editIsFeatured');
+    const editEventTypeInput = document.getElementById('editEventType');     // Sarà Game Type
+    const editEventGenderInput = document.getElementById('editEventGender'); // Nuovo riferimento
+    const editEventLinkInput = document.getElementById('editEventLink');     // Nuovo riferimento
+    // const editEventImageInput = document.getElementById('editEventImage'); // RIMOSSO
+    // const editIsFeaturedInput = document.getElementById('editIsFeatured'); // RIMOSSO
+
+    const saveChangesButton = document.getElementById('saveChangesButton'); // Pulsante per salvare
+    const deleteEventButton = document.getElementById('deleteEventButton'); // Nuovo pulsante per eliminare
 
     // --- Utility Functions ---
 
-    // Function to log activities (copied from add-event.js, ensure consistency)
     async function logActivity(action, eventDetails) {
         const timestamp = new Date().toISOString();
-        let userIp = 'N/A'; // Default value in case fetching fails
+        let userIp = 'N/A';
 
         try {
             const ipResponse = await fetch('https://api.ipify.org?format=json');
@@ -56,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
             action: action,
             ipAddress: userIp,
             event: {
-                id: eventDetails.id, // Use the generated ID
+                id: eventDetails.id,
                 name: eventDetails.name,
                 location: eventDetails.location,
             }
@@ -94,25 +100,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Function for geocoding from location to coordinates (latitude/longitude)
-    // You might want to copy this from add-event.js if you need auto-fill on location change
-    // in the edit form as well. Remember to update the User-Agent.
     async function getCoordinatesFromLocation(locationName) {
         if (locationName.trim() === '') {
-            editLatitudeInput.value = ''; // Use edit form's lat/long inputs
+            editLatitudeInput.value = '';
             editLongitudeInput.value = '';
+            geolocationMessageDiv.textContent = ''; // Clear message
+            geolocationMessageDiv.className = 'message';
             return;
         }
 
-        messageDiv.textContent = 'Searching for coordinates for the location...';
-        messageDiv.className = 'message info';
+        geolocationMessageDiv.textContent = 'Searching for coordinates for the location...';
+        geolocationMessageDiv.className = 'message info';
 
         try {
             const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName)}&limit=1`;
             
             const response = await fetch(nominatimUrl, {
                 headers: {
-                    'User-Agent': 'EventApp/1.0 (your-email@example.com)' // CHANGE THIS
+                    'User-Agent': NOMINATIM_USER_AGENT // Usa la costante importata
                 }
             });
 
@@ -126,24 +131,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 const firstResult = data[0];
                 editLatitudeInput.value = parseFloat(firstResult.lat).toFixed(6); 
                 editLongitudeInput.value = parseFloat(firstResult.lon).toFixed(6);
-                messageDiv.textContent = 'Coordinates found!';
-                messageDiv.className = 'message success';
+                geolocationMessageDiv.textContent = 'Coordinates found!';
+                geolocationMessageDiv.className = 'message success';
             } else {
                 editLatitudeInput.value = '';
                 editLongitudeInput.value = '';
-                messageDiv.textContent = 'Location not found, please enter coordinates manually.';
-                messageDiv.className = 'message warning';
+                geolocationMessageDiv.textContent = 'Location not found, please enter coordinates manually.';
+                geolocationMessageDiv.className = 'message warning';
             }
         } catch (error) {
             console.error('Error during geocoding:', error);
-            messageDiv.textContent = `Geocoding error: ${error.message}. Please enter coordinates manually.`;
-            messageDiv.className = 'message error';
+            geolocationMessageDiv.textContent = `Geocoding error: ${error.message}. Please enter coordinates manually.`;
+            geolocationMessageDiv.className = 'message error';
         }
     }
 
     // --- Event Listeners ---
 
-    // Event listener for the search button
     searchButton.addEventListener('click', async () => {
         const eventIdToSearch = searchEventIdInput.value.trim();
         if (!eventIdToSearch) {
@@ -156,6 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         messageDiv.textContent = 'Searching for event...';
         messageDiv.className = 'message info';
         eventEditFormContainer.style.display = 'none'; // Hide form until event is found
+        geolocationMessageDiv.textContent = ''; // Clear geolocation message
 
         try {
             const response = await fetch(JSONBIN_EVENTS_READ_URL, {
@@ -170,22 +175,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
             const events = data.record || [];
-            // Find the event by its unique 'id' property
+            
             const foundEvent = events.find(event => event.id === eventIdToSearch);
 
             if (foundEvent) {
                 // Populate the form with the found event's data
-                eventIdInput.value = foundEvent.id; // Store the ID in the hidden input
+                eventIdInput.value = foundEvent.id;
                 editEventNameInput.value = foundEvent.name;
-                editEventDateInput.value = foundEvent.date;
-                editEventTimeInput.value = foundEvent.time;
+                
+                // Pre-valorizza le date
+                editEventStartDateInput.value = foundEvent.startDate ? new Date(foundEvent.startDate).toISOString().split('T')[0] : '';
+                editEventEndDateInput.value = foundEvent.endDate ? new Date(foundEvent.endDate).toISOString().split('T')[0] : '';
+                
                 editEventLocationInput.value = foundEvent.location;
-                editEventDescriptionInput.value = foundEvent.description;
+                editEventDescriptionInput.value = foundEvent.description || ''; // Può essere vuoto
                 editLatitudeInput.value = foundEvent.latitude;
                 editLongitudeInput.value = foundEvent.longitude;
-                editEventTypeInput.value = foundEvent.type;
-                editEventImageInput.value = foundEvent.image;
-                editIsFeaturedInput.checked = foundEvent.featured;
+                editEventTypeInput.value = foundEvent.type || 'other'; // 'type' è ora Game Type
+                editEventGenderInput.value = foundEvent.gender || 'other'; // Nuovo campo
+                editEventLinkInput.value = foundEvent.link || ''; // Nuovo campo, può essere vuoto
 
                 eventEditFormContainer.style.display = 'block'; // Show the edit form
                 messageDiv.textContent = `Event '${foundEvent.name}' found! You can now modify its values.`;
@@ -215,24 +223,32 @@ document.addEventListener('DOMContentLoaded', () => {
         messageDiv.textContent = 'Saving changes...';
         messageDiv.className = 'message info';
 
-        const eventIdToUpdate = eventIdInput.value; // The ID of the event being modified
+        const eventIdToUpdate = eventIdInput.value;
 
         const updatedEventData = {
-            id: eventIdToUpdate, // Keep the original ID
+            id: eventIdToUpdate,
             name: editEventNameInput.value,
-            date: editEventDateInput.value,
-            time: editEventTimeInput.value,
+            startDate: editEventStartDateInput.value, // Data di inizio
+            endDate: editEventEndDateInput.value,     // Data di fine
             location: editEventLocationInput.value,
+            latitude: parseFloat(editLatitudeInput.value), // Assicurati che siano numeri
+            longitude: parseFloat(editLongitudeInput.value),
+            type: editEventTypeInput.value,           // Game Type
+            gender: editEventGenderInput.value,       // Gender
             description: editEventDescriptionInput.value,
-            latitude: editLatitudeInput.value,
-            longitude: editLongitudeInput.value,
-            type: editEventTypeInput.value,
-            image: editEventImageInput.value,
-            featured: editIsFeaturedInput.checked
+            link: editEventLinkInput.value,
+            featured: false // 'featured' è rimosso dal form, impostalo sempre a false qui se non lo gestisci altrove
         };
 
+        // Gestione di campi opzionali che potrebbero essere vuoti
+        if (isNaN(updatedEventData.latitude)) updatedEventData.latitude = null;
+        if (isNaN(updatedEventData.longitude)) updatedEventData.longitude = null;
+        if (updatedEventData.endDate === '') updatedEventData.endDate = null;
+        if (updatedEventData.description === '') updatedEventData.description = null;
+        if (updatedEventData.link === '') updatedEventData.link = null;
+
+
         try {
-            // STEP 1: Load all existing events
             const readResponse = await fetch(JSONBIN_EVENTS_READ_URL, {
                 headers: {
                     'X-Master-Key': JSONBIN_MASTER_KEY
@@ -240,20 +256,18 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!readResponse.ok) {
-                throw new Error(`Error reading existing events for modification: ${response.status} - ${await response.text()}`);
+                throw new Error(`Error reading existing events for modification: ${readResponse.status} - ${await readResponse.text()}`);
             }
 
             const existingData = await readResponse.json();
             let events = existingData.record || [];
 
-            // Find the index of the event to update in the array
             const eventIndex = events.findIndex(event => event.id === eventIdToUpdate);
 
             if (eventIndex !== -1) {
-                // Update the event with the new data
+                // Aggiorna l'evento con i nuovi dati
                 events[eventIndex] = updatedEventData;
 
-                // STEP 2: Write the entire updated array back to the bin
                 const writeResponse = await fetch(JSONBIN_EVENTS_WRITE_URL, {
                     method: 'PUT',
                     headers: {
@@ -272,11 +286,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 messageDiv.textContent = `Event '${updatedEventData.name}' (ID: ${eventIdToUpdate}) updated successfully!`;
                 messageDiv.className = 'message success';
                 
-                // Hide the form after success
                 eventEditFormContainer.style.display = 'none';
-                searchEventIdInput.value = ''; // Clear the search field
+                searchEventIdInput.value = '';
 
-                // Log the edit action
                 logActivity('EDIT_EVENT', updatedEventData);
 
             } else {
@@ -290,4 +302,81 @@ document.addEventListener('DOMContentLoaded', () => {
             messageDiv.className = 'message error';
         }
     });
+
+    // Event listener for deleting an event
+    deleteEventButton.addEventListener('click', async () => {
+        const eventIdToDelete = eventIdInput.value; // L'ID dell'evento attualmente caricato nel form
+
+        if (!eventIdToDelete) {
+            messageDiv.textContent = 'No event loaded to delete.';
+            messageDiv.className = 'message error';
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to delete event with ID: ${eventIdToDelete}? This action cannot be undone.`)) {
+            return; // L'utente ha annullato l'operazione
+        }
+
+        messageDiv.textContent = 'Deleting event...';
+        messageDiv.className = 'message info';
+
+        try {
+            // STEP 1: Load all existing events
+            const readResponse = await fetch(JSONBIN_EVENTS_READ_URL, {
+                headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+            });
+
+            if (!readResponse.ok) {
+                throw new Error(`Error reading existing events for deletion: ${readResponse.status} - ${await readResponse.text()}`);
+            }
+
+            const existingData = await readResponse.json();
+            let events = existingData.record || [];
+            
+            // Trova l'evento da eliminare e rimuovilo dall'array
+            const initialEventCount = events.length;
+            const eventToDelete = events.find(event => event.id === eventIdToDelete); // Salva l'evento prima di rimuoverlo per il log
+            events = events.filter(event => event.id !== eventIdToDelete);
+
+            if (events.length < initialEventCount) { // Se un evento è stato effettivamente rimosso
+                // STEP 2: Write the updated array (without the deleted event) back to the bin
+                const writeResponse = await fetch(JSONBIN_EVENTS_WRITE_URL, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_MASTER_KEY,
+                        'X-Bin-Meta': 'false'
+                    },
+                    body: JSON.stringify(events)
+                });
+
+                if (!writeResponse.ok) {
+                    const errorText = await writeResponse.text();
+                    throw new Error(`Error deleting event: ${writeResponse.status} - ${errorText}`);
+                }
+
+                messageDiv.textContent = `Event (ID: ${eventIdToDelete}) deleted successfully!`;
+                messageDiv.className = 'message success';
+                
+                // Nascondi il form e pulisci il campo di ricerca
+                eventEditFormContainer.style.display = 'none';
+                searchEventIdInput.value = '';
+
+                // Logga l'azione di eliminazione
+                if (eventToDelete) {
+                    logActivity('DELETE_EVENT', eventToDelete);
+                }
+
+            } else {
+                messageDiv.textContent = 'Error: Event not found for deletion (ID mismatch).';
+                messageDiv.className = 'message error';
+            }
+
+        } catch (error) {
+            console.error('Error during event deletion:', error);
+            messageDiv.textContent = `Error: ${error.message}`;
+            messageDiv.className = 'message error';
+        }
+    });
+
 });
