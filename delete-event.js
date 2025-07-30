@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         messageDiv.textContent = 'Loading events...';
         messageDiv.className = 'message info';
         try {
-            const response = await fetch(JSONBIN_READ_URL, {
+            const response = await fetch(JSONBIN_EVENTS_READ_URL, {
                 headers: {
                     'X-Master-Key': JSONBIN_MASTER_KEY
                 }
@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const updatedEvents = allEvents.filter(e => e.createdAt !== createdAt);
 
-            const response = await fetch(JSONBIN_WRITE_URL, {
+            const response = await fetch(JSONBIN_EVENTS_WRITE_URL, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
