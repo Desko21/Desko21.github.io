@@ -313,8 +313,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p><i class="fas fa-map-marker-alt icon-margin-right"></i><strong>Location:</strong> ${locationText}</p>
                 <p>${gameTypeIcon}<strong>Game Type:</strong> ${eventType}</p>
                 <p>${genderIcon}<strong>Gender:</strong> ${gender}</p>
+				${event.contactEmail ? `<p><i class="fas fa-envelope icon-margin-right"></i><strong>Email:</strong> <a href="mailto:${event.contactEmail}">${event.contactEmail}</a></p>` : ''}
                 <p><i class="fas fa-info-circle icon-margin-right"></i>${descriptionText}</p>
-                ${event.contactEmail ? `<p><i class="fas fa-envelope icon-margin-right"></i><strong>Email:</strong> <a href="mailto:${event.contactEmail}">${event.contactEmail}</a></p>` : ''}
+                
             `;
 
             if (event.link && typeof event.link === 'string') {
