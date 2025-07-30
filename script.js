@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Geolocation is supported by this browser.");
         map.locate({
             setView: true,
-            maxZoom: 5,
+            maxZoom: 5, // Un po' meno zoom per mostrare una zona più ampia inizialmente
             enableHighAccuracy: true,
             timeout: 10000,
             maximumAge: 0
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'jpy': '¥',
         'cad': 'C$',
         'aud': 'A$',
-        'chf': 'CHF', // Often CHF for Swiss Franc
+        'chf': 'CHF',
         'cny': '¥',
         'inr': '₹',
         'brl': 'R$'
@@ -67,9 +67,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- NEW: Mappa per i nomi visualizzati dei tipi di costo (CORRECTED) ---
     const costTypeDisplayNames = {
-        'not_specified': '',        // When saved as 'not_specified'
-        'perperson': 'Per person', // When saved as 'perperson'
-        'perteam': 'Per Team'      // When saved as 'perteam'
+        'not_specified': '',
+        'perperson': 'per person', // Changed to lowercase 'p' to match usual formatting
+        'perteam': 'per team'      // Changed to lowercase 't'
     };
 
     function populateFilterDropdown(selectElement, options) {
@@ -129,8 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- MODIFICA QUI LA FUNZIONE formatCostType ---
-    // Helper function to format cost type (e.g., 'perperson' to 'Per person')
+    // Helper function to format cost type (e.g., 'perperson' to 'per person')
     function formatCostType(costTypeString) {
         // Usa la mappa per ottenere il nome di visualizzazione esatto
         // Se costTypeString non è nella mappa o è vuoto/null, restituisce una stringa vuota
@@ -203,12 +202,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- MODIFICA QUI PER COSTO, VALUTA, TIPO DI COSTO UNO DI FIANCO ALL'ALTRO ---
             let costPopup = '';
-            if (event.cost !== null && event.cost !== undefined && typeof event.cost === 'number') {
+            // Verifica se event.cost è un numero valido e non nullo
+            if (event.cost !== null && event.cost !== undefined && typeof event.cost === 'number' && !isNaN(event.cost)) {
                 const currencySym = event.currency ? getCurrencySymbol(event.currency) : '';
                 const formattedCost = `${currencySym}${event.cost.toFixed(2)}`;
-                const formattedCostType = formatCostType(event.costType); // Now uses the map
-                // Combiniamo il tutto in un'unica riga
-                costPopup = `<p><strong>Cost:</strong> ${formattedCost} ${formattedCostType}</p>`;
+                // Utilizza formatCostType solo se costType ha un valore significativo
+                const formattedCostType = event.costType && event.costType !== 'not_specified' ? formatCostType(event.costType) : '';
+                // Combiniamo il tutto in un'unica riga, aggiungendo uno spazio solo se il tipo di costo è presente
+                costPopup = `<p><strong>Cost:</strong> ${formattedCost}${formattedCostType ? ' ' + formattedCostType : ''}</p>`;
             }
             // --- FINE MODIFICA ---
 
@@ -317,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             let featuredIconHtml = event.featured ? '<span class="star-icon event-list-icon">★</span>' : '';
-            let sixesTitleIconHtml = '';
+            // let sixesTitleIconHtml = ''; // Questo non è usato, puoi rimuoverlo
 
             const formattedDate = new Date(event.startDate).toLocaleDateString();
             let dateRange = formattedDate;
@@ -367,12 +368,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // --- MODIFICA QUI PER COSTO, VALUTA, TIPO DI COSTO UNO DI FIANCO ALL'ALTRO ---
             let costDisplay = '';
-            if (event.cost !== null && event.cost !== undefined && typeof event.cost === 'number') {
+            if (event.cost !== null && event.cost !== undefined && typeof event.cost === 'number' && !isNaN(event.cost)) {
                 const currencySym = event.currency ? getCurrencySymbol(event.currency) : '';
                 const formattedCost = `${currencySym}${event.cost.toFixed(2)}`;
-                const formattedCostType = formatCostType(event.costType); // Now uses the map
-                // Combiniamo il tutto in un'unica riga
-                costDisplay = `<p><i class="fas fa-dollar-sign icon-margin-right"></i><strong>Cost:</strong> ${formattedCost} ${formattedCostType}</p>`;
+                const formattedCostType = event.costType && event.costType !== 'not_specified' ? formatCostType(event.costType) : '';
+                costDisplay = `<p><i class="fas fa-dollar-sign icon-margin-right"></i><strong>Cost:</strong> ${formattedCost}${formattedCostType ? ' ' + formattedCostType : ''}</p>`;
             }
             // --- FINE MODIFICA ---
 
@@ -387,7 +387,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p><i class="fas fa-map-marker-alt icon-margin-right"></i><strong>Location:</strong> ${locationText}</p>
                 <p>${gameTypeIcon}<strong>Game Type:</strong> ${eventType}</p>
                 <p>${genderIcon}<strong>Gender:</strong> ${gender}</p>
-                ${costDisplay} ${event.contactEmail ? `<p><i class="fas fa-envelope icon-margin-right"></i><strong>Email:</strong> <a href="mailto:${event.contactEmail}">${event.contactEmail}</a></p>` : ''}
+                ${costDisplay}
+                ${event.contactEmail ? `<p><i class="fas fa-envelope icon-margin-right"></i><strong>Email:</strong> <a href="mailto:${event.contactEmail}">${event.contactEmail}</a></p>` : ''}
                 <p><i class="fas fa-info-circle icon-margin-right"></i>${descriptionText}</p>
             `;
 
@@ -418,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load events on startup
     loadEvents();
 
-    ---
+
     // START: Hamburger Menu Management
     const hamburgerMenu = document.querySelector('.hamburger-menu');
     const mobileNav = document.querySelector('nav.mobile-nav');
@@ -444,5 +445,5 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('Hamburger menu or mobile navigation not found. Check your HTML structure.');
     }
     // END: Hamburger Menu Management
-    ---
+
 });
